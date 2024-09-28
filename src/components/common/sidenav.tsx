@@ -8,8 +8,7 @@ import {
     Cog8ToothIcon,
     ArrowLeftEndOnRectangleIcon,
 } from "@heroicons/react/24/outline";
-import PennyWiseLogo from "./logo";
-import Image from "next/image";
+import { PennyWiseLogo } from "./logo";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -23,17 +22,17 @@ const navLinks = [
 
 export default function SideNav() {
     const pathname = usePathname();
-    const [collapsed, setCollapsed] = useState(false);
+    const [collapsed, setCollapsed] = useState<boolean>(false);
 
     return (
-        <div
+        <aside
             className={clsx(
                 "flex-none grid grid-cols-1 grid-rows-4 align-top border-r border-gray-200 w-64 h-full min-h-[30rem] bg-stone-100 shadow-xl max-md:hidden duration-200",
                 { "md:w-24": collapsed },
             )}
         >
             <div className="row-span-1 flex flex-row justify-start items-center gap-2 min-h-20 px-3 py-4 bg-gray-200">
-                <PennyWiseLogo isTopBarLogo={false} />
+                <PennyWiseLogo hiddenOnLargeScreen={false} />
                 <h1
                     className={clsx(
                         "inline-block ml-2 text-transparent text-2xl font-bold bg-clip-text bg-gradient-to-r from-blue-600 via-purple-700 to-pink-500 duration-75",
@@ -82,14 +81,14 @@ export default function SideNav() {
                     <Cog8ToothIcon className="w-6 min-w-6" />
                     <span className={`${collapsed ? "opacity-0" : "opacity-100"} text-sm font-medium`}>Settings</span>
                 </Link>
-                <Link
-                    href={"/"}
-                    className={`flex flex-none items-center rounded-md gap-3 w-full h-[42px] ${collapsed ? "w-[48px] max-w-[48px]" : "max-w-full"} p-3 bg-gray-50 hover:bg-sky-100 hover:text-blue-600 shadow-md shadow-slate-300 overflow-hidden text-nowrap duration-200`}
+                <button
+                    className={`flex flex-none items-center rounded-md gap-3 w-full h-[42px] ${collapsed ? "w-[48px] max-w-[48px]" : "max-w-full"} p-3 bg-gray-50 hover:bg-rose-600 text-rose-600 hover:text-white text-nowrap shadow-md shadow-slate-300 overflow-hidden duration-200`}
+                    onClick={() => { }}
                 >
                     <ArrowLeftEndOnRectangleIcon className="w-6 min-w-6" />
                     <span className={`${collapsed ? "opacity-0" : "opacity-100"} text-sm font-medium`}>Log out</span>
-                </Link>
+                </button>
             </div>
-        </div>
+        </aside>
     )
 }
