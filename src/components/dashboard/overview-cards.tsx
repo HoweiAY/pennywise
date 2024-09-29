@@ -3,7 +3,7 @@ import {
     CurrencyDollarIcon,
     BanknotesIcon,
 } from "@heroicons/react/24/outline";
-import { formatCurrency } from "@/utils/format";
+import { formatCurrency } from "@/libs/utils/format";
 import clsx from "clsx";
 
 const iconMap = {

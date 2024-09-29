@@ -4,8 +4,6 @@ import Link from "next/link";
 import { useFormState, useFormStatus } from "react-dom";
 
 export default function LoginForm() {
-    const { pending } = useFormStatus();
-
     return (
         <form
             className="flex flex-col justify-center max-md:justify-start items-start md:w-1/2 h-full p-6 max-md:pt-1"
@@ -39,25 +37,28 @@ export default function LoginForm() {
                 placeholder="password"
                 required
             />
-            <div className="flex flex-row items-center mt-3 space-x-2">
-                <label
-                    htmlFor="remember-me"
-                    className="text-sm font-semibold"
+            <div className="flex lg:flex-row max-md:flex-row flex-col justify-between lg:items-center max-md:items-center w-11/12 max-md:w-full mt-3">
+                <div className="flex flex-row items-center space-x-2">
+                    <label
+                        htmlFor="remember-me"
+                        className="text-sm font-semibold"
+                    >
+                        Remember me
+                    </label>
+                    <input
+                        id="remember-me"
+                        type="checkbox"
+                        className="w-4"
+                    />
+                </div>
+                <Link
+                    href={"/reset-password"}
+                    className="w-fit mt-1 text-sm font-semibold text-blue-500 border-b border-blue-500"
                 >
-                    Remember me
-                </label>
-                <input
-                    id="remember-me"
-                    type="checkbox"
-                    className="w-4"
-                />
+                    Forgot your password?
+                </Link>
             </div>
-            <button
-                className="w-11/12 max-md:w-full my-6 p-2 border-0 rounded-lg text-sm text-white font-semibold bg-blue-500 hover:bg-blue-600 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 transition-colors duration-200"
-                aria-disabled={pending}
-            >
-                Login
-            </button>
+            <LoginButton />
             <p className="max-md:mb-6 text-sm">
                 Don't have an account?
                 <Link
@@ -66,5 +67,17 @@ export default function LoginForm() {
                 >Sign up now!</Link>
             </p>
         </form>
+    )
+}
+
+function LoginButton() {
+    const { pending } = useFormStatus();
+    return (
+        <button
+            className="w-11/12 max-md:w-full my-6 p-2 border-0 rounded-lg text-sm text-white font-semibold bg-blue-500 hover:bg-blue-600 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 transition-colors duration-200"
+            aria-disabled={pending}
+        >
+            Login
+        </button>
     )
 }
