@@ -1,11 +1,17 @@
 "use client";
 
+import { login } from "@/libs/actions/auth";
+import { authErrorMessage } from "@/libs/utils/helper";
 import Link from "next/link";
 import { useFormState, useFormStatus } from "react-dom";
+import clsx from "clsx";
 
 export default function LoginForm() {
+    const [ error, dispatch ] = useFormState(login, undefined);
+
     return (
         <form
+            action={dispatch}
             className="flex flex-col justify-center max-md:justify-start items-start md:w-1/2 h-full p-6 max-md:pt-1"
         >
             <h1 className="md:h-16 my-3 text-4xl max-lg:text-3xl font-bold">
@@ -19,6 +25,7 @@ export default function LoginForm() {
             </label>
             <input
                 id="email"
+                name="email"
                 type="email"
                 className="w-11/12 max-md:w-full h-10 p-3 border border-gray-300 rounded-lg text-sm max-md:text-xs"
                 placeholder="example@email.com"
@@ -32,32 +39,24 @@ export default function LoginForm() {
             </label>
             <input
                 id="password"
+                name="password"
                 type="password"
                 className="w-11/12 max-md:w-full h-10 p-3 border border-gray-300 rounded-lg text-sm max-md:text-xs"
                 placeholder="password"
                 required
             />
-            <div className="flex lg:flex-row max-md:flex-row flex-col justify-between lg:items-center max-md:items-center w-11/12 max-md:w-full mt-3">
-                <div className="flex flex-row items-center space-x-2">
-                    <label
-                        htmlFor="remember-me"
-                        className="text-sm font-semibold"
-                    >
-                        Remember me
-                    </label>
-                    <input
-                        id="remember-me"
-                        type="checkbox"
-                        className="w-4"
-                    />
-                </div>
-                <Link
-                    href={"/reset-password"}
-                    className="w-fit mt-1 text-sm font-semibold text-blue-500 border-b border-blue-500"
-                >
-                    Forgot your password?
-                </Link>
-            </div>
+            <Link
+                href={"/reset-password"}
+                className="w-fit mt-3 text-sm font-semibold text-blue-500 border-b border-blue-500"
+            >
+                Forgot your password?
+            </Link>
+            <p className={clsx(
+                "w-11/12 max-md:w-full mt-4 text-center text-sm text-red-500",
+                { "hidden": !error }
+            )}>
+                {authErrorMessage(error)}
+            </p>
             <LoginButton />
             <p className="max-md:mb-6 text-sm">
                 Don't have an account?

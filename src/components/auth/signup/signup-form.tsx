@@ -1,11 +1,17 @@
 "use client";
 
+import { signUp } from "@/libs/actions/auth";
+import { authErrorMessage } from "@/libs/utils/helper";
 import Link from "next/link";
 import { useFormState, useFormStatus } from "react-dom";
+import clsx from "clsx";
 
 export default function SignupForm() {
+    const [ error, dispatch ] = useFormState(signUp, undefined);
+
     return (
         <form
+            action={dispatch}
             className="flex flex-col justify-center max-md:justify-start items-start md:w-1/2 h-full p-6 pt-3 max-md:pt-1"
         >
             <header className="md:h-[108px]">
@@ -24,6 +30,7 @@ export default function SignupForm() {
             </label>
             <input
                 id="username"
+                name="username"
                 type="text"
                 className="w-11/12 max-md:w-full h-10 p-3 border border-gray-300 rounded-lg text-sm max-md:text-xs"
                 placeholder="username"
@@ -37,6 +44,7 @@ export default function SignupForm() {
             </label>
             <input
                 id="email"
+                name="email"
                 type="email"
                 className="w-11/12 max-md:w-full h-10 p-3 border border-gray-300 rounded-lg text-sm max-md:text-xs"
                 placeholder="example@email.com"
@@ -50,11 +58,18 @@ export default function SignupForm() {
             </label>
             <input
                 id="password"
+                name="password"
                 type="password"
                 className="w-11/12 max-md:w-full h-10 p-3 border border-gray-300 rounded-lg text-sm max-md:text-xs"
                 placeholder="password"
                 required
             />
+            <p className={clsx(
+                "w-11/12 max-md:w-full mt-4 text-center text-sm text-red-500",
+                { "hidden": !error }
+            )}>
+                {authErrorMessage(error)}
+            </p>
             <SignupButton />
             <p className="max-md:mb-6 text-sm">
                 Already have an account?
