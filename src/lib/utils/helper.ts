@@ -1,4 +1,4 @@
-import { AuthFormState } from "@/libs/types/form-state";
+import { AuthFormState } from "@/lib/types/form-state";
 
 export function authErrorMessage(error: AuthFormState | undefined): string {
     let errorMessage = "An error has occurred";

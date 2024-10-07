@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { supabaseUrl, supabaseKey } from "@/libs/utils/supabase";
+import { supabaseUrl, supabaseKey } from "@/lib/utils/supabase/server";
 
 // Middleware for Auth token refresh
 export async function updateSession(request: NextRequest) {
@@ -29,7 +29,7 @@ export async function updateSession(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user && (
         request.nextUrl.pathname.startsWith("/dashboard") ||
-        request.nextUrl.pathname.startsWith("/signup/account-setup")
+        request.nextUrl.pathname.startsWith("/account-setup")
     )) {
         // Redirect the user to the login page if no session
         const url = request.nextUrl.clone();

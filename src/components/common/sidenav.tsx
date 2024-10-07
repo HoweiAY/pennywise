@@ -40,7 +40,7 @@ export default function SideNav() {
                     )}
                 >PennyWise</h1>
             </div>
-            <nav className="row-span-4 flex flex-col min-h-60 px-4 overflow-scroll">
+            <nav className="row-span-4 flex flex-col min-h-60 px-4 overflow-scroll no-scrollbar">
                 <button
                     className={clsx(
                         "flex flex-none items-center gap-2 rounded-md w-[48px] h-[42px] px-3 py-2 my-4 bg-gray-50 hover:bg-sky-100 hover:text-blue-600 shadow-md shadow-slate-300 duration-200",
@@ -73,7 +73,8 @@ export default function SideNav() {
                     })}
                 </ul>
             </nav>
-            <div className="row-span-2 flex flex-col justify-end gap-1 w-full min-h-20 px-4 py-8 space-x-0 space-y-2">
+            <div className="relative row-span-2 flex flex-col justify-end gap-1 w-full min-h-20 px-4 py-8 space-x-0 space-y-2">
+                <div className="absolute -top-12 left-0 w-full h-12 bg-gradient-to-t from-gray-50 to-transparent" />
                 <Link
                     href={"/dashboard/settings"}
                     className={`flex flex-none items-center rounded-md gap-3 w-full h-[42px] ${collapsed ? "w-[48px] max-w-[48px]" : "max-w-full"} p-3 bg-gray-50 hover:bg-sky-100 hover:text-blue-600 shadow-md shadow-slate-300 overflow-hidden text-nowrap duration-200`}

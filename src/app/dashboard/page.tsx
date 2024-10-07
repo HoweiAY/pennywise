@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default async function Dashboard() {
     return (
-        <main className="h-fit mb-2 overflow-scroll">
+        <main className="h-fit mb-2 overflow-hidden">
             <div className="px-6">
                 <p className="my-8 text-2xl font-bold overflow-hidden whitespace-nowrap text-ellipsis">
                     Welcome, user! 👋
