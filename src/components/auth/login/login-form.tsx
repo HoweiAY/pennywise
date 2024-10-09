@@ -1,13 +1,26 @@
 "use client";
 
-import { login } from "@/libs/actions/auth";
-import { authErrorMessage } from "@/libs/utils/helper";
+import { login } from "@/lib/actions/auth";
+import { authErrorMessage } from "@/lib/utils/helper";
 import Link from "next/link";
+import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
+import { ExclamationCircleIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
 import clsx from "clsx";
 
 export default function LoginForm() {
     const [ error, dispatch ] = useFormState(login, undefined);
+    const [ passwordHidden, setPasswordHidden ] = useState<boolean>(true);
+
+    const showTogglePasswordButton = () => {
+        const className = "absolute top-3 right-4 w-5 h-5 max-md:w-4 max-md:h-4 bg-white hover:cursor-pointer";
+        const onClick = () => setPasswordHidden(prev => !prev);
+        return (
+            passwordHidden 
+            ? <EyeIcon className={className} onClick={onClick} /> 
+            : <EyeSlashIcon className={className} onClick={onClick} />
+        )
+    };
 
     return (
         <form
@@ -37,28 +50,32 @@ export default function LoginForm() {
             >
                 Password
             </label>
-            <input
-                id="password"
-                name="password"
-                type="password"
-                className="w-11/12 max-md:w-full h-10 p-3 border border-gray-300 rounded-lg text-sm max-md:text-xs"
-                placeholder="password"
-                required
-            />
+            <div className="relative w-11/12 max-md:w-full">
+                <input
+                    id="password"
+                    name="password"
+                    type={passwordHidden ? "password" : "text"}
+                    className="w-full h-10 p-3 border border-gray-300 rounded-lg text-sm max-md:text-xs"
+                    placeholder="password"
+                    required
+                /> 
+                {showTogglePasswordButton()}
+            </div>
             <Link
                 href={"/reset-password"}
-                className="w-fit mt-3 text-sm font-semibold text-blue-500 border-b border-blue-500"
+                className="w-fit mt-3 text-sm max-md:text-xs font-semibold text-blue-500 border-b border-blue-500"
             >
                 Forgot your password?
             </Link>
             <p className={clsx(
-                "w-11/12 max-md:w-full mt-4 text-center text-sm text-red-500",
+                "flex flex-row justify-center gap-1 w-11/12 max-md:w-full mt-4 text-center text-sm max-md:text-xs text-red-500",
                 { "hidden": !error }
             )}>
+                <ExclamationCircleIcon className="w-5 h-5 max-md:w-4 max-md:h-4" />
                 {authErrorMessage(error)}
             </p>
             <LoginButton />
-            <p className="max-md:mb-6 text-sm">
+            <p className="max-md:mb-4 text-sm max-md:text-xs">
                 Don't have an account?
                 <Link
                     href={"/signup"}
@@ -73,7 +90,7 @@ function LoginButton() {
     const { pending } = useFormStatus();
     return (
         <button
-            className="w-11/12 max-md:w-full my-6 p-2 border-0 rounded-lg text-sm text-white font-semibold bg-blue-500 hover:bg-blue-600 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 transition-colors duration-200"
+            className="w-11/12 max-md:w-full my-6 p-2 max-md:mt-4 border-0 rounded-lg text-sm text-white font-semibold bg-blue-500 hover:bg-blue-600 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 transition-colors duration-200"
             aria-disabled={pending}
         >
             Login

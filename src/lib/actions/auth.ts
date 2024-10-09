@@ -1,11 +1,11 @@
 "use server";
 
 import { z } from "zod";
-import { createSupabaseServerClient } from "@/libs/utils/supabase";
+import { createSupabaseServerClient } from "@/lib/utils/supabase/server";
 import { AuthError } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { AuthFormState } from "@/libs/types/form-state";
+import { AuthFormState } from "@/lib/types/form-state";
 
 const SignUpSchema = z.object({
     username: z.string().trim().min(6, { message: "Username must have at least 6 characters" }),
@@ -57,8 +57,7 @@ export async function signUp(
         return { message: "An error has occurred" };
     }
 
-    revalidatePath("/dashboard");
-    redirect("/dashboard");
+    redirect("/account-setup?step=1");
 }
 
 // Server action for logging in a user
