@@ -8,12 +8,12 @@ import { useFormState, useFormStatus } from "react-dom";
 import clsx from "clsx";
 
 export default function GeneralInfoForm({
-    formData,
+    prevFormData,
     handleUpdateFormData,
     handleSubmitFormData,
     handleStepChange,
 }: {
-    formData: AccountSetupFormState,
+    prevFormData: AccountSetupFormState,
     handleUpdateFormData: (data: AccountSetupFormState) => void,
     handleSubmitFormData: (data: AccountSetupFormState) => Promise<void>,
     handleStepChange: (step: 1 | 2 | 3) => void,
@@ -32,12 +32,11 @@ export default function GeneralInfoForm({
                 last_name: formData.get("lastName")?.toString(),
                 country: country,
             };
-            console.log(updatedFormData);
-            //await handleSubmitFormData(updatedFormData);
+            await handleSubmitFormData(updatedFormData);
             handleUpdateFormData(updatedFormData);
             handleStepChange(2);
         } catch (error) {
-            return { message: "An error has occurred, please try again" };
+            return { message: "An error has occurred. Please try again" };
         }
     };
 
@@ -61,12 +60,12 @@ export default function GeneralInfoForm({
                     type="text"
                     className="w-full h-8 p-3 border border-gray-300 rounded-md text-sm max-md:text-xs"
                     placeholder="Enter your first name here"
-                    defaultValue={formData?.first_name || ""}
+                    defaultValue={prevFormData?.first_name || ""}
                     required
                 />
                 <label
                     htmlFor="lastName"
-                    className="mt-2 mb-1 text-sm font-semibold"
+                    className="mt-4 mb-1 max-md:mt-3 text-sm font-semibold"
                 >
                     Last name
                 </label>
@@ -76,12 +75,12 @@ export default function GeneralInfoForm({
                     type="text"
                     className="w-full h-8 p-3 border border-gray-300 rounded-md text-sm max-md:text-xs"
                     placeholder="Enter your last name here"
-                    defaultValue={formData?.last_name || ""}
+                    defaultValue={prevFormData?.last_name || ""}
                     required
                 />
                 <label
                     htmlFor="country"
-                    className="mt-2 mb-1 text-sm font-semibold"
+                    className="mt-4 mb-1 max-md:mt-3 text-sm font-semibold"
                 >
                     Where are you from?
                 </label>
@@ -89,7 +88,7 @@ export default function GeneralInfoForm({
                     <select
                         id="country"
                         name="country"
-                        defaultValue={formData?.country || ""}
+                        defaultValue={prevFormData?.country || ""}
                         className="appearance-none rounded-md w-full h-8 px-3 border border-gray-300 text-sm max-md:text-xs bg-white placeholder:text-gray-500 focus:border-gray-400"
                     >
                         <option value={""}>Choose a country...</option>

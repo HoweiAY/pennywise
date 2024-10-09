@@ -1,24 +1,27 @@
 "use client";
 
 import { currencyData } from "@/lib/utils/constant";
-import { formatCurrencySymbol } from "@/lib/utils/format";
+import { formatCurrencySymbol, formatCurrencyAmount } from "@/lib/utils/format";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { ExclamationCircleIcon } from "@heroicons/react/24/solid";
+import { useRouter } from "next/navigation";
 import { AccountSetupFormState } from "@/lib/types/form-state";
 import { useFormState, useFormStatus } from "react-dom";
 import clsx from "clsx";
 
 export default function BalanceBudgetForm({
-    formData,
+    prevFormData,
     handleUpdateFormData,
     handleSubmitFormData,
     handleStepChange,
 }: {
-    formData: AccountSetupFormState,
+    prevFormData: AccountSetupFormState,
     handleUpdateFormData: (data: AccountSetupFormState) => void,
     handleSubmitFormData: (data: AccountSetupFormState) => Promise<void>,
     handleStepChange: (step: 1 | 2 | 3) => void,
 }) {
+    const { push } = useRouter();
+
     const handleSumbit = async (
         prevState: { message: string } | undefined,
         formData: FormData,
@@ -33,8 +36,8 @@ export default function BalanceBudgetForm({
             if (!balance) {
                 return { message: "Please enter your current balance" };
             }
-            if (balance <= 0) {
-                return { message: "Please enter a balance amount greater than 0" };
+            if (balance < 0) {
+                return { message: "Please enter a balance amount no less than 0" };
             }
             if (spendingLimit && spendingLimit <= 0) {
                 return { message: "Please enter a spending limit greater than 0" };
@@ -46,12 +49,11 @@ export default function BalanceBudgetForm({
                 balance: balanceInCents,
                 spending_limit: spendingLimitInCents || null,
             };
-            console.log(updatedFormData);
-            //await handleSubmitFormData(updatedFormData);
+            await handleSubmitFormData(updatedFormData);
             handleUpdateFormData(updatedFormData);
-            //handleStepChange(3);
+            push("/dashboard");
         } catch (error) {
-            return { message: "An error has occurred, please try again" };
+            return { message: "An error has occurred. Please try again" };
         }
     };
 
@@ -73,7 +75,7 @@ export default function BalanceBudgetForm({
                     <select
                         id="currency"
                         name="currency"
-                        defaultValue={formData?.currency || ""}
+                        defaultValue={prevFormData?.currency || ""}
                         className="appearance-none rounded-md w-full h-8 px-3 border border-gray-300 text-sm max-md:text-xs bg-white placeholder:text-gray-500 focus:border-gray-400"
                     >
                         <option value={""}>Choose a currency...</option>
@@ -101,8 +103,8 @@ export default function BalanceBudgetForm({
                     name="balance"
                     type="number"
                     className="w-full h-8 p-3 border border-gray-300 rounded-md text-sm max-md:text-xs"
-                    placeholder="Enter balance amount"
-                    defaultValue={formData?.balance || ""}
+                    placeholder="Enter balance amount (e.g., 10000)"
+                    defaultValue={formatCurrencyAmount(prevFormData?.balance) || ""}
                     min={0}
                     step={0.01}
                     required
@@ -119,7 +121,7 @@ export default function BalanceBudgetForm({
                     type="number"
                     className="w-full h-8 p-3 border border-gray-300 rounded-md text-sm max-md:text-xs"
                     placeholder="Enter your spending limit (optional)"
-                    defaultValue={formData?.spending_limit || ""}
+                    defaultValue={formatCurrencyAmount(prevFormData?.spending_limit) || ""}
                     min={0}
                     step={0.01}
                 />
@@ -134,24 +136,24 @@ export default function BalanceBudgetForm({
             <div className="flex flex-row justify-between w-full">
                 <div 
                     className="w-24 max-md:w-20 p-2 border rounded-lg text-center max-md:text-sm font-semibold bg-gray-50 hover:bg-sky-100 hover:text-blue-600 hover:cursor-pointer shadow-md shadow-slate-300 duration-200"
-                    onClick={() => handleStepChange(1)}
+                    onClick={() => handleStepChange(2)}
                 >
                     Previous
                 </div>
-                <NextButton /> 
+                <FinishButton /> 
             </div>
         </form>
     )
 }
 
-function NextButton() {
+function FinishButton() {
     const { pending } = useFormStatus();
     return (
         <button
             className="w-20 max-md:w-16 p-2 border-0 rounded-lg text-white max-md:text-sm font-semibold hover:cursor-pointer bg-blue-500 hover:bg-blue-600 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 transition-colors duration-200"
             aria-disabled={pending}
         >
-            Next
+            Finish
         </button>
     )
 }

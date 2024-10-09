@@ -14,4 +14,5 @@ export type AccountSetupFormState = {
     currency?: string,
     balance?: number,
     spending_limit?: number | null,
+    avatar_url?: string | null,
 }

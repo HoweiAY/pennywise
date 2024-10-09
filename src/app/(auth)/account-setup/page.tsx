@@ -1,8 +1,9 @@
 "use client";
 
 import GeneralInfoForm from "@/components/auth/account-setup/general-info-form";
+import AvatarUploadForm from "@/components/auth/account-setup/avatar-upload-form";
 import BalanceBudgetForm from "@/components/auth/account-setup/balance-budget-form";
-import { MobileSetupBreadcrumbs } from "@/components/auth/account-setup/setup-breadcrumbs";
+import { SetupBreadcrumbs, MobileSetupBreadcrumbs } from "@/components/auth/account-setup/setup-breadcrumbs";
 import { AccountSetupFormState } from "@/lib/types/form-state";
 import { createSupabaseBrowserClient } from "@/lib/utils/supabase/client";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
@@ -59,19 +60,19 @@ export default function AccountSetupPage() {
     const displayForm = (step: 1 | 2 | 3) => {
         const stepForms = {
             1: <GeneralInfoForm
-                    formData={formData}
+                    prevFormData={formData}
                     handleUpdateFormData={handleUpdateFormData}
                     handleSubmitFormData={handleSubmitFormData}
                     handleStepChange={handleStepChange}
                 />,
-            2: <BalanceBudgetForm
-                    formData={formData}
+            2: <AvatarUploadForm
+                    prevFormData={formData}
                     handleUpdateFormData={handleUpdateFormData}
                     handleSubmitFormData={handleSubmitFormData}
                     handleStepChange={handleStepChange}
                 />,
             3: <BalanceBudgetForm 
-                    formData={formData}
+                    prevFormData={formData}
                     handleUpdateFormData={handleUpdateFormData}
                     handleSubmitFormData={handleSubmitFormData}
                     handleStepChange={handleStepChange}
@@ -81,9 +82,22 @@ export default function AccountSetupPage() {
     }
 
     return (
-        <div className="flex flex-col w-7/12 max-md:w-full md:h-[450px] max-md:min-h-[400px]">
-            <MobileSetupBreadcrumbs />
-            {displayForm(step)}
-        </div>
+        <main className="flex flex-col justify-between border rounded-2xl shadow-2xl w-8/12 max-lg:w-10/12 max-md:w-3/4 md:h-[600px] min-w-[400px] min-h-[400px] p-6 bg-white overflow-hidden">
+            <header className="md:p-2">
+                <h1 className="text-4xl max-lg:text-3xl font-bold">
+                    Let's get you started!
+                </h1>
+                <p className="my-1 max-lg:text-sm text-gray-500">
+                    Set up your account to start using PennyWise 🤗
+                </p>
+            </header>
+            <div className="flex flex-row justify-center items-center gap-1">
+                <SetupBreadcrumbs />
+                <div className="flex flex-col w-7/12 max-md:w-full md:h-[450px] max-md:min-h-[400px]">
+                    <MobileSetupBreadcrumbs />
+                    {displayForm(step)}
+                </div>
+            </div>
+        </main>
     );
 } 

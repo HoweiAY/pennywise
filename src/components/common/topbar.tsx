@@ -2,7 +2,7 @@
 
 import { BellIcon } from "@heroicons/react/24/outline";
 import { PennyWiseLogo } from "./logo";
-import profilePicDefault from "@/ui/icons/dashboard/profile-pic-default.svg";
+import avatarDefault from "@/ui/icons/avatar-default.png";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -18,15 +18,15 @@ export default function TopBar() {
                     <BellIcon className="w-7 h-7" />
                 </Link>
                 <button
-                    className="flex justify-center items-center border border-black rounded-full w-12 h-12 overflow-hidden"
+                    className="flex justify-center items-center border-2 border-gray-700 rounded-full w-12 h-12 overflow-hidden"
                     onClick={() => {}}
                 >
                     <Image
                         priority
-                        src={profilePicDefault}
+                        src={avatarDefault}
                         width={48}
                         height={48}
-                        alt="Default Profile Picture"
+                        alt="Default user avatar"
                     />
                 </button>
             </div>

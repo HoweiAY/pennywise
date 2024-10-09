@@ -1,7 +1,7 @@
 export const formatCurrency = (amount: number, currency?: string) => {
   return (amount / 100).toLocaleString("en-US", {
     style: "currency",
-    currency: "USD",
+    currency: currency || "USD",
   });
 };
 
@@ -14,4 +14,8 @@ export const formatCurrencySymbol = (currency: string) => {
       maximumFractionDigits: 0,
     }
   ).replace(/\d/g, "").trim();
+};
+
+export const formatCurrencyAmount = (amount?: number | null) => {
+  return amount ? (amount / 100).toFixed(2) : "";
 };

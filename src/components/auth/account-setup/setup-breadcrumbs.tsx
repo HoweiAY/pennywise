@@ -5,8 +5,8 @@ import clsx from "clsx";
 
 const accountSetupBreadcrumbs = [
     { step: 1, name: "General information", description: "Tell us more about yourself" },
-    { step: 2, name: "Balance and budget details", description: "Set up your balance information" },
-    { step: 3, name: "???", description: "Sample text" },
+    { step: 2, name: "Upload your avatar picture", description: "Add a user avatar to stand out" },
+    { step: 3, name: "Balance and budget details", description: "Set up your balance information" },
 ];
 
 function getFormTitle(step: string | null) {
