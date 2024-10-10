@@ -3,7 +3,10 @@ import {
     CurrencyDollarIcon,
     BanknotesIcon,
 } from "@heroicons/react/24/outline";
+import { ExclamationCircleIcon } from "@heroicons/react/24/solid";
 import { formatCurrency } from "@/lib/utils/format";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { unstable_noStore as noStore } from "next/cache";
 import clsx from "clsx";
 
 const iconMap = {
@@ -12,12 +15,66 @@ const iconMap = {
     expenditure: BanknotesIcon,
 };
 
-export default async function OverviewCards() {
+export default async function OverviewCards({
+    supabaseClient,
+    userId,
+}: {
+    supabaseClient: SupabaseClient,
+    userId: string,
+}) {
+    noStore();
+    
+    const overviewData: {
+        balance: number | null,
+        income: number | null,
+        expenditure: number | null,
+        balanceChange: number | null,
+        incomeChange: number | null,
+        expenditureChange: number | null,
+        currency: string | null,
+    } = {
+        balance: null,
+        income: null,
+        expenditure: null,
+        balanceChange: null,
+        incomeChange: null,
+        expenditureChange: null,
+        currency: null,
+    };
+
+    const { data: balanceData, error: balanceError } = await supabaseClient
+        .from("users")
+        .select("balance, currency")
+        .eq("user_id", userId)
+        .limit(1);
+    if (!balanceError && balanceData.length > 0) {
+        overviewData.balance = balanceData[0].balance;
+        overviewData.currency = balanceData[0].currency;
+    }
+
     return (
         <>
-            <Card title="Total balance" value={6969690} type="balance" />
-            <Card title="Income" value={666000} type="income" />
-            <Card title="Expenditure" value={420000} type="expenditure" />
+            <Card
+                title="Total balance"
+                value={overviewData.balance}
+                valueChange={overviewData.balanceChange}
+                currency={overviewData.currency}
+                type="balance"
+            />
+            <Card
+                title="Income"
+                value={overviewData.income}
+                valueChange={overviewData.incomeChange}
+                currency={overviewData.currency}
+                type="income"
+            />
+            <Card
+                title="Expenditure"
+                value={overviewData.expenditure}
+                valueChange={overviewData.expenditureChange}
+                currency={overviewData.currency}
+                type="expenditure"
+            />
         </>
     );
 }
@@ -25,10 +82,14 @@ export default async function OverviewCards() {
 export function Card({
     title,
     value,
+    valueChange,
+    currency,
     type
 }: {
     title: string,
-    value: number,
+    value: number | null,
+    valueChange: number | null,
+    currency: string | null,
     type: "balance" | "income" | "expenditure";
 }) {
     const Icon = iconMap[type];
@@ -54,18 +115,24 @@ export function Card({
                 { "max-md:gap-1 max-sm:my-1": type !== "balance" }
             )}>
                 <p className={clsx(
-                    "text-3xl font-semibold overflow-hidden whitespace-nowrap text-ellipsis",
+                    "text-3xl max-sm:text-2xl font-semibold overflow-hidden whitespace-nowrap text-ellipsis",
                     { "max-sm:text-lg": type !== "balance" }
                 )}>
-                    {formatCurrency(value)}
+                    {value ? formatCurrency(value, currency) : "$ --"}
                 </p>
-                <p className={clsx(
-                    "text-sm text-gray-500",
-                    { "max-sm:text-xs": type !== "balance" },
-                )}>
-                    <span className="text-green-500 font-semibold">+12345.6% </span>
-                    since last month
-                </p>
+                {
+                    value 
+                    ?
+                    <p className="text-sm max-sm:text-xs text-gray-500">
+                        <span className="text-green-500 font-semibold">+12345.6% </span>
+                        since last month
+                    </p>
+                    : 
+                    <div className="flex flex-row items-center gap-1 my-1 text-red-500">
+                        <ExclamationCircleIcon className="w-5 h-5 max-md:w-4 max-md:h-4 min-w-4 min-h-4" />
+                        <span className="text-sm max-md:text-xs text-nowrap text-ellipsis overflow-hidden">Error loading {type} data</span>
+                    </div>
+                }
             </div>
         </div>
     )

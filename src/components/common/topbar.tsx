@@ -3,10 +3,33 @@
 import { BellIcon } from "@heroicons/react/24/outline";
 import { PennyWiseLogo } from "./logo";
 import avatarDefault from "@/ui/icons/avatar-default.png";
+import { createSupabaseBrowserClient } from "@/lib/utils/supabase/client";
+import { StaticImport } from "next/dist/shared/lib/get-img-props";
 import Image from "next/image";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 
 export default function TopBar() {
+    const [ avatarSrc, setAvatarSrc ] = useState<string | StaticImport | null>(avatarDefault.src);
+
+    useEffect(() => {
+        const getAvatarUrl = async () => {
+            const supabase = await createSupabaseBrowserClient();
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data: userData, error } = await supabase
+                    .from("users")
+                    .select("avatar_url")
+                    .eq("user_id", user.id)
+                    .limit(1);
+                if (!error && userData.length > 0) {
+                    setAvatarSrc(userData[0].avatar_url);
+                }
+            }
+        };
+        getAvatarUrl();
+    }, []);
+
     return (
         <div className="flex flex-row justify-end max-md:justify-between items-center h-20 ps-6 pe-12 py-6 max-md:px-6 border shadow-sm bg-white sticky top-0 z-0">
             <PennyWiseLogo hiddenOnLargeScreen={true} />
@@ -23,10 +46,11 @@ export default function TopBar() {
                 >
                     <Image
                         priority
-                        src={avatarDefault}
+                        loader={() => typeof avatarSrc === "string" ? avatarSrc : avatarDefault.src}
+                        src={avatarSrc || avatarDefault.src}
                         width={48}
                         height={48}
-                        alt="Default user avatar"
+                        alt="User avatar"
                     />
                 </button>
             </div>
