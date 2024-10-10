@@ -1,7 +1,7 @@
 "use client";
 
 import { countryCodes } from "@/lib/utils/constant";
-import { AccountSetupFormState } from "@/lib/types/form-state";
+import { AccountSetupFormData } from "@/lib/types/form-state";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { ExclamationCircleIcon } from "@heroicons/react/24/solid";
 import { useFormState, useFormStatus } from "react-dom";
@@ -13,9 +13,9 @@ export default function GeneralInfoForm({
     handleSubmitFormData,
     handleStepChange,
 }: {
-    prevFormData: AccountSetupFormState,
-    handleUpdateFormData: (data: AccountSetupFormState) => void,
-    handleSubmitFormData: (data: AccountSetupFormState) => Promise<void>,
+    prevFormData: AccountSetupFormData,
+    handleUpdateFormData: (data: AccountSetupFormData) => void,
+    handleSubmitFormData: (data: AccountSetupFormData) => Promise<void>,
     handleStepChange: (step: 1 | 2 | 3) => void,
 }) {
     const handleSumbit = async (

@@ -13,7 +13,7 @@ import {
 import { Cropper, ReactCropperElement } from "react-cropper";
 import { PlusCircleIcon, ExclamationCircleIcon, CheckCircleIcon } from "@heroicons/react/24/solid";
 import { dataUrlToBlob } from "@/lib/utils/helper";
-import { AccountSetupFormState } from "@/lib/types/form-state";
+import { AccountSetupFormData } from "@/lib/types/form-state";
 import { Avatar, AvatarProps } from "@files-ui/react";
 import { createSupabaseBrowserClient } from "@/lib/utils/supabase/client";
 import { useState, createRef } from "react";
@@ -27,9 +27,9 @@ export default function AvatarUploadForm({
     handleSubmitFormData,
     handleStepChange,
 }: {
-    prevFormData: AccountSetupFormState,
-    handleUpdateFormData: (data: AccountSetupFormState) => void,
-    handleSubmitFormData: (data: AccountSetupFormState) => Promise<void>,
+    prevFormData: AccountSetupFormData,
+    handleUpdateFormData: (data: AccountSetupFormData) => void,
+    handleSubmitFormData: (data: AccountSetupFormData) => Promise<void>,
     handleStepChange: (step: 1 | 2 | 3) => void,
 }) {
     const [ avatarSrc, setAvatarSrc ] = useState<AvatarProps["src"] | undefined>(avatarDefault.src);
@@ -86,7 +86,9 @@ export default function AvatarUploadForm({
                     cacheControl: "3600",
                     upsert: true,
                 });
-            if (error) throw error;
+            if (error) {
+                return { message: error.message };
+            }
             const { data: publicUrlData } = supabase.storage.from("avatars").getPublicUrl(avatarUploadData.path);
             const updatedFormData = { avatar_url: publicUrlData.publicUrl };
             await handleSubmitFormData(updatedFormData);
