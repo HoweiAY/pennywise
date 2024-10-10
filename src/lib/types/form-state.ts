@@ -7,7 +7,7 @@ export type AuthFormState = {
     message?: string | null;
 }
 
-export type AccountSetupFormState = {
+export type AccountSetupFormData = {
     first_name?: string,
     last_name?: string,
     country?: string,
