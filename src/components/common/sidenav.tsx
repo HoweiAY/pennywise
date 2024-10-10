@@ -10,8 +10,11 @@ import {
 } from "@heroicons/react/24/outline";
 import { PennyWiseLogo } from "./logo";
 import Link from "next/link";
+import { logout } from "@/lib/actions/auth";
+import { AuthError } from "@supabase/supabase-js";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useFormState, useFormStatus } from "react-dom";
 import clsx from "clsx";
 
 const navLinks = [
@@ -22,7 +25,20 @@ const navLinks = [
 
 export default function SideNav() {
     const pathname = usePathname();
-    const [collapsed, setCollapsed] = useState<boolean>(false);
+    const [ collapsed, setCollapsed ] = useState<boolean>(false);
+
+    const handleLogout = async (
+        prevState: { message: string } | undefined,
+        formData: FormData,
+    ) => {
+        try {
+            await logout();
+        } catch (error) {
+            return { message: error instanceof AuthError ? error.message : "Error logging out user" };
+        }
+    };
+
+    const [ error, dispatch ] = useFormState(handleLogout, undefined);
 
     return (
         <aside
@@ -74,7 +90,7 @@ export default function SideNav() {
                 </ul>
             </nav>
             <div className="relative row-span-2 flex flex-col justify-end gap-1 w-full min-h-20 px-4 py-8 space-x-0 space-y-2">
-                <div className="absolute -top-12 left-0 w-full h-12 bg-gradient-to-t from-gray-50 to-transparent" />
+                <div className="absolute -top-12 left-0 w-full h-12 bg-gradient-to-t from-stone-100 to-transparent" />
                 <Link
                     href={"/dashboard/settings"}
                     className={`flex flex-none items-center rounded-md gap-3 w-full h-[42px] ${collapsed ? "w-[48px] max-w-[48px]" : "max-w-full"} p-3 bg-gray-50 hover:bg-sky-100 hover:text-blue-600 shadow-md shadow-slate-300 overflow-hidden text-nowrap duration-200`}
@@ -82,14 +98,26 @@ export default function SideNav() {
                     <Cog8ToothIcon className="w-6 min-w-6" />
                     <span className={`${collapsed ? "opacity-0" : "opacity-100"} text-sm font-medium`}>Settings</span>
                 </Link>
-                <button
-                    className={`flex flex-none items-center rounded-md gap-3 w-full h-[42px] ${collapsed ? "w-[48px] max-w-[48px]" : "max-w-full"} p-3 bg-gray-50 hover:bg-rose-600 text-rose-600 hover:text-white text-nowrap shadow-md shadow-slate-300 overflow-hidden duration-200`}
-                    onClick={() => { }}
+                <form
+                    action={dispatch}
+                    className="w-full"
                 >
-                    <ArrowLeftEndOnRectangleIcon className="w-6 min-w-6" />
-                    <span className={`${collapsed ? "opacity-0" : "opacity-100"} text-sm font-medium`}>Log out</span>
-                </button>
+                    <LogoutButton collapsed={collapsed} />
+                </form>
             </div>
         </aside>
+    )
+}
+
+function LogoutButton({ collapsed }: { collapsed: boolean }) {
+    const { pending } = useFormStatus();
+    return (
+        <button 
+            className={`flex flex-none items-center rounded-md gap-3 w-full h-[42px] ${collapsed ? "w-[48px] max-w-[48px]" : "max-w-full"} p-3 bg-gray-50 hover:bg-rose-600 text-rose-600 hover:text-white text-nowrap shadow-md shadow-slate-300 overflow-hidden aria-disabled:cursor-not-allowed aria-disabled:opacity-50 duration-200`}
+            aria-disabled={pending}
+        >
+            <ArrowLeftEndOnRectangleIcon className="w-6 min-w-6" />
+            <span className={`${collapsed ? "opacity-0" : "opacity-100"} text-sm font-medium`}>Log out</span>
+        </button>
     )
 }
