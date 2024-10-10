@@ -4,7 +4,7 @@ import GeneralInfoForm from "@/components/auth/account-setup/general-info-form";
 import AvatarUploadForm from "@/components/auth/account-setup/avatar-upload-form";
 import BalanceBudgetForm from "@/components/auth/account-setup/balance-budget-form";
 import { SetupBreadcrumbs, MobileSetupBreadcrumbs } from "@/components/auth/account-setup/setup-breadcrumbs";
-import { AccountSetupFormState } from "@/lib/types/form-state";
+import { AccountSetupFormData } from "@/lib/types/form-state";
 import { createSupabaseBrowserClient } from "@/lib/utils/supabase/client";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -14,7 +14,7 @@ export default function AccountSetupPage() {
     const pathname = usePathname();
     const { replace } = useRouter();
     const [ step, setStep ] = useState<1 | 2 | 3>(1);
-    const [ formData, setFormData ] = useState<AccountSetupFormState>({});
+    const [ formData, setFormData ] = useState<AccountSetupFormData>({});
 
     useEffect(() => {
         const currStep = searchParams.get("step");
@@ -37,14 +37,14 @@ export default function AccountSetupPage() {
         setStep(step);
     };
 
-    const handleUpdateFormData = (data: AccountSetupFormState) => {
+    const handleUpdateFormData = (data: AccountSetupFormData) => {
         setFormData({
             ...formData,
             ...data,
         });
     };
 
-    const handleSubmitFormData = async (data: AccountSetupFormState) => {
+    const handleSubmitFormData = async (data: AccountSetupFormData) => {
         const supabase = await createSupabaseBrowserClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
