@@ -46,7 +46,7 @@ export default function TopBar() {
                 >
                     <Image
                         priority
-                        loader={() => typeof avatarSrc === "string" ? avatarSrc : avatarDefault.src}
+                        loader={() => typeof avatarSrc === "string" ? avatarSrc : `${avatarDefault.src}?w=48&q=75`}
                         src={avatarSrc || avatarDefault.src}
                         width={48}
                         height={48}

@@ -171,7 +171,7 @@ export default function AvatarUploadForm({
                                 </DialogClose>
                                 <DialogClose
                                     className="w-20 p-2 border-0 rounded-lg text-center text-white max-md:text-sm font-semibold hover:cursor-pointer bg-blue-500 hover:bg-blue-600 transition-colors duration-200"
-                                    onClick={() => handleAvatarChange(imgCropperRef.current?.cropper?.getCroppedCanvas().toDataURL(), false, true)}
+                                    onClick={() => handleAvatarChange(imgCropperRef.current?.cropper?.getCroppedCanvas()?.toDataURL() || avatarDefault.src, false, true)}
                                 >
                                     Confirm
                                 </DialogClose>
