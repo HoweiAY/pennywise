@@ -1,4 +1,5 @@
-import TransactionsSearchBar from "@/components/dashboard/transactions/search-transactions";
+import TransactionsSearchBar from "@/components/dashboard/transactions/transactions-search-bar";
+import TransactionsTable from "@/components/dashboard/transactions/transactions-table";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import { Metadata } from "next";
 import Link from "next/link";
@@ -18,9 +19,7 @@ export default function Transactions() {
                     <TransactionsSearchBar />
                     <AddTransactionButton />
                 </div>
-                <section className="border border-slate-100 rounded-xl h-96 mb-10 bg-white shadow-lg">
-
-                </section>
+                <TransactionsTable />
             </div>
         </main>
     )
