@@ -18,9 +18,9 @@ import { useFormState, useFormStatus } from "react-dom";
 import clsx from "clsx";
 
 const navLinks = [
-    { name: "Home", href: "/dashboard", icon: HomeIcon },
-    { name: "Transactions", href: "/dashboard/transactions", icon: ArrowsRightLeftIcon },
-    { name: "Notifications", href: "/dashboard/notifications", icon: BellIcon },
+    { name: "Home", href: "/dashboard", urlRegex: /\/dashboard$/g, icon: HomeIcon },
+    { name: "Transactions", href: "/dashboard/transactions", urlRegex: /\/dashboard\/transactions[\/.]*/g, icon: ArrowsRightLeftIcon },
+    { name: "Notifications", href: "/dashboard/notifications", urlRegex: /\/dashboard\/notifications[\/.]*/g, icon: BellIcon },
 ];
 
 export default function SideNav() {
@@ -78,7 +78,7 @@ export default function SideNav() {
                                     href={link.href}
                                     className={clsx(
                                         "flex flex-none justify-start items-center gap-3 w-full h-[42px] p-3 bg-gray-50 hover:bg-sky-100 hover:text-blue-600 font-medium duration-200",
-                                        { "bg-sky-100 text-blue-600 font-semibold": pathname === link.href },
+                                        { "bg-sky-100 text-blue-600 font-semibold": pathname.match(link.urlRegex) },
                                     )}
                                 >
                                     <LinkIcon className="w-6 min-w-6" />

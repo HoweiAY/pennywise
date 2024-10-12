@@ -1,6 +1,7 @@
-// Country and currency-related constant values
-// All country codes adhere to the ISO-3166-alpha-2 standard
-
+/*
+    Country codes and corresponding names
+    (Note: All country codes adhere to the ISO-3166-alpha-2 standard)
+*/
 export const countryCodes = {
     "AF": "Afghanistan",
     "AX": "Aland Islands",
@@ -250,6 +251,7 @@ export const countryCodes = {
     "ZW": "Zimbabwe"
 };
 
+// Currency codes and corresponding names accepted by PayPal
 export const currencyData = {
     "AUD": "Australian dollar",
     "BRL": "Brazilian real",
@@ -277,3 +279,27 @@ export const currencyData = {
     "USD": "United States dollar"
 };
 
+/*
+    Transaction categories with IDs:
+    - 1: Food and Drinks
+    - 2: Groceries
+    - 3: Health and Personal Care
+    - 4: Housing
+    - 5: Shopping
+    - 6: Sports and Entertainment
+    - 7: HousingTravelling and Transportation
+    - 8: Utilities
+    - 9: Others
+    (Note: ID starts from one to avoid clashing with null value)
+*/
+export const transactionCategories = {
+    1: { name: "Food and Drinks", titlePlaceholder: "Dinner at Five Guys 🍔" },
+    2: { name: "Groceries", titlePlaceholder: "Ingredients for chicken casserole 🍲"},
+    3: { name: "Health and Personal Care", titlePlaceholder: "Medicines for my fever 🤒"},
+    4: { name: "Housing", titlePlaceholder: "Paying off my mortgage 🏡"},
+    5: { name: "Shopping", titlePlaceholder: "New dress from Balenciaga 👗"},
+    6: { name: "Sports and Entertainment", titlePlaceholder: "Movies with the boys 🎞️"},
+    7: { name: "Travel and Transportation", titlePlaceholder: "Flight to Mumbai ✈️"},
+    8: { name: "Utilities", titlePlaceholder: "Electricity bill for next month ⚡"},
+    9: { name: "Others", titlePlaceholder: "My new transaction 💲"},
+};
