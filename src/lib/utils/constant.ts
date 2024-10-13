@@ -303,3 +303,10 @@ export const transactionCategories = {
     8: { name: "Utilities", titlePlaceholder: "Electricity bill for next month ⚡"},
     9: { name: "Others", titlePlaceholder: "My new transaction 💲"},
 };
+
+// Budget categories with IDs, same as transaction categories but without placeholder for input fields
+export const budgetCategories = Object.entries(transactionCategories)
+    .reduce((categories: {[id: string]: {name: string}}, [id, categoryData]) => {
+        categories[parseInt(id)] = { name: categoryData.name };
+        return categories;
+    }, {});
