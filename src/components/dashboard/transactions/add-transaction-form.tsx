@@ -14,7 +14,7 @@ export default function AddTransactionForm() {
     const [ type, setType ] = useState<TransactionType>("Deposit");
     const [ categoryId, setCategoryId ] = useState<TransactionCategoryId | null>(null);
 
-    const getTitlePlaceholder = (type: "Deposit" | "Expense" | "Pay friend") => {
+    const getTitlePlaceholder = (type: TransactionType) => {
         return type === "Deposit"
             ? "My first paycheck 💵"
             : categoryId && (categoryId satisfies TransactionCategoryId)
@@ -90,27 +90,25 @@ export default function AddTransactionForm() {
                 <input
                     id="type"
                     name="type"
-                    type="text"
+                    type="hidden"
                     value={type}
-                    onChange={(e) => e.target.value = type}
-                    className="hidden"
                 />
                 <div className="flex flex-row justify-center items-center border border-slate-300 rounded-md overflow-hidden">
                     {["Deposit", "Expense", "Pay friend"].map((typeName, idx) => {
                         return (
-                            <div
+                            <input
                                 key={`type_${idx}`}
-                                tabIndex={0}
+                                id={`type_${idx}`}
+                                name={`type_${idx}`}
+                                type="button"
+                                value={typeName}
                                 className={clsx(
                                     "px-4 py-2 max-md:px-3 max-md:py-1 max-md:text-sm hover:cursor-pointer transition-colors duration-200",
                                     { "bg-blue-500 hover:bg-blue-600 text-white font-semibold": type === typeName },
                                     { "border-x bg-white hover:bg-sky-100 text-gray-800 hover:text-blue-600": type !== typeName },
                                 )}
-                                onKeyDown={(e) => e.key === "Enter" && setType(typeName as TransactionType)}
                                 onClick={() => setType(typeName as TransactionType)}
-                            >
-                                {typeName}
-                            </div>
+                            />
                         )
                     })}
                 </div>
@@ -176,7 +174,7 @@ export default function AddTransactionForm() {
                     </select>
                     <ChevronDownIcon className="absolute top-10 right-2.5 w-4 h-4 text-gray-500" />
                 </div>
-                <div className="flex flex-row justify-end items-center gap-1 mt-3 text-end text-xs text-gray-500 hover:cursor-pointer">
+                <div className="flex flex-row justify-end items-center gap-1 mt-3 text-end text-xs text-gray-500 hover:cursor-pointer hover:underline">
                     <QuestionMarkCircleIcon className="w-4 h-4" />
                     <span>Help</span>
                 </div>
