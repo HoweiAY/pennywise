@@ -1,11 +1,34 @@
 import AddTransactionForm from "@/components/dashboard/transactions/add-transaction-form";
+import { createSupabaseServerClient } from "@/lib/utils/supabase/server";
 import { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
     title: "New Transaction - PennyWise",
 }
 
-export default function AddTransaction() {
+export default async function AddTransaction() {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        redirect("/login");
+    }
+    const { data: userData, error } = await supabase
+        .from("users")
+        .select("currency, balance, spending_limit")
+        .eq("user_id", user.id)
+        .limit(1);
+    if (error) throw error;
+    const {
+        currency,
+        balance: balanceInCents,
+        spending_limit: spendingLimitInCents,
+    }: {
+        currency: string,
+        balance: number,
+        spending_limit: number | null,
+    } = userData[0];
+
     return (
         <main className="h-fit mb-2 overflow-hidden">
             <div className="px-6">
@@ -17,7 +40,12 @@ export default function AddTransaction() {
                         Create a new transaction by entering the details below
                     </p>
                 </header>
-                <AddTransactionForm />
+                <AddTransactionForm
+                    userId={user.id}
+                    currency={currency}
+                    balanceInCents={balanceInCents}
+                    spendingLimitInCents={spendingLimitInCents}
+                />
             </div>
         </main>
     )
