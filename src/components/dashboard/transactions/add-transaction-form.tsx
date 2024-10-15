@@ -1,14 +1,30 @@
 "use client";
 
 import { ChevronDownIcon, QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
+import { ExclamationCircleIcon } from "@heroicons/react/24/solid";
 import { transactionCategories } from "@/lib/utils/constant";
+import { transactionErrorMessage } from "@/lib/utils/helper";
 import { TransactionType, TransactionCategoryId } from "@/lib/types/transactions";
+import { createTransaction } from "@/lib/actions/transaction";
+import { createSupabaseBrowserClient } from "@/lib/utils/supabase/client";
+import { SupabaseClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import clsx from "clsx";
 
-export default function AddTransactionForm() {
+export default function AddTransactionForm({
+    userId,
+    currency,
+    balanceInCents,
+    spendingLimitInCents,
+}: {
+    userId: string,
+    currency: string,
+    balanceInCents: number,
+    spendingLimitInCents: number | null,
+}) {
+    const [ supabaseClient, setSupabaseClient ] = useState<SupabaseClient | null>(null);
     const [ descriptionTextboxWidth, setDescriptionTextboxWidth ] = useState<number>(0);
     const [ titlePlaceholder, setTitlePlaceholder ] = useState<string>("My new transaction 💲");
     const [ type, setType ] = useState<TransactionType>("Deposit");
@@ -22,22 +38,20 @@ export default function AddTransactionForm() {
             : "My new transaction 💲";
     };
 
-    const handleSumbit = async (
-        prevState: { message: string } | undefined,
-        formData: FormData,
-    ) => {
-        return undefined;
-    };
-
     useEffect(() => {
-        setDescriptionTextboxWidth(window.innerWidth);  
+        const createSupabaseClient = async () => {
+            const supabase = await createSupabaseBrowserClient();
+            setSupabaseClient(supabase);
+        };
+        setDescriptionTextboxWidth(window.innerWidth);
+        // createSupabaseClient();
     }, []);
 
     useEffect(() => {
         setTitlePlaceholder(getTitlePlaceholder(type));
     }, [type, categoryId]);
 
-    const [ error, dispatch ] = useFormState(handleSumbit, undefined);
+    const [ error, dispatch ] = useFormState(createTransaction, undefined);
 
     return (
         <form
@@ -58,11 +72,17 @@ export default function AddTransactionForm() {
                 placeholder={`e.g., ${titlePlaceholder}`}
                 required
             />
+            <input
+                id="currency"
+                name="currency"
+                type="hidden"
+                value={currency}
+            />
             <label
                 htmlFor="amount"
                 className="mt-4 mb-1 text-lg font-semibold"
             >
-                {`Amount (in ${"USD"})`}
+                {`Amount (in ${currency})`}
             </label>
             <input
                 id="amount"
@@ -193,6 +213,13 @@ export default function AddTransactionForm() {
                 className="min-h-12 max-h-64 p-3 border border-gray-300 rounded-md text-sm max-md:text-xs"
                 placeholder="Write a short message..."
             />
+            <p className={clsx(
+                "flex flex-row justify-center gap-1 w-full mt-4 text-center text-sm max-md:text-xs text-red-500",
+                { "hidden": !error },
+            )}>
+                <ExclamationCircleIcon className="w-5 h-5 max-md:w-4 max-md:h-4" />
+                {transactionErrorMessage(error)}
+            </p>
             <div className="flex flex-row justify-between items-center my-6">
                 <Link
                     href={"/dashboard/transactions"}
