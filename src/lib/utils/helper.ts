@@ -1,4 +1,4 @@
-import { AuthFormState, TransactionFormState } from "@/lib/types/form-state";
+import { AuthFormState, TransactionFormState, BudgetFormState } from "@/lib/types/form-state";
 import { unescape } from "querystring";
 
 export function authErrorMessage(error: AuthFormState | undefined): string {
@@ -23,6 +23,20 @@ export function transactionErrorMessage(error: TransactionFormState | undefined)
             if (title) return title[0];
             if (amount) return amount[0];
             if (type) return type[0];
+        }
+        if (error.message) errorMessage = error.message;
+    }
+    return errorMessage;
+}
+
+export function budgetErrorMessage(error: BudgetFormState | undefined): string {
+    let errorMessage = "An error has occurred";
+    if (error) {
+        if (error.error) {
+            const { name, amount, category } = error.error;
+            if (name) return name[0];
+            if (amount) return amount[0];
+            if (category) return category[0];
         }
         if (error.message) errorMessage = error.message;
     }

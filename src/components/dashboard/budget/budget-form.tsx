@@ -1,24 +1,33 @@
 "use client";
 
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import { ExclamationCircleIcon } from "@heroicons/react/24/solid";
 import { budgetCategories } from "@/lib/utils/constant";
+import { budgetErrorMessage } from "@/lib/utils/helper";
+import { createBudget, updateBudget } from "@/lib/actions/budget";
 import { useState, useEffect } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import Link from "next/link";
+import clsx from "clsx";
 
 export default function BudgetForm({
+    currency,
     budgetId,
 }: {
+    currency: string,
     budgetId?: string,
 }) {
     const [ descriptionTextboxWidth, setDescriptionTextboxWidth ] = useState<number>(0);
 
     useEffect(() => {
-        setDescriptionTextboxWidth(window.innerWidth);  
+        setDescriptionTextboxWidth(window.innerWidth);
     }, []);
+
+    const [ error, dispatch ] = useFormState(budgetId ? updateBudget : createBudget, undefined);
     
     return (
         <form
+            action={dispatch}
             className="flex flex-col mt-6 mb-2 max-md:mt-4"
         >
             <label
@@ -35,11 +44,17 @@ export default function BudgetForm({
                 placeholder="e.g., My new budget 💹"
                 required
             />
+            <input
+                id="currency"
+                name="currency"
+                type="hidden"
+                value={currency}
+            />
             <label
                 htmlFor="amount"
                 className="mt-4 mb-1 text-lg font-semibold"
             >
-                {`Amount (in ${"USD"})`}
+                {`Amount (in ${currency})`}
             </label>
             <input
                 id="amount"
@@ -94,6 +109,13 @@ export default function BudgetForm({
                 className="min-h-12 max-h-64 p-3 border border-gray-300 rounded-md text-sm max-md:text-xs"
                 placeholder="Write a brief description about your budget plan..."
             />
+            <p className={clsx(
+                "flex flex-row justify-center gap-1 w-full mt-4 text-center text-sm max-md:text-xs text-red-500",
+                { "hidden": !error },
+            )}>
+                <ExclamationCircleIcon className="w-5 h-5 max-md:w-4 max-md:h-4" />
+                {budgetErrorMessage(error)}
+            </p>
             <div className="flex flex-row justify-between items-center my-6">
                 <Link
                     href={"/dashboard/budget"}
