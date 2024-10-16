@@ -43,7 +43,8 @@ Table public.transactions (
     
     constraint transactions_pkey primary key (transaction_id),
     constraint transactions_payer_id_fkey foreign key (payer_id) references users (user_id) on delete set null,
-    constraint transactions_recipient_id_fkey foreign key (recipient_id) references users (user_id) on delete set null
+    constraint transactions_recipient_id_fkey foreign key (recipient_id) references users (user_id) on delete set null,
+    constraint transactions_budget_id_fkey foreign key (budget_id) references budgets (budget_id) on delete set null
 )
 ```
 
