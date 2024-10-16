@@ -54,7 +54,6 @@ export async function createTransaction(
         const transactionData: TransactionFormData = {
             title: validatedTransactionData.data.title,
             transaction_type: validatedTransactionData.data.type,
-            category_id: validatedTransactionData.data.category,
             amount: amountInCents,
             description: validatedTransactionData.data.description,
         };
@@ -68,26 +67,28 @@ export async function createTransaction(
             transactionData.recipient_id = user.id;
             transactionData.recipient_currency = validatedTransactionData.data.currency;
         } else {
+            transactionData.category_id = validatedTransactionData.data.category;
             transactionData.payer_id = user.id;
             transactionData.payer_currency = validatedTransactionData.data.currency;
         }
-        const { error } = await supabase.from("transactions").insert(transactionData);
-        if (error) {
-            return { message: error.message };
-        }
-
-        try {
-            if (transactionData.transaction_type === "Deposit") {
-                await addUserBalance(user.id, amountInCents, supabase);
-            } else {
-                await deductUserBalance(user.id, amountInCents, supabase);
+        const changeBalancePromise = transactionData.transaction_type === "Deposit"
+            ? addUserBalance(user.id, amountInCents, supabase)
+            : deductUserBalance(user.id, amountInCents, supabase);
+        
+        Promise.all([
+            supabase.from("transactions").insert(transactionData),
+            changeBalancePromise,
+        ]).then(res => {
+            const { error } = res[0];
+            if (error) {
+                return { message: error.message };
             }
-        } catch (error) {
+        }).catch(error => {
             if (error instanceof Error) {
                 return { message: error.message };
             }
             throw new Error();
-        }      
+        });
     } catch (error) {
         return { message: "An error has occurred" };
     }
