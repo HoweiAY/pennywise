@@ -45,3 +45,22 @@ export type TransactionFormData = {
     budget_id?: string | null,
     description: string | null,
 }
+
+export type BudgetFormState = {
+    error?:{
+        name?: string[] | undefined;
+        amount?: string[] | undefined;
+        category?: string[] | undefined;
+        description?: string[] | undefined;
+    };
+    message?: string | null;
+}
+
+export type BudgetFormData = {
+    name: string,
+    category_id: number,
+    currency: string,
+    amount: number,
+    user_id: string,
+    description: string | null,
+}
