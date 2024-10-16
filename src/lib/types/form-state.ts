@@ -35,7 +35,7 @@ export type TransactionFormState = {
 export type TransactionFormData = {
     title: string,
     transaction_type: TransactionType,
-    category_id: number | null,
+    category_id?: number | null,
     payer_currency?: string | null,
     recipient_currency?: string | null,
     exchange_rate?: number | null,
