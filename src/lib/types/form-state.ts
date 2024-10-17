@@ -63,4 +63,5 @@ export type BudgetFormData = {
     amount: number,
     user_id: string,
     description: string | null,
+    updated_at?: string | null,
 }

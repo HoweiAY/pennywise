@@ -70,5 +70,59 @@ export async function updateBudget(
     prevState: BudgetFormState | undefined,
     formData: FormData,
 ) {
-    return undefined;
+    try {
+        const budgetId = formData.get("budget_id");
+        const name = formData.get("name");
+        const currency = formData.get("currency");
+        const amount = formData.get("amount");
+        const category = formData.get("category");
+        const description = formData.get("description");
+        
+        if (!budgetId) {
+            return { message: "Error: budget ID not found" };
+        }
+        const validatedBudgetData = BudgetSchema.safeParse({
+            name,
+            currency,
+            amount,
+            category,
+            description,
+        });
+        if (!validatedBudgetData.success) {
+            return {
+                error: validatedBudgetData.error.flatten().fieldErrors,
+                message: "Invalid field input(s)",
+            }
+        }
+
+        const supabase = await createSupabaseServerClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            return { message: "Error: user not found" };
+        }
+        const amountInCents = Math.floor(validatedBudgetData.data.amount * 100);
+        const budgetFormData: BudgetFormData = {
+            name: validatedBudgetData.data.name,
+            category_id: validatedBudgetData.data.category,
+            currency: validatedBudgetData.data.currency,
+            amount: amountInCents,
+            user_id: user.id,
+            description: validatedBudgetData.data.description,
+            updated_at: new Date().toISOString(),
+        };
+        const { error } = await supabase
+            .from("budgets")
+            .update(budgetFormData)
+            .eq("budget_id", budgetId);
+        if (error) {
+            return { message: error.message };
+        }
+    } catch (error) {
+        if (error instanceof Error) {
+            return { message: error.message };
+        }
+        return { message: "An error has occurred" };
+    }
+
+    redirect("/dashboard/budget");
 }

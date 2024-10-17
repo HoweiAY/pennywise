@@ -2,8 +2,10 @@
 
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { ExclamationCircleIcon } from "@heroicons/react/24/solid";
+import { BudgetFormData } from "@/lib/types/form-state";
 import { budgetCategories } from "@/lib/utils/constant";
 import { budgetErrorMessage } from "@/lib/utils/helper";
+import { formatCurrencyAmount } from "@/lib/utils/format";
 import { createBudget, updateBudget } from "@/lib/actions/budget";
 import { useState, useEffect } from "react";
 import { useFormState, useFormStatus } from "react-dom";
@@ -13,9 +15,11 @@ import clsx from "clsx";
 export default function BudgetForm({
     currency,
     budgetId,
+    prevBudgetData,
 }: {
     currency: string,
     budgetId?: string,
+    prevBudgetData?: BudgetFormData,
 }) {
     const [ descriptionTextboxWidth, setDescriptionTextboxWidth ] = useState<number>(0);
 
@@ -23,13 +27,19 @@ export default function BudgetForm({
         setDescriptionTextboxWidth(window.innerWidth);
     }, []);
 
-    const [ error, dispatch ] = useFormState(budgetId ? updateBudget : createBudget, undefined);
+    const [ error, dispatch ] = useFormState(budgetId && prevBudgetData ? updateBudget : createBudget, undefined);
     
     return (
         <form
             action={dispatch}
             className="flex flex-col mt-6 mb-2 max-md:mt-4"
         >
+            <input
+                id="budget_id"
+                name="budget_id"
+                type="hidden"
+                value={budgetId}
+            />
             <label
                 htmlFor="name"
                 className="mt-2 mb-1 text-lg font-semibold"
@@ -40,6 +50,7 @@ export default function BudgetForm({
                 id="name"
                 name="name"
                 type="text"
+                defaultValue={prevBudgetData?.name}
                 className="w-full h-8 p-3 border border-gray-300 rounded-md text-sm max-md:text-xs"
                 placeholder="e.g., My new budget 💹"
                 required
@@ -60,6 +71,7 @@ export default function BudgetForm({
                 id="amount"
                 name="amount"
                 type="number"
+                defaultValue={prevBudgetData?.amount ? formatCurrencyAmount(prevBudgetData.amount) : undefined}
                 className="w-full h-8 p-3 border border-gray-300 rounded-md text-sm max-md:text-xs"
                 placeholder="Set a budget limit (e.g., 500)"
                 min={0}
@@ -77,7 +89,7 @@ export default function BudgetForm({
                     <select
                         id="category"
                         name="category"
-                        defaultValue={""}
+                        defaultValue={prevBudgetData?.category_id}
                         className="appearance-none group rounded-md w-full h-8 px-3 border border-gray-300 text-sm max-md:text-xs bg-white placeholder:text-gray-500 focus:border-gray-400"
                     >
                         <option value={""}>Choose a category...</option>
@@ -106,6 +118,7 @@ export default function BudgetForm({
                 name="description"
                 rows={5}
                 cols={descriptionTextboxWidth}
+                defaultValue={prevBudgetData?.description ?? undefined}
                 className="min-h-12 max-h-64 p-3 border border-gray-300 rounded-md text-sm max-md:text-xs"
                 placeholder="Write a brief description about your budget plan..."
             />

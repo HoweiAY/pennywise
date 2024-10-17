@@ -10,6 +10,7 @@ import { formatCurrency } from "@/lib/utils/format";
 import { budgetCategories } from "@/lib/utils/constant";
 import { BudgetCategoryId } from "@/lib/types/budget";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { unstable_noStore as noStore } from "next/cache";
 import Link from "next/link";
 
 export default async function UserBudgetCardCarousel({
@@ -19,6 +20,8 @@ export default async function UserBudgetCardCarousel({
     supabaseClient: SupabaseClient,
     userId: string,
 }) {
+    noStore();
+    
     const { data: budgetData, error } = await supabaseClient
         .from("budgets")
         .select("budget_id, name, category_id, currency, amount")
@@ -39,6 +42,7 @@ export default async function UserBudgetCardCarousel({
                     return (
                         <UserBudgetCard
                             key={idx}
+                            budget_id={budget.budget_id}
                             name={budget.name}
                             categoryId={budget.category_id}
                             currency={budget.currency}
@@ -46,6 +50,18 @@ export default async function UserBudgetCardCarousel({
                         />
                     )
                 })}
+                {budgetData.length === 0 && 
+                    <CarouselItem className="opacity-80">
+                        <div className="flex flex-col justify-center items-center gap-y-2 border border-slate-100 rounded-xl w-full h-44 p-6 bg-white shadow-md text-center text-gray-800">
+                            <h3 className="font-semibold text-xl">
+                                No budgets planned
+                            </h3>
+                            <p className="text-sm text-gray-500">
+                                Create a new budget to start planning your finance
+                            </p>
+                        </div>
+                    </CarouselItem>
+                }
             </CarouselContent>
             <CarouselPrevious />
             <CarouselNext />
@@ -54,11 +70,13 @@ export default async function UserBudgetCardCarousel({
 }
 
 function UserBudgetCard({
+    budget_id,
     name,
     categoryId,
     currency,
     amountInCents,
 }: {
+    budget_id: string,
     name: string,
     categoryId: BudgetCategoryId,
     currency: string,
@@ -67,7 +85,7 @@ function UserBudgetCard({
     return (
         <CarouselItem className="relative pl-2 md:basis-1/2 lg:basis-1/3 hover:scale-[102%] duration-200">
             <Link
-                href={"/dashboard/budget/1"}
+                href={`/dashboard/budget/${budget_id}`}
                 className="flex flex-col border border-slate-100 rounded-xl w-full h-44 p-6 bg-white shadow-md text-gray-800"
             >
                 <header>
@@ -87,7 +105,7 @@ function UserBudgetCard({
             </Link>
             <div className="absolute bottom-3 right-4 flex flex-row items-center gap-1">
                 <Link
-                    href={"/dashboard/budget/1/edit"}
+                    href={`/dashboard/budget/${budget_id}/edit`}
                     className="border-0 rounded-full p-2 text-blue-500 hover:bg-sky-100 hover:text-blue-600 duration-200"
                 >
                     <PencilIcon className="w-4 h-4" />
