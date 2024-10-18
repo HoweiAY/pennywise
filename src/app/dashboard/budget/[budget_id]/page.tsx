@@ -1,5 +1,7 @@
 import BudgetTransactionsTable from "@/components/dashboard/budget/budget-transactions-table";
-import { PencilSquareIcon } from "@heroicons/react/24/outline";
+import DeleteBudgetDialog from "@/components/dashboard/budget/delete-budget-dialog";
+import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { budgetCategories } from "@/lib/utils/constant";
 import { formatCurrency } from "@/lib/utils/format";
 import { createSupabaseServerClient } from "@/lib/utils/supabase/server";
@@ -61,13 +63,23 @@ export default async function ViewBudget({ params }: { params: { budget_id: stri
                         <h2 className="text-2xl max-md:text-xl font-semibold overflow-hidden text-nowrap text-ellipsis">
                             {name}
                         </h2>
-                        <Link
-                            href={`/dashboard/budget/${params.budget_id}/edit`}
-                            className="flex flex-row justify-center items-center gap-2 max-md:gap-1 border-0 rounded-lg w-fit h-10 px-6 max-md:px-4 text-white font-semibold bg-blue-500 hover:bg-blue-600 transition-colors duration-200"
-                        >
-                            <PencilSquareIcon className="w-4 h-4" />
-                            Edit
-                        </Link>
+                        <div className="flex flex-row justify-end items-center gap-2">
+                            <Link
+                                href={`/dashboard/budget/${params.budget_id}/edit`}
+                                className="flex flex-row justify-center items-center gap-2 max-md:gap-1 border-0 rounded-lg w-fit h-10 px-6 max-md:px-4 text-white font-semibold bg-blue-500 hover:bg-blue-600 transition-colors duration-200"
+                            >
+                                <PencilSquareIcon className="w-4 h-4" />
+                                Edit
+                            </Link>
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <button className="flex justify-center items-center border border-slate-100 rounded-lg w-12 h-10 max-md:px-4 text-rose-600 bg-gray-50 hover:bg-rose-600 hover:text-white shadow-md shadow-slate-300 duration-200">
+                                        <TrashIcon className="w-4 h-4" />
+                                    </button>
+                                </AlertDialogTrigger>
+                                <DeleteBudgetDialog budgetId={params.budget_id} redirectOnDelete={true} />
+                            </AlertDialog>
+                        </div>
                     </div>
                     <p className="pt-3 max-md:pt-1 text-5xl max-md:text-4xl font-semibold overflow-hidden text-nowrap text-ellipsis">
                         {formatCurrency(amountInCents, currency)}

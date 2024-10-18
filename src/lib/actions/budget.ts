@@ -3,7 +3,8 @@
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/utils/supabase/server";
 import { BudgetFormState, BudgetFormData } from "@/lib/types/form-state";
-import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { redirect, RedirectType } from "next/navigation";
 
 const BudgetSchema = z.object({
     name: z.string().trim().min(1, { message: "Please give your budget a name" }),
@@ -125,4 +126,16 @@ export async function updateBudget(
     }
 
     redirect("/dashboard/budget");
+}
+
+export async function deleteBudget(budgetId: string, redirectOnDelete?: boolean) {
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase
+        .from("budgets")
+        .delete()
+        .eq("budget_id", budgetId);
+    revalidatePath("/dashboard/budget");
+    if (redirectOnDelete) {
+        redirect("/dashboard/budget");
+    }
 }

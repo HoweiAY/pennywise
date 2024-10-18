@@ -1,3 +1,4 @@
+import DeleteBudgetDialog from "@/components/dashboard/budget/delete-budget-dialog";
 import {
     Carousel,
     CarouselContent,
@@ -5,6 +6,7 @@ import {
     CarouselNext,
     CarouselPrevious,
 } from "@/components/ui/carousel";
+import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { formatCurrency } from "@/lib/utils/format";
 import { budgetCategories } from "@/lib/utils/constant";
@@ -110,9 +112,14 @@ function UserBudgetCard({
                 >
                     <PencilIcon className="w-4 h-4" />
                 </Link>
-                <button className="border-0 rounded-full p-2 hover:bg-rose-600 text-rose-600 hover:text-white duration-200">
-                    <TrashIcon className="w-4 h-4" />
-                </button>
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <button className="border-0 rounded-full p-2 hover:bg-rose-600 text-rose-600 hover:text-white duration-200">
+                            <TrashIcon className="w-4 h-4" />
+                        </button>
+                    </AlertDialogTrigger>
+                    <DeleteBudgetDialog budgetId={budget_id} />
+                </AlertDialog>
             </div>
         </CarouselItem>
     )
