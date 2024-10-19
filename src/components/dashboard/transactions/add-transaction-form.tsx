@@ -4,31 +4,46 @@ import { ChevronDownIcon, QuestionMarkCircleIcon } from "@heroicons/react/24/out
 import { ExclamationCircleIcon } from "@heroicons/react/24/solid";
 import { transactionCategories } from "@/lib/utils/constant";
 import { transactionErrorMessage } from "@/lib/utils/helper";
+import { formatCurrency } from "@/lib/utils/format";
 import { TransactionType, TransactionCategoryId } from "@/lib/types/transactions";
 import { createTransaction } from "@/lib/actions/transaction";
 import { createSupabaseBrowserClient } from "@/lib/utils/supabase/client";
 import { SupabaseClient } from "@supabase/supabase-js";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useFormState, useFormStatus } from "react-dom";
+import { useDebouncedCallback } from "use-debounce";
 import clsx from "clsx";
+
+type UserBudget = {
+    budget_id: string,
+    name: string,
+    amount: number,
+};
 
 export default function AddTransactionForm({
     userId,
     currency,
     balanceInCents,
-    spendingLimitInCents,
+    remainingSpendingLimitInCents,
 }: {
     userId: string,
     currency: string,
     balanceInCents: number,
-    spendingLimitInCents: number | null,
+    remainingSpendingLimitInCents: number | null,
 }) {
     const [ supabaseClient, setSupabaseClient ] = useState<SupabaseClient | null>(null);
     const [ descriptionTextboxWidth, setDescriptionTextboxWidth ] = useState<number>(0);
     const [ titlePlaceholder, setTitlePlaceholder ] = useState<string>("My new transaction 💲");
+    const [ amountInCents, setAmountInCents ] = useState<number | null>(null);
+    const [ deductedSpendingLimitInCents, setDeductedSpendingLimitInCents ] = useState<number>(0);
     const [ type, setType ] = useState<TransactionType>("Deposit");
+    const [ userBudgets, setUserBudgets ] = useState<UserBudget[]>([]);
+    const [ budgetId, setBudgetId ] = useState<string | null>(null);
+    const [ remainingBudgetAmountInCents, setRemainingBudgetAmountInCents ] = useState<number>(0);
+    const [ deductedBudgetAmountInCents, setDeductedBudgetAmountInCents ] = useState<number>(0);
     const [ categoryId, setCategoryId ] = useState<TransactionCategoryId | null>(null);
+    
 
     const getTitlePlaceholder = (type: TransactionType) => {
         return type === "Deposit"
@@ -38,14 +53,75 @@ export default function AddTransactionForm({
             : "My new transaction 💲";
     };
 
+    const getRemainingBudgetAmount = useCallback( async (budgetId: string | null) => {
+        if (!budgetId || !supabaseClient) {
+            setRemainingBudgetAmountInCents(0);
+            return;
+        }
+        for (const budget of userBudgets) {
+            if (budget.budget_id !== budgetId) continue;
+            const budgetAmount = budget.amount;
+            const currDateTime = new Date();
+            const monthStartDateTime = new Date(currDateTime.getFullYear(), currDateTime.getMonth(), 1, 0, 0, 0, 0);
+            const { data: budgetSumData, error } = await supabaseClient
+                .from("transactions")
+                .select("spentBudget:amount.sum()")
+                .eq("budget_id", budgetId)
+                .lt("updated_at", currDateTime.toISOString())
+                .gte("updated_at", monthStartDateTime.toISOString());
+            if (!error && budgetSumData.length > 0) {
+                const remainingBudget = budgetAmount - budgetSumData[0].spentBudget;
+                setRemainingBudgetAmountInCents(remainingBudget);
+                setDeductedBudgetAmountInCents(amountInCents !== null ? remainingBudget - amountInCents : remainingBudget);
+            }
+            break;
+        }
+    }, [supabaseClient, userBudgets, amountInCents]);
+
+    const handleAmountChange = useDebouncedCallback((amount: string) => {
+        const inputAmountInCents = Math.floor(parseFloat(amount) * 100);
+        setAmountInCents(!isNaN(inputAmountInCents) ? inputAmountInCents : null);
+        if (remainingSpendingLimitInCents) {
+            const deductedLimit = remainingSpendingLimitInCents - inputAmountInCents;
+            setDeductedSpendingLimitInCents(!isNaN(deductedLimit) ? deductedLimit : remainingSpendingLimitInCents);
+        }
+        if (budgetId && remainingBudgetAmountInCents) {
+            const deductedBudget = remainingBudgetAmountInCents - inputAmountInCents;
+            setDeductedBudgetAmountInCents(!isNaN(deductedBudget) ? deductedBudget : remainingBudgetAmountInCents);
+        }
+    }, 300);
+
     useEffect(() => {
         const createSupabaseClient = async () => {
             const supabase = await createSupabaseBrowserClient();
             setSupabaseClient(supabase);
         };
         setDescriptionTextboxWidth(window.innerWidth);
-        // createSupabaseClient();
+        if (remainingSpendingLimitInCents) {
+            setDeductedSpendingLimitInCents(remainingSpendingLimitInCents);
+        }
+        createSupabaseClient();
     }, []);
+
+    useEffect(() => {
+        const getUserBudgets = async () => {
+            if (!supabaseClient) return;
+            const { data: budgetData, error } = await supabaseClient
+                .from("budgets")
+                .select("budget_id, name, amount")
+                .eq("user_id", userId)
+                .order("updated_at", { ascending: false })
+                .limit(12);
+            if (!error && budgetData.length > 0) {
+                setUserBudgets(budgetData);
+            }
+        };
+        getUserBudgets();
+    }, [supabaseClient]);
+
+    useEffect(() => {
+        getRemainingBudgetAmount(budgetId); 
+    }, [budgetId]);
 
     useEffect(() => {
         setTitlePlaceholder(getTitlePlaceholder(type));
@@ -92,13 +168,29 @@ export default function AddTransactionForm({
                 placeholder="Enter transaction amount (e.g., 100)"
                 min={0}
                 step={0.01}
+                onChange={(e) => handleAmountChange(e.target.value)}
                 required
+            />
+            <input
+                id="balance"
+                name="balance"
+                type="hidden"
+                value={balanceInCents}
+            />
+            <input
+                id="remaining_spending_limit"
+                name="remaining_spending_limit"
+                type="hidden"
+                value={remainingSpendingLimitInCents ?? undefined}
             />
             <p className={clsx(
                 "mt-2 text-xs text-gray-500",
-                { "hidden": type === "Deposit" },
+                { "hidden": type === "Deposit" || !remainingSpendingLimitInCents },
             )}>
-                Spending limit left: <span>$ --</span>
+                <span>Spending limit left: </span>
+                <span className={clsx({ "text-rose-600": deductedSpendingLimitInCents < 0 })}>
+                    {formatCurrency(deductedSpendingLimitInCents, currency)}
+                </span>
             </p>
             <div className="flex flex-row md:items-center gap-3 mt-6">
                 <label
@@ -149,15 +241,34 @@ export default function AddTransactionForm({
                         name="budget"
                         disabled={categoryId !== null}
                         className="appearance-none group rounded-md w-full h-8 px-3 border border-gray-300 text-sm max-md:text-xs bg-white placeholder:text-gray-500 focus:border-gray-400 disabled:opacity-50"
-                        onChange={(e) => console.log(e.target.value)}
+                        onChange={(e) => setBudgetId(e.target.value || null)}
                     >
                         <option value={""}>Choose a budget...</option>
+                        {userBudgets.map((budget, idx) => {
+                            return (
+                                <option
+                                    key={`budget_${idx}`}
+                                    value={budget.budget_id}
+                                >
+                                    {budget.name}
+                                </option>
+                            )
+                        })}
                     </select>
+                    <input
+                        id="remaining_budget_amount"
+                        name="remaining_budget_amount"
+                        type="hidden"
+                        value={remainingBudgetAmountInCents}
+                    />
                     <p className={clsx(
                         "mt-1 text-xs text-gray-500",
-                        { "hidden": type === "Deposit" },
+                        { "hidden": !budgetId },
                     )}>
-                        Budget left: <span>$ --</span>
+                        <span>Budget left: </span>
+                        <span className={clsx({ "text-rose-600": deductedBudgetAmountInCents < 0 })}>
+                            {formatCurrency(deductedBudgetAmountInCents, currency)}
+                        </span>
                     </p>
                     <ChevronDownIcon className="absolute top-10 right-2.5 w-4 h-4 text-gray-500" />
                 </div>
@@ -176,6 +287,7 @@ export default function AddTransactionForm({
                     <select
                         id="category"
                         name="category"
+                        disabled={budgetId !== null}
                         defaultValue={categoryId || ""}
                         className="appearance-none group rounded-md w-full h-8 px-3 border border-gray-300 text-sm max-md:text-xs bg-white placeholder:text-gray-500 focus:border-gray-400 disabled:opacity-50"
                         onChange={(e) => setCategoryId(e.target.value ? parseInt(e.target.value) as TransactionCategoryId : null)}
@@ -194,9 +306,9 @@ export default function AddTransactionForm({
                     </select>
                     <ChevronDownIcon className="absolute top-10 right-2.5 w-4 h-4 text-gray-500" />
                 </div>
-                <div className="flex flex-row justify-end items-center gap-1 mt-3 text-end text-xs text-gray-500 hover:cursor-pointer hover:underline">
+                <div className="flex flex-row justify-end items-center gap-1 mt-3 text-end text-xs text-gray-500">
                     <QuestionMarkCircleIcon className="w-4 h-4" />
-                    <span>Help</span>
+                    <span className="hover:cursor-pointer hover:underline">Help</span>
                 </div>
             </section>
             <label

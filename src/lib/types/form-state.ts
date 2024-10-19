@@ -24,8 +24,11 @@ export type TransactionFormState = {
         title?: string[] | undefined;
         currency?: string[] | undefined;
         amount?: string[] | undefined;
+        balance?: string[] | undefined;
+        remainingSpendingLimit?: string[] | undefined;
         type?: string[] | undefined;
         budget?: string[] | undefined;
+        remainingBudgetAmount?: string[] | undefined;
         category?: string[] | undefined;
         description?: string[] | undefined;
     };

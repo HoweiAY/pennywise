@@ -13,21 +13,28 @@ export default async function AddTransaction() {
     if (!user) {
         redirect("/login");
     }
-    const { data: userData, error } = await supabase
+    const { data: userData, error: userDataError } = await supabase
         .from("users")
         .select("currency, balance, spending_limit")
         .eq("user_id", user.id)
         .limit(1);
-    if (error) throw error;
-    const {
-        currency,
-        balance: balanceInCents,
-        spending_limit: spendingLimitInCents,
-    }: {
-        currency: string,
-        balance: number,
-        spending_limit: number | null,
-    } = userData[0];
+    if (userDataError) throw userDataError;
+    const { currency, balance: balanceInCents }: { currency: string, balance: number } = userData[0];
+    
+    let remainingSpendingLimitInCents = userData[0].spending_limit;
+    if (remainingSpendingLimitInCents) {
+        const currDateTime = new Date();
+        const monthStartDateTime = new Date(currDateTime.getFullYear(), currDateTime.getMonth(), 1, 0, 0, 0, 0);
+        const { data: transactionSumData, error: transactionSumError } = await supabase
+            .from("transactions")
+            .select("spentLimit:amount.sum()")
+            .eq("payer_id", user.id)
+            .lt("updated_at", currDateTime.toISOString())
+            .gte("updated_at", monthStartDateTime.toISOString());
+        if (!transactionSumError && transactionSumData.length > 0) {
+            remainingSpendingLimitInCents -= transactionSumData[0].spentLimit as number;
+        }
+    }
 
     return (
         <main className="h-fit mb-2 overflow-hidden">
@@ -44,7 +51,7 @@ export default async function AddTransaction() {
                     userId={user.id}
                     currency={currency}
                     balanceInCents={balanceInCents}
-                    spendingLimitInCents={spendingLimitInCents}
+                    remainingSpendingLimitInCents={remainingSpendingLimitInCents}
                 />
             </div>
         </main>
