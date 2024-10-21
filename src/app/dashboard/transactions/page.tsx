@@ -1,6 +1,7 @@
 import TransactionsSearchBar from "@/components/dashboard/transactions/transactions-search-bar";
 import TransactionsTable from "@/components/dashboard/transactions/transactions-table";
 import { PlusIcon } from "@heroicons/react/24/outline";
+import { getTransactionsPages } from "@/lib/actions/transaction";
 import { Metadata } from "next";
 import Link from "next/link";
 
@@ -8,7 +9,20 @@ export const metadata: Metadata = {
     title: "Transactions - PennyWise",
 };
 
-export default function Transactions() {
+export default async function Transactions({
+    searchParams,
+}: {
+    searchParams?: {
+        search?: string,
+        page?: string,
+    };
+}) {
+    const searchQuery = searchParams?.search || "";
+    const currPage = Number(searchParams?.page) || 1;
+    const itemsPerPage = 10;
+    // const { totalPageCount, error } = await getTransactionsPages(itemsPerPage, searchQuery);
+    // if (error) throw error;
+
     return (
         <main className="h-fit mb-2 overflow-hidden">
             <div className="px-6">
@@ -19,7 +33,11 @@ export default function Transactions() {
                     <TransactionsSearchBar />
                     <AddTransactionButton />
                 </div>
-                <TransactionsTable />
+                <TransactionsTable
+                    searchQuery={searchQuery}
+                    currPage={currPage}
+                    itemsPerPage={itemsPerPage}
+                />
             </div>
         </main>
     )

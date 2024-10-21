@@ -4,7 +4,9 @@ import { z } from "zod";
 import { addUserBalance, deductUserBalance } from "@/lib/actions/user";
 import { createSupabaseServerClient } from "@/lib/utils/supabase/server";
 import { TransactionFormState, TransactionFormData } from "@/lib/types/form-state";
+import { TransactionItem } from "@/lib/types/transactions";
 import { redirect } from "next/navigation";
+import { unstable_noStore as noStore } from "next/cache";
 
 const TransactionSchema = z.object({
     title: z.string().trim().min(1, { message: "Please give your transaction a title" }),
@@ -122,4 +124,87 @@ export async function createTransaction(
     }
 
     redirect("/dashboard/transactions");
+}
+
+// Server action for transactions table pagination
+export async function getTransactionsPages(itemsPerPage: number, searchQuery: string): Promise<{ totalPageCount?: number, error?: Error }> {
+    noStore();
+
+    try {
+        const supabase = await createSupabaseServerClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            redirect("/login");
+        }
+        let supabaseQuery = supabase
+            .from("transactions")
+            .select("transactionCount:count()");
+        if (searchQuery) {
+            const splitSearchQuery = searchQuery.trim().split(" ");
+            const searchTerms = splitSearchQuery.reduce((prevTerms, term) => term ? `${prevTerms ? prevTerms + " | " : ""}'${term}'` : prevTerms, ``);
+            supabaseQuery = supabaseQuery.textSearch("title", searchTerms);
+        }
+        supabaseQuery = supabaseQuery
+            .or(`payer_id.eq.${user.id}, recipient_id.eq.${user.id}`)
+            .limit(1);
+        const { data: transactionCountData, error } = await supabaseQuery;
+        if (error) throw error;
+        const { transactionCount } = transactionCountData[0] as { transactionCount: number };
+        return { totalPageCount: Math.ceil(transactionCount / itemsPerPage) };
+    } catch (error) {
+        if (error instanceof Error) {
+            return { error };
+        }
+        return { error: new Error("Transaction pagination information fetch failed") };
+    }
+}
+
+// Server action for getting queried transactions
+export async function getFilteredTransactions(
+    searchQuery: string,
+    currPage: number,
+    itemsPerPage: number
+): Promise<{ transactionItems?: TransactionItem[], error?: Error }> {
+    noStore();
+
+    try {
+        const supabase = await createSupabaseServerClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            redirect("/login");
+        }
+        let supabaseQuery = supabase
+            .from("transactions")
+            .select(`
+                transaction_id,
+                title,
+                payer_currency,
+                recipient_currency,
+                exchange_rate,
+                amount,
+                transaction_type,
+                category_id,
+                payer_data:users!transactions_payer_id_fkey(avatar_url),
+                recipient_data:users!transactions_recipient_id_fkey(avatar_url),
+                description,
+                created_at
+            `)
+            .or(`payer_id.eq.${user.id}, recipient_id.eq.${user.id}`);
+        if (searchQuery) {
+            const splitSearchQuery = searchQuery.trim().split(" ");
+            const searchTerms = splitSearchQuery.reduce((prevTerms, term) => term ? `${prevTerms ? prevTerms + " & " : ""}'${term}'` : prevTerms, ``);
+            supabaseQuery = supabaseQuery.textSearch("title", searchTerms);
+        }
+        supabaseQuery = supabaseQuery
+            .order("updated_at", { ascending: false })
+            .limit(itemsPerPage);
+        const { data: transactionsData, error } = await supabaseQuery;
+        if (error) throw error;
+        return { transactionItems: transactionsData };
+    } catch (error) {
+        if (error instanceof Error) {
+            return { error };
+        }
+        return { error: new Error("Transaction items fetch failed") };
+    }
 }
