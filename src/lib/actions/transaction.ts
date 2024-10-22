@@ -4,9 +4,9 @@ import { z } from "zod";
 import { addUserBalance, deductUserBalance } from "@/lib/actions/user";
 import { createSupabaseServerClient } from "@/lib/utils/supabase/server";
 import { TransactionFormState, TransactionFormData } from "@/lib/types/form-state";
-import { TransactionItem } from "@/lib/types/transactions";
+import { TransactionItem, TransactionType } from "@/lib/types/transactions";
 import { redirect } from "next/navigation";
-import { unstable_noStore as noStore } from "next/cache";
+import { unstable_noStore as noStore, revalidatePath } from "next/cache";
 
 const TransactionSchema = z.object({
     title: z.string().trim().min(1, { message: "Please give your transaction a title" }),
@@ -25,7 +25,7 @@ const TransactionSchema = z.object({
 export async function createTransaction(
     prevState: TransactionFormState | undefined,
     formData: FormData,
-) {
+): Promise<TransactionFormState> {
     try {
         const title = formData.get("title");
         const currency = formData.get("currency");
@@ -126,8 +126,66 @@ export async function createTransaction(
     redirect("/dashboard/transactions");
 }
 
+export async function deleteTransaction(
+    transactionId: string,
+    redirectOnDelete?: boolean,
+): Promise<{ errorMessage?: string }> {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            return { errorMessage: "Error: user not found" };
+        }
+    
+    const { data: transactionData, error: transactionDataError } = await supabase
+        .from("transactions")
+        .select("transaction_type, amount")
+        .eq("transaction_id", transactionId)
+        .limit(1);
+    if (transactionDataError) {
+        return { errorMessage: transactionDataError.message };
+    }
+    const {
+        transaction_type: transactionType,
+        amount,
+    }: {
+        transaction_type: TransactionType,
+        amount: number,
+    } = transactionData[0];
+    const changeBalanceAction = transactionType === "Deposit"
+        ? deductUserBalance(user.id, amount, supabase)
+        : addUserBalance(user.id, amount, supabase);
+    try {
+        await changeBalanceAction;
+    } catch (error) {
+        if (error instanceof Error) {
+            return { errorMessage: error.message };
+        }
+        return { errorMessage: "Error: cannot change user balance" };
+    }
+    
+    const { error: deleteTransactionError } = await supabase
+        .from("transactions")
+        .delete()
+        .eq("transaction_id", transactionId);
+    if (deleteTransactionError) {
+        return { errorMessage: deleteTransactionError.message };
+    }
+    revalidatePath("/dashboard/transactions");
+    if (redirectOnDelete) {
+        redirect("/dashboard/transactions");
+    }
+    
+    return {};
+}
+
 // Server action for transactions table pagination
-export async function getTransactionsPages(itemsPerPage: number, searchQuery: string): Promise<{ totalPageCount?: number, error?: Error }> {
+export async function getTransactionsPages(
+    itemsPerPage: number,
+    searchQuery: string
+): Promise<{
+    totalPageCount?: number,
+    errorMessage?: string,
+}> {
     noStore();
 
     try {
@@ -153,9 +211,9 @@ export async function getTransactionsPages(itemsPerPage: number, searchQuery: st
         return { totalPageCount: Math.ceil(transactionCount / itemsPerPage) };
     } catch (error) {
         if (error instanceof Error) {
-            return { error };
+            return { errorMessage: error.message };
         }
-        return { error: new Error("Transaction pagination information fetch failed") };
+        return { errorMessage: "Transaction pagination information fetch failed" };
     }
 }
 
@@ -164,7 +222,10 @@ export async function getFilteredTransactions(
     searchQuery: string,
     currPage: number,
     itemsPerPage: number
-): Promise<{ transactionItems?: TransactionItem[], error?: Error }> {
+): Promise<{
+    transactionItems?: TransactionItem[],
+    errorMessage?: string,
+}> {
     noStore();
 
     try {
@@ -205,8 +266,8 @@ export async function getFilteredTransactions(
         return { transactionItems: transactionsData };
     } catch (error) {
         if (error instanceof Error) {
-            return { error };
+            return { errorMessage: error.message };
         }
-        return { error: new Error("Transaction items fetch failed") };
+        return { errorMessage: "Transaction items fetch failed" };
     }
 }

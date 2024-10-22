@@ -8,7 +8,7 @@ export async function addUserBalance(
     userId: string,
     amountInCents: number,
     supabaseClient?: SupabaseClient,
-) {
+): Promise<void> {
     const supabase = supabaseClient ?? await createSupabaseServerClient();
     const { data: userData, error: userError } = await supabase
         .from("users")
@@ -30,7 +30,7 @@ export async function deductUserBalance(
     userId: string,
     amountInCents: number,
     supabaseClient?: SupabaseClient,
-) {
+): Promise<void> {
     const supabase = supabaseClient ?? await createSupabaseServerClient();
     const { data: userData, error: userError } = await supabase
         .from("users")

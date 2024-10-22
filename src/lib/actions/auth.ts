@@ -21,7 +21,7 @@ const LoginSchema = SignUpSchema.omit({ username: true });
 export async function signUp(
     prevState: AuthFormState | undefined,
     formData: FormData,
-) {
+): Promise<AuthFormState | undefined> {
     try {
         const username = formData.get("username");
         const email = formData.get("email");
@@ -64,7 +64,7 @@ export async function signUp(
 export async function login(
     prevState: AuthFormState | undefined,
     formData: FormData,
-) {
+): Promise<AuthFormState | undefined> {
     try {
         const email = formData.get("email");
         const password = formData.get("password");
@@ -98,7 +98,7 @@ export async function login(
 }
 
 // Server action for logging out a user
-export async function logout() {
+export async function logout(): Promise<AuthFormState | undefined> {
     try {
         const supabase = await createSupabaseServerClient();
         const { error } = await supabase.auth.signOut();
@@ -107,7 +107,7 @@ export async function logout() {
         if (error instanceof AuthError) {
             return { message: error.message };
         }
-        else throw error;
+        return { message: "Error logging user out"};
     }
 
     redirect("/login");

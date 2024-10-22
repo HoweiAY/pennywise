@@ -17,7 +17,7 @@ const BudgetSchema = z.object({
 export async function createBudget(
     prevState: BudgetFormState | undefined,
     formData: FormData,
-) {
+): Promise<BudgetFormState | undefined> {
     try {
         const name = formData.get("name");
         const currency = formData.get("currency");
@@ -70,7 +70,7 @@ export async function createBudget(
 export async function updateBudget(
     prevState: BudgetFormState | undefined,
     formData: FormData,
-) {
+): Promise<BudgetFormState | undefined> {
     try {
         const budgetId = formData.get("budget_id");
         const name = formData.get("name");
@@ -128,14 +128,22 @@ export async function updateBudget(
     redirect("/dashboard/budget");
 }
 
-export async function deleteBudget(budgetId: string, redirectOnDelete?: boolean) {
+export async function deleteBudget(
+    budgetId: string,
+    redirectOnDelete?: boolean,
+): Promise<{ errorMessage?: string }> {
     const supabase = await createSupabaseServerClient();
     const { error } = await supabase
         .from("budgets")
         .delete()
         .eq("budget_id", budgetId);
+    if (error) {
+        return { errorMessage: error.message };
+    }
     revalidatePath("/dashboard/budget");
     if (redirectOnDelete) {
         redirect("/dashboard/budget");
     }
+    
+    return {};
 }
