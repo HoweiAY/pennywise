@@ -1,3 +1,4 @@
+import TransactionsTablePagination from "@/components/dashboard/transactions/transaction-table-pagination";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -14,17 +15,19 @@ import clsx from "clsx";
 export default async function TransactionsTable({
     searchQuery,
     currPage,
+    totalPageCount,
     itemsPerPage,
 }: {
     searchQuery: string,
     currPage: number,
+    totalPageCount: number,
     itemsPerPage: number,
 }) {
     const { transactionItems, error } = await getFilteredTransactions(searchQuery, currPage, itemsPerPage);
     if (error) throw error;
 
     return (
-        <section className="border border-slate-100 rounded-xl min-h-96 px-6 pb-6 max-md:px-3 mb-10 bg-white shadow-lg">
+        <section className="flex flex-col border border-slate-100 rounded-xl min-h-96 px-6 pb-6 max-md:px-3 mb-10 bg-white shadow-lg">
             <h1 className="pt-4 text-2xl max-md:text-xl font-semibold">
                 Latest Transactions
             </h1>
@@ -118,7 +121,7 @@ export default async function TransactionsTable({
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                         <h2 className="px-3">Amount</h2>
-                        <h2 className="text-end">Date</h2>
+                        <h2 className="max-md:text-end">Date</h2>
                     </div>
                 </div>
                 {transactionItems?.map((transaction, idx) => {
@@ -131,14 +134,14 @@ export default async function TransactionsTable({
                                 <div className="h-10 w-10 min-w-10 border-2 border-gray-700 rounded-full">
 
                                 </div>
-                                <div className="w-full whitespace-nowrap text-ellipsis overflow-hidden">
+                                <div className="w-full whitespace-nowrap overflow-hidden">
                                     <p className="font-semibold text-sm text-ellipsis overflow-hidden">{transaction.title}</p>
                                     <p className="text-gray-500 text-ellipsis overflow-hidden">{transaction.description}</p>
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                                 <div className={clsx(
-                                    "flex items-center px-3 whitespace-nowrap font-semibold text-ellipsis overflow-hidden",
+                                    "flex items-center px-3 whitespace-nowrap font-semibold",
                                     { "text-green-500": transaction.transaction_type === "Deposit" },
                                     { "text-red-500": transaction.transaction_type !== "Deposit" },
                                 )}>
@@ -151,7 +154,7 @@ export default async function TransactionsTable({
                                     )}
                                 </div>
                                 <p className="max-md:hidden flex items-center whitespace-nowrap text-ellipsis overflow-hidden">
-                                    {formatDateTime(transaction.created_at)}
+                                    <span className="text-ellipsis overflow-hidden">{formatDateTime(transaction.created_at)}</span>
                                 </p>
                                 <p className="md:hidden flex justify-end items-center whitespace-nowrap text-ellipsis overflow-hidden">
                                     {formatDateTime(transaction.created_at, true)}
@@ -172,6 +175,17 @@ export default async function TransactionsTable({
                     )
                 })}
             </div>
+            {transactionItems?.length === 0 && 
+                <div className="flex flex-col justify-center items-center w-full h-48 border-0 rounded-lg bg-gray-100">
+                    <p className="text-center text-xl max-md:text-lg font-semibold">
+                        {searchQuery ? "No results found" : "No transactions"}
+                    </p>
+                    <p className="px-2 text-center text-sm">
+                        {searchQuery ? "There are no matching transactions for your search" : "Add a new transaction to get started!"}
+                    </p>
+                </div>
+            }
+            <TransactionsTablePagination currPage={currPage} totalPageCount={totalPageCount} />
         </section>
     )
 }

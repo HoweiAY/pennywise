@@ -168,6 +168,7 @@ export async function getFilteredTransactions(
     noStore();
 
     try {
+        const pageOffset = (currPage - 1) * itemsPerPage;
         const supabase = await createSupabaseServerClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
@@ -197,6 +198,7 @@ export async function getFilteredTransactions(
         }
         supabaseQuery = supabaseQuery
             .order("updated_at", { ascending: false })
+            .range(pageOffset, pageOffset + itemsPerPage - 1)
             .limit(itemsPerPage);
         const { data: transactionsData, error } = await supabaseQuery;
         if (error) throw error;
