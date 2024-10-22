@@ -10,16 +10,16 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ToastAction } from "@/components/ui/toast";
-import { deleteBudget } from "@/lib/actions/budget";
+import { deleteTransaction } from "@/lib/actions/transaction";
 import { useCallback, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 
-export default function DeleteBudgetDialog({
-    budgetId,
+export default function DeleteTransactionDialog({
+    transactionId,
     redirectOnDelete,
 }: {
-    budgetId: string,
+    transactionId: string,
     redirectOnDelete?: boolean,
 }) {
     const [ isPending, startTransition ] = useTransition();
@@ -27,16 +27,16 @@ export default function DeleteBudgetDialog({
     const router = useRouter();
     const { toast } = useToast();
 
-    const handleDeleteBudget = useCallback( async () => {
+    const handleDeleteTransaction = useCallback( async () => {
         setDeletionInProgress(true);
-        const { errorMessage } = await deleteBudget(budgetId, redirectOnDelete);
+        const { errorMessage } = await deleteTransaction(transactionId, redirectOnDelete);
         if (errorMessage) {
             toast({
                 variant: "destructive",
                 title: "Delete transaction failed",
-                description: "An error has occurred while deleting the budget",
+                description: "An error has occurred while deleting the transaction",
                 action: (
-                    <ToastAction altText="Try again" onClick={handleDeleteBudget}>
+                    <ToastAction altText="Try again" onClick={handleDeleteTransaction}>
                         Try again
                     </ToastAction>
                 )
@@ -45,16 +45,16 @@ export default function DeleteBudgetDialog({
             startTransition(() => router.refresh());
         }
         setDeletionInProgress(false);
-    }, [budgetId]);
+    }, [transactionId, redirectOnDelete]);
 
     return (
         <AlertDialogContent className="rounded-lg">
             <AlertDialogHeader>
                 <AlertDialogTitle>
-                    Delete this budget?
+                    Delete this transaction?
                 </AlertDialogTitle>
                 <AlertDialogDescription>
-                    This action cannot be undone. This budget will be deleted from your account permanently.
+                    This action cannot be undone. This transaction will be deleted from your account permanently.
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -63,7 +63,7 @@ export default function DeleteBudgetDialog({
                 </AlertDialogCancel>
                     <AlertDialogAction
                         className="bg-rose-500 text-white font-semibold hover:bg-rose-600 shadow-md shadow-slate-300 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 duration-200"
-                        onClick={handleDeleteBudget}
+                        onClick={handleDeleteTransaction}
                         aria-disabled={deletionInProgress}
                     >
                         Delete

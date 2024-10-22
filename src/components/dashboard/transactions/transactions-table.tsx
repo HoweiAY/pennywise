@@ -1,10 +1,12 @@
-import TransactionsTablePagination from "@/components/dashboard/transactions/transaction-table-pagination";
+import TransactionsTablePagination from "@/components/dashboard/transactions/transactions-table-pagination";
+import DeleteTransactionDialog from "@/components/dashboard/transactions/delete-transaction-dialog";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { EllipsisVerticalIcon, InformationCircleIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { getFilteredTransactions } from "@/lib/actions/transaction";
 import { transactionCategories } from "@/lib/utils/constant";
@@ -23,15 +25,14 @@ export default async function TransactionsTable({
     totalPageCount: number,
     itemsPerPage: number,
 }) {
-    const { transactionItems, error } = await getFilteredTransactions(searchQuery, currPage, itemsPerPage);
-    if (error) throw error;
+    const { transactionItems, errorMessage } = await getFilteredTransactions(searchQuery, currPage, itemsPerPage);
 
     return (
         <section className="flex flex-col border border-slate-100 rounded-xl min-h-96 px-6 pb-6 max-md:px-3 mb-10 bg-white shadow-lg">
-            <h1 className="pt-4 text-2xl max-md:text-xl font-semibold">
+            <h1 className="py-6 max-md:py-4 text-2xl max-md:text-xl font-semibold">
                 Latest Transactions
             </h1>
-            <table className="table-auto border-0 rounded-lg min-w-full overflow-hidden max-lg:hidden">
+            <table className="table-auto border-0 rounded-lg min-w-full bg-gray-50 overflow-hidden max-lg:hidden">
                 <thead className="text-left font-normal">
                     <tr>
                         <th scope="col" className="px-3 py-5 font-semibold">
@@ -113,7 +114,7 @@ export default async function TransactionsTable({
                     })}
                 </tbody>
             </table>
-            <div className="lg:hidden rounded-lg border-0 min-w-full text-xs overflow-hidden">
+            <div className="lg:hidden rounded-lg border-0 min-w-full text-xs bg-gray-50 overflow-hidden">
                 <div className="grid grid-cols-2 w-full ps-3 pe-8 py-5 max-md:ps-2 max-md:py-3 text-left text-sm font-semibold">
                     <div className="flex flex-row items-center gap-x-2 md:gap-x-4">
                         <div className="w-10 min-w-10" />
@@ -192,26 +193,31 @@ export default async function TransactionsTable({
 
 function OptionsMenu({ transactionId, deletable }: { transactionId: string, deletable: boolean }) {
     return (
-        <DropdownMenuContent>
-            <Link href={`/dashboard/transactions/${transactionId}`}>
-                <DropdownMenuItem className="w-full hover:cursor-pointer max-lg:text-sm">
-                    <InformationCircleIcon className="w-4 h-4" />
-                    <p>Details</p>
-                </DropdownMenuItem>
-            </Link>
-            <Link href={`/dashboard/transactions/${transactionId}/edit`}>
-                <DropdownMenuItem className="w-full hover:cursor-pointer max-lg:text-sm">
-                    <PencilIcon className="w-4 h-4" />
-                    <p>Edit</p>
-                </DropdownMenuItem>
-            </Link>
-            <DropdownMenuItem className={clsx(
-                "hover:cursor-pointer max-lg:text-sm",
-                {"hidden": !deletable},
-            )}>
-                <TrashIcon className="w-4 h-4 text-rose-600" />
-                <p className="text-rose-600">Delete</p>
-            </DropdownMenuItem>
-        </DropdownMenuContent>
+        <AlertDialog>
+            <DropdownMenuContent>
+                <Link href={`/dashboard/transactions/${transactionId}`}>
+                    <DropdownMenuItem className="w-full hover:cursor-pointer max-lg:text-sm">
+                        <InformationCircleIcon className="w-4 h-4" />
+                        <p>Details</p>
+                    </DropdownMenuItem>
+                </Link>
+                <Link href={`/dashboard/transactions/${transactionId}/edit`}>
+                    <DropdownMenuItem className="w-full hover:cursor-pointer max-lg:text-sm">
+                        <PencilIcon className="w-4 h-4" />
+                        <p>Edit</p>
+                    </DropdownMenuItem>
+                </Link>
+                <AlertDialogTrigger asChild>
+                    <DropdownMenuItem className={clsx(
+                        "hover:cursor-pointer max-lg:text-sm",
+                        {"hidden": !deletable},
+                    )}>
+                        <TrashIcon className="w-4 h-4 text-rose-600" />
+                        <p className="text-rose-600">Delete</p>
+                    </DropdownMenuItem>
+                </AlertDialogTrigger>
+            </DropdownMenuContent>
+            <DeleteTransactionDialog transactionId={transactionId} />
+        </AlertDialog>
     )
 }

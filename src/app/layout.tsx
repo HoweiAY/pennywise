@@ -1,3 +1,4 @@
+import { Toaster } from "@/components/ui/toaster";
 import { poppins } from "@/ui/fonts/fonts";
 import type { Metadata } from "next";
 import "./globals.css";
@@ -18,6 +19,7 @@ export default function RootLayout({
         className={`${poppins.variable} antialiased`}
       >
         {children}
+        <Toaster />
       </body>
     </html>
   );

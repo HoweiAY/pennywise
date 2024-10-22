@@ -20,8 +20,7 @@ export default async function Transactions({
     const searchQuery = searchParams?.search || "";
     const currPage = Number(searchParams?.page) || 1;
     const itemsPerPage = 10;
-    const { totalPageCount, error } = await getTransactionsPages(itemsPerPage, searchQuery);
-    if (error) throw error;
+    const { totalPageCount, errorMessage } = await getTransactionsPages(itemsPerPage, searchQuery);
 
     return (
         <main className="h-fit mb-2 overflow-hidden">

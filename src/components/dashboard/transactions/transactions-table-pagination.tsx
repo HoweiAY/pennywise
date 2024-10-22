@@ -64,7 +64,7 @@ export default function TransactionsTablePagination({
     }, [currPage, totalPageCount]);
 
     return (
-        <Pagination className="mt-auto py-3">
+        <Pagination className="mt-auto pt-6">
             <PaginationContent>
                 <PaginationItem>
                     <PaginationPrevious
