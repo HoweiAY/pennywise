@@ -33,7 +33,7 @@ export default function DeleteBudgetDialog({
         if (errorMessage) {
             toast({
                 variant: "destructive",
-                title: "Delete transaction failed",
+                title: "Delete budget failed",
                 description: "An error has occurred while deleting the budget",
                 action: (
                     <ToastAction altText="Try again" onClick={handleDeleteBudget}>
