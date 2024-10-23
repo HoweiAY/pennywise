@@ -4,57 +4,56 @@ import { ChevronDownIcon, QuestionMarkCircleIcon } from "@heroicons/react/24/out
 import { ExclamationCircleIcon } from "@heroicons/react/24/solid";
 import { transactionCategories } from "@/lib/utils/constant";
 import { transactionErrorMessage } from "@/lib/utils/helper";
-import { formatCurrency } from "@/lib/utils/format";
+import { formatCurrency, formatCurrencyAmount } from "@/lib/utils/format";
+import { TransactionFormData, BudgetFormData } from "@/lib/types/form-state";
 import { TransactionType, TransactionCategoryId } from "@/lib/types/transactions";
-import { createTransaction } from "@/lib/actions/transaction";
-import { createSupabaseBrowserClient } from "@/lib/utils/supabase/client";
-import { SupabaseClient } from "@supabase/supabase-js";
+import { createTransaction, updateTransaction } from "@/lib/actions/transaction";
+import { getUserBudgets, getBudgetAmountSpent } from "@/lib/actions/budget";
 import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { useDebouncedCallback } from "use-debounce";
 import clsx from "clsx";
 
-type UserBudget = {
-    budget_id: string,
-    name: string,
-    amount: number,
-};
-
-export default function AddTransactionForm({
+export default function TransactionForm({
     userId,
     currency,
     balanceInCents,
     remainingSpendingLimitInCents,
+    transactionId,
+    prevTransactionData,
+    userBudgetData,
 }: {
     userId: string,
     currency: string,
     balanceInCents: number,
     remainingSpendingLimitInCents: number | null,
+    transactionId?: string,
+    prevTransactionData?: TransactionFormData,
+    userBudgetData?: BudgetFormData[],
 }) {
-    const [ supabaseClient, setSupabaseClient ] = useState<SupabaseClient | null>(null);
     const [ descriptionTextboxWidth, setDescriptionTextboxWidth ] = useState<number>(0);
     const [ titlePlaceholder, setTitlePlaceholder ] = useState<string>("My new transaction 💲");
-    const [ amountInCents, setAmountInCents ] = useState<number | null>(null);
+    const [ amountInCents, setAmountInCents ] = useState<number | null>(prevTransactionData?.amount || null);
     const [ deductedSpendingLimitInCents, setDeductedSpendingLimitInCents ] = useState<number>(0);
-    const [ type, setType ] = useState<TransactionType>("Deposit");
-    const [ userBudgets, setUserBudgets ] = useState<UserBudget[]>([]);
-    const [ budgetId, setBudgetId ] = useState<string | null>(null);
+    const [ type, setType ] = useState<TransactionType>(prevTransactionData?.transaction_type ?? "Deposit");
+    const [ userBudgets, setUserBudgets ] = useState<BudgetFormData[]>(userBudgetData ?? []);
+    const [ budgetId, setBudgetId ] = useState<string | null | undefined>(prevTransactionData?.budget_id ?? null);
     const [ remainingBudgetAmountInCents, setRemainingBudgetAmountInCents ] = useState<number>(0);
     const [ deductedBudgetAmountInCents, setDeductedBudgetAmountInCents ] = useState<number>(0);
     const [ categoryId, setCategoryId ] = useState<TransactionCategoryId | null>(null);
     
 
-    const getTitlePlaceholder = (type: TransactionType) => {
+    const getTitlePlaceholder = useCallback((type: TransactionType) => {
         return type === "Deposit"
             ? "My first paycheck 💵"
             : categoryId && (categoryId satisfies TransactionCategoryId)
             ? transactionCategories[categoryId].titlePlaceholder
             : "My new transaction 💲";
-    };
+    }, [categoryId]);
 
-    const getRemainingBudgetAmount = useCallback( async (budgetId: string | null) => {
-        if (!budgetId || !supabaseClient) {
+    const getRemainingBudgetAmount = useCallback(async (budgetId: string | null) => {
+        if (!budgetId) {
             setRemainingBudgetAmountInCents(0);
             return;
         }
@@ -63,23 +62,27 @@ export default function AddTransactionForm({
             const budgetAmount = budget.amount;
             const currDateTime = new Date();
             const monthStartDateTime = new Date(currDateTime.getFullYear(), currDateTime.getMonth(), 1, 0, 0, 0, 0);
-            const { data: budgetSumData, error } = await supabaseClient
-                .from("transactions")
-                .select("spentBudget:amount.sum()")
-                .eq("budget_id", budgetId)
-                .lt("updated_at", currDateTime.toISOString())
-                .gte("updated_at", monthStartDateTime.toISOString());
-            if (!error && budgetSumData.length > 0) {
-                const remainingBudget = budgetAmount - budgetSumData[0].spentBudget;
+            const { spentBudgetData, errorMessage } = await getBudgetAmountSpent(budgetId, monthStartDateTime, currDateTime);
+            if (!errorMessage && spentBudgetData) {
+                const remainingBudget = budgetAmount - spentBudgetData[0].spentBudget;
+                let deductedBudget = amountInCents !== null ? remainingBudget - amountInCents : remainingBudget;
+                if (prevTransactionData) {
+                    deductedBudget -= amountInCents !== prevTransactionData.amount ? prevTransactionData.amount : -amountInCents;
+                }
                 setRemainingBudgetAmountInCents(remainingBudget);
-                setDeductedBudgetAmountInCents(amountInCents !== null ? remainingBudget - amountInCents : remainingBudget);
+                setDeductedBudgetAmountInCents(deductedBudget);
             }
             break;
         }
-    }, [supabaseClient, userBudgets, amountInCents]);
+    }, [prevTransactionData, userBudgets, amountInCents]);
 
     const handleAmountChange = useDebouncedCallback((amount: string) => {
-        const inputAmountInCents = Math.floor(parseFloat(amount) * 100);
+        let inputAmountInCents = Math.floor(parseFloat(amount) * 100);
+        if (prevTransactionData) {
+            if (isNaN(inputAmountInCents)) inputAmountInCents = 0;
+            const netAmountInCents = inputAmountInCents - prevTransactionData.amount;
+            inputAmountInCents = prevTransactionData.transaction_type === "Deposit" ? -netAmountInCents : netAmountInCents;
+        }
         setAmountInCents(!isNaN(inputAmountInCents) ? inputAmountInCents : null);
         if (remainingSpendingLimitInCents) {
             const deductedLimit = remainingSpendingLimitInCents - inputAmountInCents;
@@ -92,48 +95,47 @@ export default function AddTransactionForm({
     }, 300);
 
     useEffect(() => {
-        const createSupabaseClient = async () => {
-            const supabase = await createSupabaseBrowserClient();
-            setSupabaseClient(supabase);
-        };
         setDescriptionTextboxWidth(window.innerWidth);
         if (remainingSpendingLimitInCents) {
             setDeductedSpendingLimitInCents(remainingSpendingLimitInCents);
         }
-        createSupabaseClient();
+        if (prevTransactionData && prevTransactionData.transaction_type !== "Deposit") {
+            setCategoryId(prevTransactionData.category_id as TransactionCategoryId);
+        }
     }, []);
 
     useEffect(() => {
-        const getUserBudgets = async () => {
-            if (!supabaseClient) return;
-            const { data: budgetData, error } = await supabaseClient
-                .from("budgets")
-                .select("budget_id, name, amount")
-                .eq("user_id", userId)
-                .order("updated_at", { ascending: false })
-                .limit(12);
-            if (!error && budgetData.length > 0) {
-                setUserBudgets(budgetData);
+        const fetchUserBudgets = async () => {
+            const { userBudgetData, errorMessage } = await getUserBudgets(userId);
+            if (!errorMessage && userBudgetData) {
+                setUserBudgets(userBudgetData);
             }
         };
-        getUserBudgets();
-    }, [supabaseClient]);
+        if (userBudgetData) return;
+        fetchUserBudgets();
+    }, [userId]);
 
     useEffect(() => {
-        getRemainingBudgetAmount(budgetId); 
-    }, [budgetId]);
+        getRemainingBudgetAmount(budgetId ?? null);
+    }, [budgetId, userBudgets]);
 
     useEffect(() => {
         setTitlePlaceholder(getTitlePlaceholder(type));
     }, [type, categoryId]);
 
-    const [ error, dispatch ] = useFormState(createTransaction, undefined);
+    const [ error, dispatch ] = useFormState(prevTransactionData ? updateTransaction : createTransaction, undefined);
 
     return (
         <form
             action={dispatch}
             className="flex flex-col mt-6 mb-2 max-md:mt-4"
         >
+            <input
+                id="transaction_id"
+                name="transaction_id"
+                type="hidden"
+                value={transactionId}
+            />
             <label
                 htmlFor="title"
                 className="mt-2 mb-1 text-lg font-semibold"
@@ -144,6 +146,7 @@ export default function AddTransactionForm({
                 id="title"
                 name="title"
                 type="text"
+                defaultValue={prevTransactionData?.title}
                 className="w-full h-8 p-3 border border-gray-300 rounded-md text-sm max-md:text-xs"
                 placeholder={`e.g., ${titlePlaceholder}`}
                 required
@@ -164,12 +167,19 @@ export default function AddTransactionForm({
                 id="amount"
                 name="amount"
                 type="number"
+                defaultValue={prevTransactionData ? formatCurrencyAmount(prevTransactionData.amount) : undefined}
                 className="w-full h-8 p-3 border border-gray-300 rounded-md text-sm max-md:text-xs"
                 placeholder="Enter transaction amount (e.g., 100)"
                 min={0}
                 step={0.01}
                 onChange={(e) => handleAmountChange(e.target.value)}
                 required
+            />
+            <input
+                id="prev_amount"
+                name="prev_amount"
+                type="hidden"
+                value={prevTransactionData?.amount}
             />
             <input
                 id="balance"
@@ -192,7 +202,10 @@ export default function AddTransactionForm({
                     {formatCurrency(deductedSpendingLimitInCents, currency)}
                 </span>
             </p>
-            <div className="flex flex-row md:items-center gap-3 mt-6">
+            <div className={clsx(
+                "flex flex-row md:items-center gap-3 mt-6",
+                { "hidden": prevTransactionData },
+            )}>
                 <label
                     htmlFor="type"
                     className="text-lg font-semibold"
@@ -240,6 +253,7 @@ export default function AddTransactionForm({
                         id="budget"
                         name="budget"
                         disabled={categoryId !== null}
+                        defaultValue={budgetId ?? ""}
                         className="appearance-none group rounded-md w-full h-8 px-3 border border-gray-300 text-sm max-md:text-xs bg-white placeholder:text-gray-500 focus:border-gray-400 disabled:opacity-50"
                         onChange={(e) => setBudgetId(e.target.value || null)}
                     >
@@ -288,7 +302,7 @@ export default function AddTransactionForm({
                         id="category"
                         name="category"
                         disabled={budgetId !== null}
-                        defaultValue={categoryId || ""}
+                        defaultValue={prevTransactionData?.category_id || ""}
                         className="appearance-none group rounded-md w-full h-8 px-3 border border-gray-300 text-sm max-md:text-xs bg-white placeholder:text-gray-500 focus:border-gray-400 disabled:opacity-50"
                         onChange={(e) => setCategoryId(e.target.value ? parseInt(e.target.value) as TransactionCategoryId : null)}
                     >
@@ -322,6 +336,7 @@ export default function AddTransactionForm({
                 name="description"
                 rows={5}
                 cols={descriptionTextboxWidth}
+                defaultValue={prevTransactionData?.description ?? undefined}
                 className="min-h-12 max-h-64 p-3 border border-gray-300 rounded-md text-sm max-md:text-xs"
                 placeholder="Write a short message..."
             />

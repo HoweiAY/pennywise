@@ -43,6 +43,10 @@ export default function DeleteBudgetDialog({
             });
         } else if (!redirectOnDelete) {
             startTransition(() => router.refresh());
+            toast({
+                title: "Delete successful",
+                description: "Your transaction has been deleted.",
+            });
         }
         setDeletionInProgress(false);
     }, [budgetId]);

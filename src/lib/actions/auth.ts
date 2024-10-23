@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/utils/supabase/server";
-import { AuthError } from "@supabase/supabase-js";
+import { AuthError, User } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { AuthFormState } from "@/lib/types/form-state";
@@ -111,4 +111,13 @@ export async function logout(): Promise<AuthFormState | undefined> {
     }
 
     redirect("/login");
+}
+
+export async function getAuthUser(): Promise<{ user: User }> {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        redirect("/login");
+    }
+    return { user };
 }

@@ -47,6 +47,7 @@ export type TransactionFormData = {
     recipient_id?: string | null,
     budget_id?: string | null,
     description: string | null,
+    created_at?: string,
 }
 
 export type BudgetFormState = {
@@ -60,6 +61,7 @@ export type BudgetFormState = {
 }
 
 export type BudgetFormData = {
+    budget_id?: string,
     name: string,
     category_id: number,
     currency: string,

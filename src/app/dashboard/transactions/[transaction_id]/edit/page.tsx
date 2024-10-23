@@ -1,16 +1,31 @@
 import TransactionForm from "@/components/dashboard/transactions/transaction-form";
 import { getAuthUser } from "@/lib/actions/auth";
 import { getUserBalanceData } from "@/lib/actions/user";
-import { getTotalTransactionAmount } from "@/lib/actions/transaction";
+import { getTransactionById, getTotalTransactionAmount } from "@/lib/actions/transaction";
+import { getUserBudgets } from "@/lib/actions/budget";
 import { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
-    title: "New Transaction - PennyWise",
+    title: "Edit Transaction - PennyWise",
 }
 
-export default async function AddTransaction() {
+export default async function EditTransaction({ params }: { params: { transaction_id: string } }) {
     const { user } = await getAuthUser();
-    const { userBalanceData, errorMessage: userBalanceDataErrorMessage } = await getUserBalanceData(user.id);
+    const transactionAndBalanceData = await Promise.all([
+        getTransactionById(params.transaction_id),
+        getUserBalanceData(user.id),
+        getUserBudgets(user.id),
+    ]);
+    const [
+        { transactionData, errorMessage: transactionDataErrorMessage },
+        { userBalanceData, errorMessage: userBalanceDataErrorMessage },
+        { userBudgetData },
+    ] = transactionAndBalanceData;
+    if (transactionDataErrorMessage || !transactionData) throw new Error("Error: transaction not found");
+    if (transactionData.payer_id !== user.id && transactionData.recipient_id !== user.id) {
+        redirect("/dashboard");
+    }
     if (userBalanceDataErrorMessage || !userBalanceData) {
         throw new Error(userBalanceDataErrorMessage || "Error: user balance information not found");
     }
@@ -32,19 +47,17 @@ export default async function AddTransaction() {
     return (
         <main className="h-fit mb-2 overflow-hidden">
             <div className="px-6">
-                <header>
-                    <h1 className="mt-8 text-3xl max-md:text-2xl font-semibold overflow-hidden whitespace-nowrap text-ellipsis">
-                        New Transaction
-                    </h1>
-                    <p className="my-2 md:me-4 max-md:my-1 max-md:text-sm text-gray-500">
-                        Create a new transaction by entering the details below
-                    </p>
-                </header>
+                <h1 className="mt-8 pb-1 text-3xl max-md:text-2xl font-semibold overflow-hidden whitespace-nowrap text-ellipsis">
+                    Edit Transaction
+                </h1>
                 <TransactionForm
                     userId={user.id}
-                    currency={currency}
+                    currency={currency ?? "USD"}
                     balanceInCents={balanceInCents}
                     remainingSpendingLimitInCents={remainingSpendingLimitInCents}
+                    transactionId={params.transaction_id}
+                    prevTransactionData={transactionData}
+                    userBudgetData={userBudgetData}
                 />
             </div>
         </main>

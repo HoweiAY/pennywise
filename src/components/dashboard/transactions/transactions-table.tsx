@@ -25,14 +25,14 @@ export default async function TransactionsTable({
     totalPageCount: number,
     itemsPerPage: number,
 }) {
-    const { transactionItems, errorMessage } = await getFilteredTransactions(searchQuery, currPage, itemsPerPage);
+    const { transactionItems } = await getFilteredTransactions(searchQuery, currPage, itemsPerPage);
 
     return (
         <section className="flex flex-col border border-slate-100 rounded-xl min-h-96 px-6 pb-6 max-md:px-3 mb-10 bg-white shadow-lg">
             <h1 className="py-6 max-md:py-4 text-2xl max-md:text-xl font-semibold">
                 Latest Transactions
             </h1>
-            <table className="table-auto border-0 rounded-lg min-w-full bg-gray-50 overflow-hidden max-lg:hidden">
+            <table className="table-auto border-0 rounded-lg min-w-full bg-slate-50 overflow-hidden max-lg:hidden">
                 <thead className="text-left font-normal">
                     <tr>
                         <th scope="col" className="px-3 py-5 font-semibold">
@@ -114,7 +114,7 @@ export default async function TransactionsTable({
                     })}
                 </tbody>
             </table>
-            <div className="lg:hidden rounded-lg border-0 min-w-full text-xs bg-gray-50 overflow-hidden">
+            <div className="lg:hidden rounded-lg border-0 min-w-full text-xs bg-slate-50 overflow-hidden">
                 <div className="grid grid-cols-2 w-full ps-3 pe-8 py-5 max-md:ps-2 max-md:py-3 text-left text-sm font-semibold">
                     <div className="flex flex-row items-center gap-x-2 md:gap-x-4">
                         <div className="w-10 min-w-10" />

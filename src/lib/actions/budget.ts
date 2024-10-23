@@ -131,7 +131,7 @@ export async function updateBudget(
 export async function deleteBudget(
     budgetId: string,
     redirectOnDelete?: boolean,
-): Promise<{ errorMessage?: string }> {
+): Promise<{ status?: string, errorMessage?: string }> {
     const supabase = await createSupabaseServerClient();
     const { error } = await supabase
         .from("budgets")
@@ -144,8 +144,7 @@ export async function deleteBudget(
     if (redirectOnDelete) {
         redirect("/dashboard/budget");
     }
-    
-    return {};
+    return { status: "Success" };
 }
 
 export async function getUserBudgets(userId: string): Promise<{

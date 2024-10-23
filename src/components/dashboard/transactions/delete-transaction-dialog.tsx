@@ -12,7 +12,7 @@ import {
 import { ToastAction } from "@/components/ui/toast";
 import { deleteTransaction } from "@/lib/actions/transaction";
 import { useCallback, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 
 export default function DeleteTransactionDialog({
@@ -24,6 +24,7 @@ export default function DeleteTransactionDialog({
 }) {
     const [ isPending, startTransition ] = useTransition();
     const [ deletionInProgress, setDeletionInProgress ] = useState<boolean>(false);
+    const pathname = usePathname();
     const router = useRouter();
     const { toast } = useToast();
 
@@ -34,7 +35,7 @@ export default function DeleteTransactionDialog({
             toast({
                 variant: "destructive",
                 title: "Delete transaction failed",
-                description: "An error has occurred while deleting the transaction",
+                description: "An error has occurred while deleting the transaction.",
                 action: (
                     <ToastAction altText="Try again" onClick={handleDeleteTransaction}>
                         Try again
@@ -43,6 +44,10 @@ export default function DeleteTransactionDialog({
             });
         } else if (!redirectOnDelete) {
             startTransition(() => router.refresh());
+            toast({
+                title: "Delete successful",
+                description: "Your transaction has been deleted.",
+            });
         }
         setDeletionInProgress(false);
     }, [transactionId, redirectOnDelete]);
