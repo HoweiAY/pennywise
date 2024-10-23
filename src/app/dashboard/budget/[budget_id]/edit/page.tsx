@@ -1,6 +1,6 @@
 import BudgetForm from "@/components/dashboard/budget/budget-form";
-import { BudgetFormData } from "@/lib/types/form-state";
-import { createSupabaseServerClient } from "@/lib/utils/supabase/server";
+import { getAuthUser } from "@/lib/actions/auth";
+import { getUserBudgetById } from "@/lib/actions/budget";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 
@@ -9,19 +9,10 @@ export const metadata: Metadata = {
 };
 
 export default async function EditBudget({ params }: { params: { budget_id: string } }) {
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-        redirect("/login");
-    }
-    const { data: budgetData, error } = await supabase
-        .from("budgets")
-        .select("name, category_id, currency, amount, user_id, description")
-        .eq("budget_id", params.budget_id)
-        .limit(1);
-    if (error) throw error;
-    const prevBudgetData: BudgetFormData = budgetData[0];
-    if (prevBudgetData.user_id !== user.id) {
+    const { user } = await getAuthUser();
+    const { budgetData, errorMessage } = await getUserBudgetById(params.budget_id);
+    if (errorMessage || !budgetData) throw new Error("Error: budget not found");
+    if (budgetData.user_id !== user.id) {
         redirect("/dashboard");
     }
 
@@ -32,9 +23,9 @@ export default async function EditBudget({ params }: { params: { budget_id: stri
                 Edit budget
             </h1>
             <BudgetForm
-                currency={prevBudgetData.currency}
+                currency={budgetData.currency}
                 budgetId={params.budget_id}
-                prevBudgetData={prevBudgetData}
+                prevBudgetData={budgetData}
             />
             </div>
         </main>

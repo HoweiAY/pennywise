@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/utils/supabase/server";
 import { BudgetFormState, BudgetFormData } from "@/lib/types/form-state";
-import { revalidatePath } from "next/cache";
+import { unstable_noStore as noStore, revalidatePath } from "next/cache";
 import { redirect, RedirectType } from "next/navigation";
 
 const BudgetSchema = z.object({
@@ -146,4 +146,64 @@ export async function deleteBudget(
     }
     
     return {};
+}
+
+export async function getUserBudgets(userId: string): Promise<{
+    userBudgetData?: BudgetFormData[],
+    errorMessage?: string,
+}> {
+    noStore();
+
+    const supabase = await createSupabaseServerClient();
+    const { data: userBudgetData, error } = await supabase
+        .from("budgets")
+        .select("budget_id, name, category_id, currency, amount, user_id, description")
+        .eq("user_id", userId)
+        .order("updated_at", { ascending: false })
+        .limit(12);
+    if (error) {
+        return { errorMessage: error.message };
+    }
+    return { userBudgetData };
+}
+
+export async function getUserBudgetById(budgetId: string): Promise<{
+    budgetData?: BudgetFormData,
+    errorMessage?: string,
+}> {
+    noStore();
+
+    const supabase = await createSupabaseServerClient();
+    const { data: budgetData, error } = await supabase
+        .from("budgets")
+        .select("name, category_id, currency, amount, user_id, description")
+        .eq("budget_id", budgetId)
+        .limit(1);
+    if (error) {
+        return { errorMessage: error.message };
+    }
+    return { budgetData: budgetData[0] };
+}
+
+export async function getBudgetAmountSpent(
+    budgetId: string,
+    from: Date,
+    to: Date,
+): Promise<{
+    spentBudgetData?: { spentBudget: number }[],
+    errorMessage?: string,
+}> {
+    noStore();
+    
+    const supabase = await createSupabaseServerClient();
+    const { data: spentBudgetData, error } = await supabase
+        .from("transactions")
+        .select("spentBudget:amount.sum()")
+        .eq("budget_id", budgetId)
+        .lt("created_at", to.toISOString())
+        .gte("created_at", from.toISOString());
+    if (error) {
+        return { errorMessage: error.message };
+    }
+    return { spentBudgetData };
 }

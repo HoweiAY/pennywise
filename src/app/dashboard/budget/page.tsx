@@ -1,8 +1,7 @@
 import UserBudgetCardCarousel from "@/components/dashboard/budget/user-budget-card-carousel";
 import { PlusIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
-import { createSupabaseServerClient } from "@/lib/utils/supabase/server";
+import { getAuthUser } from "@/lib/actions/auth";
 import { Metadata } from "next";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -10,11 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default async function Budget() {
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-        redirect("/login");
-    }
+    const { user } = await getAuthUser();
 
     return (
         <main className="h-fit mb-2 overflow-hidden">
@@ -35,10 +30,7 @@ export default async function Budget() {
                             <span className="mr-1 max-md:text-sm">New Budget</span>
                         </Link>
                     </div>
-                    <UserBudgetCardCarousel
-                        supabaseClient={supabase}
-                        userId={user.id}
-                    />
+                    <UserBudgetCardCarousel userId={user.id} />
                     <Link
                         href={"/dashboard/budget/my-budgets"}
                         className="self-end flex flex-row items-center gap-2 mr-6 max-md:mr-3 md:text-lg font-semibold hover:underline"

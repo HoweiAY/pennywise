@@ -1,25 +1,18 @@
 import BudgetForm from "@/components/dashboard/budget/budget-form";
-import { createSupabaseServerClient } from "@/lib/utils/supabase/server";
+import { getAuthUser } from "@/lib/actions/auth";
+import { getUserCurrency } from "@/lib/actions/user";
 import { Metadata } from "next";
-import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
     title: "New Budget - PennyWise",
 };
 
 export default async function CreateBudget() {
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-        redirect("/login");
+    const { user } = await getAuthUser();
+    const { userCurrencyData: currency, errorMessage } = await getUserCurrency(user.id);
+    if (errorMessage || !currency) {
+        throw new Error(errorMessage || "Error: failed to fetch user currency");
     }
-    const { data: userData, error } = await supabase
-        .from("users")
-        .select("currency")
-        .eq("user_id", user.id)
-        .limit(1);
-    if (error) throw error;
-    const { currency }: { currency: string } = userData[0];
 
     return (
         <main className="h-fit mb-2 overflow-hidden">

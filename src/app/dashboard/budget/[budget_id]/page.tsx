@@ -3,8 +3,9 @@ import DeleteBudgetDialog from "@/components/dashboard/budget/delete-budget-dial
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { budgetCategories } from "@/lib/utils/constant";
-import { formatCurrency } from "@/lib/utils/format";
-import { createSupabaseServerClient } from "@/lib/utils/supabase/server";
+import { formatCurrency, formatCurrencySymbol } from "@/lib/utils/format";
+import { getAuthUser } from "@/lib/actions/auth";
+import { getUserBudgetById, getBudgetAmountSpent } from "@/lib/actions/budget";
 import { redirect } from "next/navigation";
 import { Metadata, ResolvingMetadata } from "next";
 import Link from "next/link";
@@ -13,14 +14,9 @@ export async function generateMetadata(
     { params }: { params: { budget_id: string } },
     parent: ResolvingMetadata,
 ): Promise<Metadata> {
-    const supabase = await createSupabaseServerClient();
-    const { data, error } = await supabase
-        .from("budgets")
-        .select("name")
-        .eq("budget_id", params.budget_id)
-        .limit(1);
-    if (!error && data.length > 0) {
-        const { name: budgetName } = data[0];
+    const { budgetData, errorMessage } = await getUserBudgetById(params.budget_id);
+    if (!errorMessage && budgetData) {
+        const { name: budgetName } = budgetData;
         return {
             title: `${budgetName} - PennyWise`,
         }
@@ -29,17 +25,11 @@ export async function generateMetadata(
 }
 
 export default async function ViewBudget({ params }: { params: { budget_id: string } }) {
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-        redirect("/login");
+    const { user } = await getAuthUser();
+    const { budgetData, errorMessage: budgetDataErrorMessage } = await getUserBudgetById(params.budget_id);
+    if (budgetDataErrorMessage || !budgetData) {
+        throw new Error(budgetDataErrorMessage || "Error: budget not found");
     }
-    const { data: budgetData, error } = await supabase
-        .from("budgets")
-        .select("name, category_id, currency, amount, user_id, description")
-        .eq("budget_id", params.budget_id)
-        .limit(1);
-    if (error) throw error;
     const {
         name,
         category_id: categoryId,
@@ -47,10 +37,14 @@ export default async function ViewBudget({ params }: { params: { budget_id: stri
         amount: amountInCents,
         user_id,
         description,
-    } = budgetData[0];
+    } = budgetData;
     if (user_id !== user.id) {
         redirect("/dashboard");
     }
+
+    const currDateTime = new Date();
+    const monthStartDateTime = new Date(currDateTime.getFullYear(), currDateTime.getMonth(), 1, 0, 0, 0, 0);
+    const { spentBudgetData } = await getBudgetAmountSpent(params.budget_id, monthStartDateTime, currDateTime);
 
     return (
         <main className="h-fit mb-2 overflow-hidden">
@@ -85,7 +79,11 @@ export default async function ViewBudget({ params }: { params: { budget_id: stri
                         {formatCurrency(amountInCents, currency)}
                     </p>
                     <p className="max-md:text-sm text-gray-500 overflow-hidden whitespace-nowrap text-ellipsis">
-                        Left this month: $ --
+                        Left this month: {
+                            spentBudgetData
+                                ? formatCurrency(amountInCents - spentBudgetData[0].spentBudget, currency)
+                                : `${formatCurrencySymbol(currency)} --`
+                            }
                     </p>    
                     <p className="mt-3 font-semibold">
                         Category: <span className="text-gray-800 font-normal">{budgetCategories[categoryId].name}</span>

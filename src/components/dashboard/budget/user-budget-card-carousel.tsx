@@ -8,29 +8,18 @@ import {
 } from "@/components/ui/carousel";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { formatCurrency } from "@/lib/utils/format";
+import { formatCurrency, formatCurrencySymbol } from "@/lib/utils/format";
 import { budgetCategories } from "@/lib/utils/constant";
+import { getUserBudgets, getBudgetAmountSpent } from "@/lib/actions/budget";
 import { BudgetCategoryId } from "@/lib/types/budget";
-import { SupabaseClient } from "@supabase/supabase-js";
-import { unstable_noStore as noStore } from "next/cache";
+import { TransactionCategoryId } from "@/lib/types/transactions";
 import Link from "next/link";
 
-export default async function UserBudgetCardCarousel({
-    supabaseClient,
-    userId,
-}: {
-    supabaseClient: SupabaseClient,
-    userId: string,
-}) {
-    noStore();
-    
-    const { data: budgetData, error } = await supabaseClient
-        .from("budgets")
-        .select("budget_id, name, category_id, currency, amount")
-        .eq("user_id", userId)
-        .order("updated_at", { ascending: false })
-        .limit(6);
-    if (error) throw error;
+export default async function UserBudgetCardCarousel({ userId }: { userId: string }) {
+    const { userBudgetData, errorMessage } = await getUserBudgets(userId);
+    if (errorMessage || !userBudgetData) {
+        throw new Error(errorMessage || "Error: failed to fetch user budgets");
+    }
 
     return (
         <Carousel
@@ -40,19 +29,19 @@ export default async function UserBudgetCardCarousel({
             className="w-[93%] max-lg:w-[88%] max-md:w-5/6"
         >
             <CarouselContent className="-ml-2 px-1 py-4">
-                {budgetData.map((budget, idx) => {
+                {userBudgetData.map((budget, idx) => {
                     return (
                         <UserBudgetCard
                             key={idx}
-                            budget_id={budget.budget_id}
+                            budget_id={budget.budget_id!}
                             name={budget.name}
-                            categoryId={budget.category_id}
+                            categoryId={budget.category_id as TransactionCategoryId}
                             currency={budget.currency}
                             amountInCents={budget.amount}
                         />
                     )
                 })}
-                {budgetData.length === 0 && 
+                {userBudgetData.length === 0 && 
                     <CarouselItem className="opacity-80">
                         <div className="flex flex-col justify-center items-center gap-y-2 border border-slate-100 rounded-xl w-full h-44 p-6 bg-white shadow-md text-center text-gray-800">
                             <h3 className="font-semibold text-xl">
@@ -71,7 +60,7 @@ export default async function UserBudgetCardCarousel({
       )
 }
 
-function UserBudgetCard({
+async function UserBudgetCard({
     budget_id,
     name,
     categoryId,
@@ -84,6 +73,10 @@ function UserBudgetCard({
     currency: string,
     amountInCents: number,
 }) {
+    const currDateTime = new Date();
+    const monthStartDateTime = new Date(currDateTime.getFullYear(), currDateTime.getMonth(), 1, 0, 0, 0, 0);
+    const { spentBudgetData } = await getBudgetAmountSpent(budget_id, monthStartDateTime, currDateTime);
+
     return (
         <CarouselItem className="relative pl-2 md:basis-1/2 lg:basis-1/3 hover:scale-[102%] duration-200">
             <Link
@@ -102,7 +95,11 @@ function UserBudgetCard({
                     {formatCurrency(amountInCents, currency)}
                 </p>
                 <p className="text-xs lg:text-sm max-md:text-sm text-gray-500 overflow-hidden whitespace-nowrap text-ellipsis">
-                    Left this month: {formatCurrency(6969, currency)}
+                    Left this month: {
+                            spentBudgetData
+                                ? formatCurrency(amountInCents - spentBudgetData[0].spentBudget, currency)
+                                : `${formatCurrencySymbol(currency)} --`
+                            }
                 </p>
             </Link>
             <div className="absolute bottom-3 right-4 flex flex-row items-center gap-1">
