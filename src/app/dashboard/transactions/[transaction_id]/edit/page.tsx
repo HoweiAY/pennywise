@@ -3,6 +3,8 @@ import { getAuthUser } from "@/lib/actions/auth";
 import { getUserBalanceData } from "@/lib/actions/user";
 import { getTransactionById, getTotalTransactionAmount } from "@/lib/actions/transaction";
 import { getUserBudgets } from "@/lib/actions/budget";
+import { BudgetFormData, TransactionFormData } from "@/lib/types/form-state";
+import { UserBalanceData } from "@/lib/types/user";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 
@@ -18,30 +20,45 @@ export default async function EditTransaction({ params }: { params: { transactio
         getUserBudgets(user.id),
     ]);
     const [
-        { transactionData, errorMessage: transactionDataErrorMessage },
-        { userBalanceData, errorMessage: userBalanceDataErrorMessage },
-        { userBudgetData },
+        { status: transactionStatus, message: transactionMessage, data: transactionData },
+        { status: userBalanceStatus, message: userBalanceMessage, data: userBalanceData },
+        { status: userBudgetStatus, message: userBudgetMessage, data: userBudgetData },
     ] = transactionAndBalanceData;
-    if (transactionDataErrorMessage || !transactionData) throw new Error("Error: transaction not found");
-    if (transactionData.payer_id !== user.id && transactionData.recipient_id !== user.id) {
+
+    if (transactionStatus !== "success" || !transactionData) {
+        throw new Error(transactionMessage || "Error: transaction not found");
+    }
+    const userTransactionData = transactionData["transactionData"];
+    if (userTransactionData.payer_id !== user.id && userTransactionData.recipient_id !== user.id) {
         redirect("/dashboard");
     }
-    if (userBalanceDataErrorMessage || !userBalanceData) {
-        throw new Error(userBalanceDataErrorMessage || "Error: user balance information not found");
+    
+    if (userBalanceStatus !== "success" || !userBalanceData) {
+        throw new Error(userBalanceMessage || "Error: user balance information not found");
     }
-    const { currency, balance: balanceInCents } = userBalanceData;
+    let {
+        currency, 
+        balance: balanceInCents,
+        spending_limit: remainingSpendingLimitInCents,
+    } = userBalanceData["userBalanceData"];
 
-    let remainingSpendingLimitInCents = userBalanceData.spending_limit;
     if (remainingSpendingLimitInCents) {
         const currDateTime = new Date();
         const monthStartDateTime = new Date(currDateTime.getFullYear(), currDateTime.getMonth(), 1, 0, 0, 0, 0);
         const {
-            transactionAmountData,
-            errorMessage: transactionAmountDataErrorMessage,
+            status: transactionAmountStatus,
+            message: transactionAmountMessage,
+            data: transactionAmountData,
         } = await getTotalTransactionAmount(user.id, "Expenditure", monthStartDateTime, currDateTime);
-        if (!transactionAmountDataErrorMessage && transactionAmountData) {
-            remainingSpendingLimitInCents -= transactionAmountData[0].totalAmount;
+        if (transactionAmountStatus !== "success") {
+            console.error(transactionAmountMessage);
+        } else if (transactionAmountData) {
+            remainingSpendingLimitInCents -= transactionAmountData["transactionAmount"] as number;
         }
+    }
+
+    if (userBudgetStatus !== "success") {
+        console.error(userBudgetMessage);
     }
 
     return (
@@ -56,8 +73,8 @@ export default async function EditTransaction({ params }: { params: { transactio
                     balanceInCents={balanceInCents}
                     remainingSpendingLimitInCents={remainingSpendingLimitInCents}
                     transactionId={params.transaction_id}
-                    prevTransactionData={transactionData}
-                    userBudgetData={userBudgetData}
+                    prevTransactionData={userTransactionData ?? undefined}
+                    userBudgetData={userBudgetData ? userBudgetData["userBudgetData"] : undefined}
                 />
             </div>
         </main>

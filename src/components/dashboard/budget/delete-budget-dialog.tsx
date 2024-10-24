@@ -29,8 +29,8 @@ export default function DeleteBudgetDialog({
 
     const handleDeleteBudget = useCallback( async () => {
         setDeletionInProgress(true);
-        const { errorMessage } = await deleteBudget(budgetId, redirectOnDelete);
-        if (errorMessage) {
+        const { status } = await deleteBudget(budgetId, redirectOnDelete);
+        if (status !== "success") {
             toast({
                 variant: "destructive",
                 title: "Delete budget failed",

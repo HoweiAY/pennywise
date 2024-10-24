@@ -1,6 +1,7 @@
 import BudgetForm from "@/components/dashboard/budget/budget-form";
 import { getAuthUser } from "@/lib/actions/auth";
 import { getUserBudgetById } from "@/lib/actions/budget";
+import { BudgetFormData } from "@/lib/types/form-state";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 
@@ -10,8 +11,11 @@ export const metadata: Metadata = {
 
 export default async function EditBudget({ params }: { params: { budget_id: string } }) {
     const { user } = await getAuthUser();
-    const { budgetData, errorMessage } = await getUserBudgetById(params.budget_id);
-    if (errorMessage || !budgetData) throw new Error("Error: budget not found");
+    const { status, message, data } = await getUserBudgetById(params.budget_id);
+    if (status !== "success" || !data) {
+        throw new Error(message || "Error: budget not found");
+    }
+    const budgetData = data["budgetData"];
     if (budgetData.user_id !== user.id) {
         redirect("/dashboard");
     }

@@ -30,8 +30,8 @@ export default function DeleteTransactionDialog({
 
     const handleDeleteTransaction = useCallback( async () => {
         setDeletionInProgress(true);
-        const { errorMessage } = await deleteTransaction(transactionId, redirectOnDelete);
-        if (errorMessage) {
+        const { status, message } = await deleteTransaction(transactionId, redirectOnDelete);
+        if (status !== "success") {
             toast({
                 variant: "destructive",
                 title: "Delete transaction failed",
@@ -42,6 +42,7 @@ export default function DeleteTransactionDialog({
                     </ToastAction>
                 )
             });
+            console.error(message);
         } else if (!redirectOnDelete) {
             startTransition(() => router.refresh());
             toast({

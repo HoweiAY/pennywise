@@ -6,17 +6,18 @@ import { budgetCategories } from "@/lib/utils/constant";
 import { formatCurrency, formatCurrencySymbol } from "@/lib/utils/format";
 import { getAuthUser } from "@/lib/actions/auth";
 import { getUserBudgetById, getBudgetAmountSpent } from "@/lib/actions/budget";
-import { redirect } from "next/navigation";
+import { BudgetFormData } from "@/lib/types/form-state";
 import { Metadata, ResolvingMetadata } from "next";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 
 export async function generateMetadata(
     { params }: { params: { budget_id: string } },
     parent: ResolvingMetadata,
 ): Promise<Metadata> {
-    const { budgetData, errorMessage } = await getUserBudgetById(params.budget_id);
-    if (!errorMessage && budgetData) {
-        const { name: budgetName } = budgetData;
+    const { status, data } = await getUserBudgetById(params.budget_id);
+    if (status === "success" && data) {
+        const { name: budgetName } = data["budgetData"] as BudgetFormData;
         return {
             title: `${budgetName} - PennyWise`,
         }
@@ -26,9 +27,13 @@ export async function generateMetadata(
 
 export default async function ViewBudget({ params }: { params: { budget_id: string } }) {
     const { user } = await getAuthUser();
-    const { budgetData, errorMessage: budgetDataErrorMessage } = await getUserBudgetById(params.budget_id);
-    if (budgetDataErrorMessage || !budgetData) {
-        throw new Error(budgetDataErrorMessage || "Error: budget not found");
+    const {
+        status: userBudgetStatus,
+        message: userBudgetMessage,
+        data: userBudgetData,
+    } = await getUserBudgetById(params.budget_id);
+    if (userBudgetStatus !== "success" || !userBudgetData) {
+        throw new Error(userBudgetMessage || "Error: budget not found");
     }
     const {
         name,
@@ -37,14 +42,21 @@ export default async function ViewBudget({ params }: { params: { budget_id: stri
         amount: amountInCents,
         user_id,
         description,
-    } = budgetData;
+    } = userBudgetData["budgetData"] as BudgetFormData;
     if (user_id !== user.id) {
         redirect("/dashboard");
     }
 
     const currDateTime = new Date();
     const monthStartDateTime = new Date(currDateTime.getFullYear(), currDateTime.getMonth(), 1, 0, 0, 0, 0);
-    const { spentBudgetData } = await getBudgetAmountSpent(params.budget_id, monthStartDateTime, currDateTime);
+    const {
+        status: spentBudgetStatus,
+        message: spentBudgetMessage,
+        data: spentBudgetData,
+    } = await getBudgetAmountSpent(params.budget_id, monthStartDateTime, currDateTime);
+    if (spentBudgetStatus !== "success") {
+        console.error(spentBudgetMessage);
+    }
 
     return (
         <main className="h-fit mb-2 overflow-hidden">
@@ -81,7 +93,7 @@ export default async function ViewBudget({ params }: { params: { budget_id: stri
                     <p className="max-md:text-sm text-gray-500 overflow-hidden whitespace-nowrap text-ellipsis">
                         Left this month: {
                             spentBudgetData
-                                ? formatCurrency(amountInCents - spentBudgetData[0].spentBudget, currency)
+                                ? formatCurrency(amountInCents - spentBudgetData["spentBudget"], currency)
                                 : `${formatCurrencySymbol(currency)} --`
                             }
                     </p>    

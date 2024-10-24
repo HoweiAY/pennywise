@@ -25,7 +25,11 @@ export default async function TransactionsTable({
     totalPageCount: number,
     itemsPerPage: number,
 }) {
-    const { transactionItems } = await getFilteredTransactions(searchQuery, currPage, itemsPerPage);
+    const { status, message, data } = await getFilteredTransactions(searchQuery, currPage, itemsPerPage);
+    if (status !== "success") {
+        console.error(message);
+    }
+    const transactionItems = data ? data["transactionItems"] : [];
 
     return (
         <section className="flex flex-col border border-slate-100 rounded-xl min-h-96 px-6 pb-6 max-md:px-3 mb-10 bg-white shadow-lg">
@@ -83,8 +87,8 @@ export default async function TransactionsTable({
                                     {formatCurrency(
                                         transaction.amount,
                                         transaction.transaction_type === "Deposit"
-                                            ? transaction.recipient_currency
-                                            : transaction.payer_currency,
+                                            ? transaction.recipient_currency || "USD"
+                                            : transaction.payer_currency || "USD",
                                     )}
                                 </td>
                                 <td className="px-3 font-medium whitespace-nowrap text-ellipsis overflow-hidden">
@@ -94,7 +98,7 @@ export default async function TransactionsTable({
                                     {transaction.category_id ? transactionCategories[transaction.category_id].name : "--"}
                                 </td>
                                 <td className="max-w-24 px-3 font-medium whitespace-nowrap text-ellipsis overflow-hidden">
-                                    {formatDateTime(transaction.created_at)}
+                                    {transaction.created_at ? formatDateTime(transaction.created_at) : "--"}
                                 </td>
                                 <td>
                                     <DropdownMenu>
@@ -104,7 +108,7 @@ export default async function TransactionsTable({
                                             </button>
                                         </DropdownMenuTrigger>
                                         <OptionsMenu
-                                            transactionId={transaction.transaction_id}
+                                            transactionId={transaction.transaction_id ?? "#"}
                                             deletable={transaction.transaction_type !== "Pay friend"}
                                         />
                                     </DropdownMenu>
@@ -150,15 +154,17 @@ export default async function TransactionsTable({
                                     {formatCurrency(
                                         transaction.amount,
                                         transaction.transaction_type === "Deposit"
-                                            ? transaction.recipient_currency
-                                            : transaction.payer_currency,
+                                            ? transaction.recipient_currency || "USD"
+                                            : transaction.payer_currency || "USD",
                                     )}
                                 </div>
                                 <p className="max-md:hidden flex items-center whitespace-nowrap text-ellipsis overflow-hidden">
-                                    <span className="text-ellipsis overflow-hidden">{formatDateTime(transaction.created_at)}</span>
+                                    <span className="text-ellipsis overflow-hidden">
+                                        {transaction.created_at ? formatDateTime(transaction.created_at) : "--"}
+                                    </span>
                                 </p>
                                 <p className="md:hidden flex justify-end items-center whitespace-nowrap text-ellipsis overflow-hidden">
-                                    {formatDateTime(transaction.created_at, true)}
+                                    {transaction.created_at ? formatDateTime(transaction.created_at, true) : "--"}
                                 </p>
                             </div>
                             <DropdownMenu>
@@ -168,7 +174,7 @@ export default async function TransactionsTable({
                                     </button>
                                 </DropdownMenuTrigger>
                                 <OptionsMenu
-                                    transactionId={transaction.transaction_id}
+                                    transactionId={transaction.transaction_id ?? "#"}
                                     deletable={transaction.transaction_type !== "Pay friend"}
                                 />
                             </DropdownMenu>
@@ -177,7 +183,7 @@ export default async function TransactionsTable({
                 })}
             </div>
             {transactionItems?.length === 0 && 
-                <div className="flex flex-col justify-center items-center w-full h-48 border-0 rounded-lg bg-gray-100">
+                <div className="flex flex-col justify-center items-center w-full h-48 my-6 border-0 rounded-lg bg-gray-100">
                     <p className="text-center text-xl max-md:text-lg font-semibold">
                         {searchQuery ? "No results found" : "No transactions"}
                     </p>
@@ -201,7 +207,7 @@ function OptionsMenu({ transactionId, deletable }: { transactionId: string, dele
                         <p>Details</p>
                     </DropdownMenuItem>
                 </Link>
-                <Link href={`/dashboard/transactions/${transactionId}/edit`}>
+                <Link href={`/dashboard/transactions/${transactionId}/edit`} scroll={false}>
                     <DropdownMenuItem className="w-full hover:cursor-pointer max-lg:text-sm">
                         <PencilIcon className="w-4 h-4" />
                         <p>Edit</p>

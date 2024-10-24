@@ -2,6 +2,7 @@ import TransactionForm from "@/components/dashboard/transactions/transaction-for
 import { getAuthUser } from "@/lib/actions/auth";
 import { getUserBalanceData } from "@/lib/actions/user";
 import { getTotalTransactionAmount } from "@/lib/actions/transaction";
+import { UserBalanceData } from "@/lib/types/user";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -10,22 +11,28 @@ export const metadata: Metadata = {
 
 export default async function AddTransaction() {
     const { user } = await getAuthUser();
-    const { userBalanceData, errorMessage: userBalanceDataErrorMessage } = await getUserBalanceData(user.id);
-    if (userBalanceDataErrorMessage || !userBalanceData) {
-        throw new Error(userBalanceDataErrorMessage || "Error: user balance information not found");
+    const { status, message, data } = await getUserBalanceData(user.id);
+    if (status != "success" || !data) {
+        throw new Error(message || "Error: user balance information not found");
     }
-    const { currency, balance: balanceInCents } = userBalanceData;
+    let {
+        currency, 
+        balance: balanceInCents,
+        spending_limit: remainingSpendingLimitInCents,
+    } = data["userBalanceData"];
 
-    let remainingSpendingLimitInCents = userBalanceData.spending_limit;
     if (remainingSpendingLimitInCents) {
         const currDateTime = new Date();
         const monthStartDateTime = new Date(currDateTime.getFullYear(), currDateTime.getMonth(), 1, 0, 0, 0, 0);
         const {
-            transactionAmountData,
-            errorMessage: transactionAmountDataErrorMessage,
+            status: transactionAmountStatus,
+            message: transactionAmountMessage,
+            data: transactionAmountData,
         } = await getTotalTransactionAmount(user.id, "Expenditure", monthStartDateTime, currDateTime);
-        if (!transactionAmountDataErrorMessage && transactionAmountData) {
-            remainingSpendingLimitInCents -= transactionAmountData[0].totalAmount;
+        if (transactionAmountStatus !== "success") {
+            console.error(transactionAmountMessage);
+        } else if (transactionAmountData) {
+            remainingSpendingLimitInCents -= transactionAmountData["transactionAmount"] as number;
         }
     }
 

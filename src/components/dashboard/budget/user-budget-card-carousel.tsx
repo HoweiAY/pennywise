@@ -14,12 +14,14 @@ import { getUserBudgets, getBudgetAmountSpent } from "@/lib/actions/budget";
 import { BudgetCategoryId } from "@/lib/types/budget";
 import { TransactionCategoryId } from "@/lib/types/transactions";
 import Link from "next/link";
+import { BudgetFormData } from "@/lib/types/form-state";
 
 export default async function UserBudgetCardCarousel({ userId }: { userId: string }) {
-    const { userBudgetData, errorMessage } = await getUserBudgets(userId);
-    if (errorMessage || !userBudgetData) {
-        throw new Error(errorMessage || "Error: failed to fetch user budgets");
+    const { status, message, data } = await getUserBudgets(userId);
+    if (status !== "success") {
+        throw new Error(message || "Error: failed to fetch user budgets");
     }
+    const userBudgetData = data ? data["userBudgetData"] as BudgetFormData[] : [];
 
     return (
         <Carousel
@@ -75,7 +77,10 @@ async function UserBudgetCard({
 }) {
     const currDateTime = new Date();
     const monthStartDateTime = new Date(currDateTime.getFullYear(), currDateTime.getMonth(), 1, 0, 0, 0, 0);
-    const { spentBudgetData } = await getBudgetAmountSpent(budget_id, monthStartDateTime, currDateTime);
+    const { status, message, data } = await getBudgetAmountSpent(budget_id, monthStartDateTime, currDateTime);
+    if (status !== "success") {
+        console.error(message);
+    }
 
     return (
         <CarouselItem className="relative pl-2 md:basis-1/2 lg:basis-1/3 hover:scale-[102%] duration-200">
@@ -96,8 +101,8 @@ async function UserBudgetCard({
                 </p>
                 <p className="text-xs lg:text-sm max-md:text-sm text-gray-500 overflow-hidden whitespace-nowrap text-ellipsis">
                     Left this month: {
-                            spentBudgetData
-                                ? formatCurrency(amountInCents - spentBudgetData[0].spentBudget, currency)
+                            data
+                                ? formatCurrency(amountInCents - data["spentBudget"], currency)
                                 : `${formatCurrencySymbol(currency)} --`
                             }
                 </p>

@@ -9,10 +9,11 @@ export const metadata: Metadata = {
 
 export default async function CreateBudget() {
     const { user } = await getAuthUser();
-    const { userCurrencyData: currency, errorMessage } = await getUserCurrency(user.id);
-    if (errorMessage || !currency) {
-        throw new Error(errorMessage || "Error: failed to fetch user currency");
+    const { status, message, data } = await getUserCurrency(user.id);
+    if (status !== "success" || !data) {
+        throw new Error(message || "Error: failed to fetch user currency");
     }
+    const currency = data["userCurrency"];
 
     return (
         <main className="h-fit mb-2 overflow-hidden">
