@@ -3,8 +3,9 @@
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/utils/supabase/server";
 import { BudgetFormState, BudgetFormData } from "@/lib/types/form-state";
+import { ServerActionResponse } from "@/lib/types/action";
 import { unstable_noStore as noStore, revalidatePath } from "next/cache";
-import { redirect, RedirectType } from "next/navigation";
+import { redirect } from "next/navigation";
 
 const BudgetSchema = z.object({
     name: z.string().trim().min(1, { message: "Please give your budget a name" }),
@@ -131,26 +132,27 @@ export async function updateBudget(
 export async function deleteBudget(
     budgetId: string,
     redirectOnDelete?: boolean,
-): Promise<{ status?: string, errorMessage?: string }> {
+): Promise<ServerActionResponse<void>> {
     const supabase = await createSupabaseServerClient();
     const { error } = await supabase
         .from("budgets")
         .delete()
         .eq("budget_id", budgetId);
     if (error) {
-        return { errorMessage: error.message };
+        return {
+            status: "error",
+            code: 500,
+            message: error.message,
+        };
     }
     revalidatePath("/dashboard/budget");
     if (redirectOnDelete) {
         redirect("/dashboard/budget");
     }
-    return { status: "Success" };
+    return { status: "success", code: 204 };
 }
 
-export async function getUserBudgets(userId: string): Promise<{
-    userBudgetData?: BudgetFormData[],
-    errorMessage?: string,
-}> {
+export async function getUserBudgets(userId: string): Promise<ServerActionResponse<BudgetFormData[]>> {
     noStore();
 
     const supabase = await createSupabaseServerClient();
@@ -161,15 +163,20 @@ export async function getUserBudgets(userId: string): Promise<{
         .order("updated_at", { ascending: false })
         .limit(12);
     if (error) {
-        return { errorMessage: error.message };
+        return {
+            status: "error",
+            code: 500,
+            message: error.message,
+        };
     }
-    return { userBudgetData };
+    return {
+        status: "success",
+        code: 200,
+        data: { userBudgetData: userBudgetData as BudgetFormData[] },
+    };
 }
 
-export async function getUserBudgetById(budgetId: string): Promise<{
-    budgetData?: BudgetFormData,
-    errorMessage?: string,
-}> {
+export async function getUserBudgetById(budgetId: string): Promise<ServerActionResponse<BudgetFormData>> {
     noStore();
 
     const supabase = await createSupabaseServerClient();
@@ -179,19 +186,24 @@ export async function getUserBudgetById(budgetId: string): Promise<{
         .eq("budget_id", budgetId)
         .limit(1);
     if (error) {
-        return { errorMessage: error.message };
+        return {
+            status: "error",
+            code: 500,
+            message: error.message,
+        };
     }
-    return { budgetData: budgetData[0] };
+    return {
+        status: "success",
+        code: 200,
+        data: { budgetData: budgetData[0] as BudgetFormData },
+     };
 }
 
 export async function getBudgetAmountSpent(
     budgetId: string,
     from: Date,
     to: Date,
-): Promise<{
-    spentBudgetData?: { spentBudget: number }[],
-    errorMessage?: string,
-}> {
+): Promise<ServerActionResponse<number>> {
     noStore();
     
     const supabase = await createSupabaseServerClient();
@@ -202,7 +214,15 @@ export async function getBudgetAmountSpent(
         .lt("created_at", to.toISOString())
         .gte("created_at", from.toISOString());
     if (error) {
-        return { errorMessage: error.message };
+        return {
+            status: "error",
+            code: 500,
+            message: error.message,
+        };
     }
-    return { spentBudgetData };
+    return {
+        status: "success",
+        code: 200,
+        data: { spentBudget: spentBudgetData[0].spentBudget as number },
+    };
 }

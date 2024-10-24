@@ -12,10 +12,14 @@ export type TransactionItem = {
     transaction_type: TransactionType;
     category_id: TransactionCategoryId | null;
     payer_data: {
-        avatar_url: string;
+        user_id?: string,
+        username?: string,
+        avatar_url?: string | null;
     }[];
     recipient_data: {
-        avatar_url: string;
+        user_id?: string,
+        username?: string,
+        avatar_url?: string | null;
     }[];
     description: any;
     created_at: any;

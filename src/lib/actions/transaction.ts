@@ -5,6 +5,7 @@ import { addUserBalance, deductUserBalance } from "@/lib/actions/user";
 import { createSupabaseServerClient } from "@/lib/utils/supabase/server";
 import { TransactionFormState, TransactionFormData } from "@/lib/types/form-state";
 import { TransactionItem, TransactionType } from "@/lib/types/transactions";
+import { ServerActionResponse } from "@/lib/types/action";
 import { redirect } from "next/navigation";
 import { unstable_noStore as noStore, revalidatePath } from "next/cache";
 
@@ -64,14 +65,16 @@ export async function createTransaction(
             remainingBudgetAmount: remainingBudgetAmountInCents,
             type: transactionType,
         } = validatedTransactionData.data;
+        const budgetId = validatedTransactionData.data.budget;
+        const categoryId = validatedTransactionData.data.category;
         if (transactionType !== "Deposit") {
             const message = (amountInCents > balanceInCents)
                 ? "Transaction amount has exceeded your available balance"
                 : (remainingSpendingLimitInCents && amountInCents > remainingSpendingLimitInCents)
                 ? "Transaction amount has exceeded your spending limit"
-                : ((budget && category) || !(budget || category))
+                : ((budgetId && categoryId) || !(budgetId || categoryId))
                 ? "Please select either a budget or a category"
-                : (budget && remainingBudgetAmountInCents && amountInCents > remainingBudgetAmountInCents)
+                : (budgetId && remainingBudgetAmountInCents && amountInCents > remainingBudgetAmountInCents)
                 ? "Transaction amount has exceeded your budget amount"
                 : null;
             if (message) {
@@ -85,7 +88,6 @@ export async function createTransaction(
             amount: amountInCents,
             description: validatedTransactionData.data.description,
         };
-        const budgetId = validatedTransactionData.data.budget;
         if (transactionType !== "Deposit" && budgetId) {
             transactionData.budget_id = budgetId;
         }
@@ -99,7 +101,7 @@ export async function createTransaction(
             transactionData.recipient_id = user.id;
             transactionData.recipient_currency = validatedTransactionData.data.currency;
         } else {
-            transactionData.category_id = validatedTransactionData.data.category;
+            transactionData.category_id = categoryId;
             transactionData.payer_id = user.id;
             transactionData.payer_currency = validatedTransactionData.data.currency;
         }
@@ -111,9 +113,15 @@ export async function createTransaction(
             supabase.from("transactions").insert(transactionData),
             updateBalanceAction,
         ]).then(res => {
-            const { error } = res[0];
-            if (error) {
-                return { message: error.message };
+            const [
+                { error: supabaseError },
+                { status: updateBalanceStatus, message: updateBalanceMessage },
+            ] = res;
+            if (supabaseError) {
+                return { message: supabaseError.message };
+            }
+            if (updateBalanceStatus !== "success") {
+                return { message: updateBalanceMessage ?? "Failed to update user balance" };
             }
         }).catch(error => {
             if (error instanceof Error) {
@@ -178,14 +186,18 @@ export async function updateTransaction(
             remainingBudgetAmount: remainingBudgetAmountInCents,
             type: transactionType,
         } = validatedTransactionData.data;
+        const budgetId = validatedTransactionData.data.budget;
+        const categoryId = validatedTransactionData.data.category;
+        console.log(`budget: ${budgetId}`);
+        console.log(`category: ${categoryId}`);
         if (transactionType !== "Deposit") {
             const message = (netAmountInCents > balanceInCents)
                 ? "Transaction amount has exceeded your available balance"
                 : (remainingSpendingLimitInCents && netAmountInCents > remainingSpendingLimitInCents)
                 ? "Transaction amount has exceeded your spending limit"
-                : ((budget && category) || !(budget || category))
+                : ((budgetId && categoryId) || !(budgetId || categoryId))
                 ? "Please select either a budget or a category"
-                : (budget && remainingBudgetAmountInCents && netAmountInCents > remainingBudgetAmountInCents)
+                : (budgetId && remainingBudgetAmountInCents && netAmountInCents > remainingBudgetAmountInCents)
                 ? "Transaction amount has exceeded your budget amount"
                 : null;
             if (message) {
@@ -201,9 +213,9 @@ export async function updateTransaction(
             amount: amountInCents,
             description: validatedTransactionData.data.description,
         };
-        const budgetId = validatedTransactionData.data.budget;
-        if (transactionType !== "Deposit" && budgetId) {
+        if (transactionType !== "Deposit") {
             transactionData.budget_id = budgetId;
+            transactionData.category_id = categoryId;
         }
 
         const supabase = await createSupabaseServerClient();
@@ -222,9 +234,15 @@ export async function updateTransaction(
             supabase.from("transactions").update(transactionData).eq("transaction_id", transactionId.toString()),
             updateBalanceAction,
         ]).then(res => {
-            const { error } = res[0];
-            if (error) {
-                return { message: error.message };
+            const [
+                { error: supabaseError },
+                { status: updateBalanceStatus, message: updateBalanceMessage },
+            ] = res;
+            if (supabaseError) {
+                return { message: supabaseError.message };
+            }
+            if (updateBalanceStatus !== "success") {
+                return { message: updateBalanceMessage ?? "Failed to update user balance" };
             }
         }).catch(error => {
             if (error instanceof Error) {
@@ -243,11 +261,15 @@ export async function updateTransaction(
 export async function deleteTransaction(
     transactionId: string,
     redirectOnDelete?: boolean,
-): Promise<{ status?: string, errorMessage?: string }> {
+): Promise<ServerActionResponse<void>> {
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-            return { errorMessage: "Error: user not found" };
+            return {
+                status: "error",
+                code: 401,
+                message: "Error: user not found",
+            };
         }
     
     const { data: transactionData, error: transactionDataError } = await supabase
@@ -256,7 +278,11 @@ export async function deleteTransaction(
         .eq("transaction_id", transactionId)
         .limit(1);
     if (transactionDataError) {
-        return { errorMessage: transactionDataError.message };
+        return {
+            status: "error",
+            code: 500,
+            message: transactionDataError.message,
+        };
     }
     const {
         transaction_type: transactionType,
@@ -268,38 +294,41 @@ export async function deleteTransaction(
     const changeBalanceAction = transactionType === "Deposit"
         ? deductUserBalance(user.id, amount, supabase)
         : addUserBalance(user.id, amount, supabase);
-    try {
-        await changeBalanceAction;
-    } catch (error) {
-        if (error instanceof Error) {
-            return { errorMessage: error.message };
-        }
-        return { errorMessage: "Error: cannot change user balance" };
+
+    const [
+        { status: changeBalanceStatus, code: changeBalanceCode, message: changeBalanceMessage },
+        { error: deleteTransactionError },
+    ] = await Promise.all([
+        changeBalanceAction,
+        supabase.from("transactions").delete().eq("transaction_id", transactionId),
+    ]);
+    if (changeBalanceStatus !== "success") {
+        return {
+            status: changeBalanceStatus,
+            code: changeBalanceCode,
+            message: changeBalanceMessage || "Failed to update user balance",
+        };
     }
-    
-    const { error: deleteTransactionError } = await supabase
-        .from("transactions")
-        .delete()
-        .eq("transaction_id", transactionId);
     if (deleteTransactionError) {
-        return { errorMessage: deleteTransactionError.message };
+        return {
+            status: "error",
+            code: 500,
+            message: deleteTransactionError.message,
+        };
     }
     revalidatePath("/dashboard/transactions");
     if (redirectOnDelete) {
         redirect("/dashboard/transactions");
     }
     
-    return { status: "Success" };
+    return { status: "success", code: 204 };
 }
 
 // Server action for transactions table pagination
 export async function getTransactionsPages(
     itemsPerPage: number,
     searchQuery: string
-): Promise<{
-    totalPageCount?: number,
-    errorMessage?: string,
-}> {
+): Promise<ServerActionResponse<number>> {
     noStore();
 
     try {
@@ -322,12 +351,24 @@ export async function getTransactionsPages(
         const { data: transactionCountData, error } = await supabaseQuery;
         if (error) throw error;
         const { transactionCount } = transactionCountData[0] as { transactionCount: number };
-        return { totalPageCount: Math.ceil(transactionCount / itemsPerPage) };
+        return {
+            status: "success",
+            code: 200,
+            data: { totalPageCount: Math.ceil(transactionCount / itemsPerPage) },
+        };
     } catch (error) {
         if (error instanceof Error) {
-            return { errorMessage: error.message };
+            return {
+                status: "error",
+                code: 500,
+                message: error.message,
+            };
         }
-        return { errorMessage: "Transaction pagination information fetch failed" };
+        return {
+            status: "error",
+            code: 500,
+            message: "Transaction pagination information fetch failed",
+        };
     }
 }
 
@@ -336,10 +377,7 @@ export async function getFilteredTransactions(
     searchQuery: string,
     currPage: number,
     itemsPerPage: number
-): Promise<{
-    transactionItems?: TransactionItem[],
-    errorMessage?: string,
-}> {
+): Promise<ServerActionResponse<TransactionItem[]>> {
     noStore();
 
     try {
@@ -377,20 +415,29 @@ export async function getFilteredTransactions(
             .limit(itemsPerPage);
         const { data: transactionsData, error } = await supabaseQuery;
         if (error) throw error;
-        return { transactionItems: transactionsData };
+        return {
+            status: "success",
+            code: 200,
+            data: { transactionItems: transactionsData as TransactionItem[] },
+        };
     } catch (error) {
         if (error instanceof Error) {
-            return { errorMessage: error.message };
+            return {
+                status: "error",
+                code: 500,
+                message: error.message,
+            };
         }
-        return { errorMessage: "Transaction items fetch failed" };
+        return {
+            status: "error",
+            code: 500,
+            message: "Transaction items fetch failed",
+        };
     }
 }
 
 // Server action for fetching a transaction with a given ID
-export async function getTransactionById(transactionId: string): Promise<{
-    transactionData?: TransactionFormData,
-    errorMessage?: string,
-}> {
+export async function getTransactionById(transactionId: string): Promise<ServerActionResponse<TransactionFormData>> {
     noStore();
 
     const supabase = await createSupabaseServerClient();
@@ -413,9 +460,17 @@ export async function getTransactionById(transactionId: string): Promise<{
         .eq("transaction_id", transactionId)
         .limit(1);
     if (error) {
-        return { errorMessage: error.message };
+        return {
+            status: "error",
+            code: 500,
+            message: error.message,
+        };
     }
-    return { transactionData: transactionData[0] };
+    return {
+        status: "success",
+        code: 200,
+        data: { transactionData: transactionData[0] as TransactionFormData },
+    };
 }
 
 // Server action for getting total transaction amount within a time period
@@ -424,7 +479,7 @@ export async function getTotalTransactionAmount(
     type: "Income" | "Expenditure",
     from: Date,
     to: Date,
-) {
+): Promise<ServerActionResponse<number>> {
     noStore();
 
     const matchingColumn = type === "Income" ? "recipient_id" : "payer_id";
@@ -436,7 +491,15 @@ export async function getTotalTransactionAmount(
         .lt("created_at", to.toISOString())
         .gte("created_at", from.toISOString());
     if (error) {
-        return { errorMessage: error.message };
+        return {
+            status: "error",
+            code: 500,
+            message: error.message,
+        };
     }
-    return { transactionAmountData };
+    return {
+        status:"success",
+        code: 200,
+        data: { transactionAmount: transactionAmountData[0].totalAmount as number },
+    };
 }

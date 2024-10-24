@@ -7,7 +7,7 @@ export type AuthFormState = {
         password?: string[];
     };
     message?: string | null;
-}
+};
 
 export type AccountSetupFormData = {
     first_name?: string,
@@ -17,7 +17,7 @@ export type AccountSetupFormData = {
     balance?: number,
     spending_limit?: number | null,
     avatar_url?: string | null,
-}
+};
 
 export type TransactionFormState = {
     error?: {
@@ -33,9 +33,10 @@ export type TransactionFormState = {
         description?: string[] | undefined;
     };
     message?: string | null;
-}
+};
 
 export type TransactionFormData = {
+    transaction_id?: string,
     title: string,
     transaction_type: TransactionType,
     category_id?: number | null,
@@ -48,7 +49,7 @@ export type TransactionFormData = {
     budget_id?: string | null,
     description: string | null,
     created_at?: string,
-}
+};
 
 export type BudgetFormState = {
     error?:{
@@ -58,7 +59,7 @@ export type BudgetFormState = {
         description?: string[] | undefined;
     };
     message?: string | null;
-}
+};
 
 export type BudgetFormData = {
     budget_id?: string,
@@ -69,4 +70,4 @@ export type BudgetFormData = {
     user_id: string,
     description: string | null,
     updated_at?: string | null,
-}
+};
