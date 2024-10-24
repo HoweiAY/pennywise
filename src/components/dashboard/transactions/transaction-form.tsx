@@ -34,7 +34,7 @@ export default function TransactionForm({
 }) {
     const [ descriptionTextboxWidth, setDescriptionTextboxWidth ] = useState<number>(0);
     const [ titlePlaceholder, setTitlePlaceholder ] = useState<string>("My new transaction 💲");
-    const [ amountInCents, setAmountInCents ] = useState<number | null>(prevTransactionData?.amount || null);
+    const [ amountInCents, setAmountInCents ] = useState<number | null>(0);
     const [ deductedSpendingLimitInCents, setDeductedSpendingLimitInCents ] = useState<number>(0);
     const [ type, setType ] = useState<TransactionType>(prevTransactionData?.transaction_type ?? "Deposit");
     const [ userBudgets, setUserBudgets ] = useState<BudgetFormData[]>(userBudgetData ?? []);
@@ -62,15 +62,21 @@ export default function TransactionForm({
             const budgetAmount = budget.amount;
             const currDateTime = new Date();
             const monthStartDateTime = new Date(currDateTime.getFullYear(), currDateTime.getMonth(), 1, 0, 0, 0, 0);
-            const { spentBudgetData, errorMessage } = await getBudgetAmountSpent(budgetId, monthStartDateTime, currDateTime);
-            if (!errorMessage && spentBudgetData) {
-                const remainingBudget = budgetAmount - spentBudgetData[0].spentBudget;
+            const {
+                status: spentBudgetStatus,
+                message: spentBudgetMessage,
+                data: spentBudgetData
+            } = await getBudgetAmountSpent(budgetId, monthStartDateTime, currDateTime);
+            if (spentBudgetStatus === "success" && spentBudgetData) {
+                const remainingBudget = budgetAmount - spentBudgetData["spentBudget"];
                 let deductedBudget = amountInCents !== null ? remainingBudget - amountInCents : remainingBudget;
-                if (prevTransactionData) {
+                if (prevTransactionData && prevTransactionData.budget_id !== budgetId) {
                     deductedBudget -= amountInCents !== prevTransactionData.amount ? prevTransactionData.amount : -amountInCents;
                 }
-                setRemainingBudgetAmountInCents(remainingBudget);
-                setDeductedBudgetAmountInCents(deductedBudget);
+                setRemainingBudgetAmountInCents(Math.min(budgetAmount, remainingBudget));
+                setDeductedBudgetAmountInCents(Math.min(budgetAmount, deductedBudget));
+            } else {
+                console.error(spentBudgetMessage);
             }
             break;
         }
@@ -89,7 +95,10 @@ export default function TransactionForm({
             setDeductedSpendingLimitInCents(!isNaN(deductedLimit) ? deductedLimit : remainingSpendingLimitInCents);
         }
         if (budgetId && remainingBudgetAmountInCents) {
-            const deductedBudget = remainingBudgetAmountInCents - inputAmountInCents;
+            let deductedBudget = remainingBudgetAmountInCents - inputAmountInCents;
+            if (prevTransactionData && prevTransactionData?.budget_id !== budgetId) {
+                deductedBudget -= prevTransactionData?.amount;
+            }
             setDeductedBudgetAmountInCents(!isNaN(deductedBudget) ? deductedBudget : remainingBudgetAmountInCents);
         }
     }, 300);
@@ -99,16 +108,21 @@ export default function TransactionForm({
         if (remainingSpendingLimitInCents) {
             setDeductedSpendingLimitInCents(remainingSpendingLimitInCents);
         }
-        if (prevTransactionData && prevTransactionData.transaction_type !== "Deposit") {
-            setCategoryId(prevTransactionData.category_id as TransactionCategoryId);
+        if (prevTransactionData) {
+            setAmountInCents(0);
+            if (prevTransactionData.transaction_type !== "Deposit") {
+                setCategoryId(prevTransactionData.category_id as TransactionCategoryId);
+            }
         }
     }, []);
 
     useEffect(() => {
         const fetchUserBudgets = async () => {
-            const { userBudgetData, errorMessage } = await getUserBudgets(userId);
-            if (!errorMessage && userBudgetData) {
-                setUserBudgets(userBudgetData);
+            const { status, message, data } = await getUserBudgets(userId);
+            if (status === "success" && data) { 
+                setUserBudgets(data["userBudgetData"]);
+            } else {
+                console.error(message);
             }
         };
         if (userBudgetData) return;
