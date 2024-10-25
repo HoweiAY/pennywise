@@ -42,7 +42,7 @@ export default async function ViewBudget({ params }: { params: { budget_id: stri
         amount: amountInCents,
         user_id,
         description,
-    } = userBudgetData["budgetData"] as BudgetFormData;
+    } = userBudgetData["budgetData"];
     if (user_id !== user.id) {
         redirect("/dashboard");
     }
@@ -83,7 +83,7 @@ export default async function ViewBudget({ params }: { params: { budget_id: stri
                                         <TrashIcon className="w-4 h-4" />
                                     </button>
                                 </AlertDialogTrigger>
-                                <DeleteBudgetDialog budgetId={params.budget_id} redirectOnDelete={true} />
+                                <DeleteBudgetDialog budgetId={params.budget_id} rerouteOnDelete={true} />
                             </AlertDialog>
                         </div>
                     </div>
@@ -105,7 +105,7 @@ export default async function ViewBudget({ params }: { params: { budget_id: stri
                         <span className="text-gray-800 font-normal">{!description && " none"}</span>
                     </p>
                     {description && 
-                        <p className="mt-1 text-gray-800 max-md:text-sm">
+                        <p className="border border-gray-200 rounded-lg min-h-20 p-2 mt-2 text-gray-800 max-md:text-sm bg-white">
                             {description}
                         </p>
                     }

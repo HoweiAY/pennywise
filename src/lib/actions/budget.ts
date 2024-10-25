@@ -129,10 +129,7 @@ export async function updateBudget(
     redirect("/dashboard/budget");
 }
 
-export async function deleteBudget(
-    budgetId: string,
-    redirectOnDelete?: boolean,
-): Promise<ServerActionResponse<void>> {
+export async function deleteBudget(budgetId: string): Promise<ServerActionResponse<void>> {
     const supabase = await createSupabaseServerClient();
     const { error } = await supabase
         .from("budgets")
@@ -146,9 +143,6 @@ export async function deleteBudget(
         };
     }
     revalidatePath("/dashboard/budget");
-    if (redirectOnDelete) {
-        redirect("/dashboard/budget");
-    }
     return { status: "success", code: 204 };
 }
 

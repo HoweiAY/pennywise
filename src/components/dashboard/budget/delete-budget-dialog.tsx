@@ -17,10 +17,10 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function DeleteBudgetDialog({
     budgetId,
-    redirectOnDelete,
+    rerouteOnDelete,
 }: {
     budgetId: string,
-    redirectOnDelete?: boolean,
+    rerouteOnDelete?: boolean,
 }) {
     const [ isPending, startTransition ] = useTransition();
     const [ deletionInProgress, setDeletionInProgress ] = useState<boolean>(false);
@@ -29,7 +29,7 @@ export default function DeleteBudgetDialog({
 
     const handleDeleteBudget = useCallback( async () => {
         setDeletionInProgress(true);
-        const { status } = await deleteBudget(budgetId, redirectOnDelete);
+        const { status } = await deleteBudget(budgetId);
         if (status !== "success") {
             toast({
                 variant: "destructive",
@@ -41,10 +41,14 @@ export default function DeleteBudgetDialog({
                     </ToastAction>
                 )
             });
-        } else if (!redirectOnDelete) {
-            startTransition(() => router.refresh());
+        } else {
+            if (rerouteOnDelete) {
+                router.push("/dashboard/budget");
+            } else {
+                startTransition(() => router.refresh());
+            }
             toast({
-                title: "Delete successful",
+                title: "Delete successful!",
                 description: "Your transaction has been deleted.",
             });
         }

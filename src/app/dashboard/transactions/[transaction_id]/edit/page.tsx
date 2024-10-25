@@ -32,6 +32,9 @@ export default async function EditTransaction({ params }: { params: { transactio
     if (userTransactionData.payer_id !== user.id && userTransactionData.recipient_id !== user.id) {
         redirect("/dashboard");
     }
+    if (userTransactionData.transaction_type === "Pay friend") {
+        redirect("/dashboard/transactions");
+    }
     
     if (userBalanceStatus !== "success" || !userBalanceData) {
         throw new Error(userBalanceMessage || "Error: user balance information not found");

@@ -17,10 +17,10 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function DeleteTransactionDialog({
     transactionId,
-    redirectOnDelete,
+    rerouteOnDelete,
 }: {
     transactionId: string,
-    redirectOnDelete?: boolean,
+    rerouteOnDelete?: boolean,
 }) {
     const [ isPending, startTransition ] = useTransition();
     const [ deletionInProgress, setDeletionInProgress ] = useState<boolean>(false);
@@ -30,7 +30,7 @@ export default function DeleteTransactionDialog({
 
     const handleDeleteTransaction = useCallback( async () => {
         setDeletionInProgress(true);
-        const { status, message } = await deleteTransaction(transactionId, redirectOnDelete);
+        const { status, message } = await deleteTransaction(transactionId);
         if (status !== "success") {
             toast({
                 variant: "destructive",
@@ -43,15 +43,19 @@ export default function DeleteTransactionDialog({
                 )
             });
             console.error(message);
-        } else if (!redirectOnDelete) {
-            startTransition(() => router.refresh());
+        } else {
+            if (rerouteOnDelete) {
+                router.push("/dashboard/transactions");
+            } else {
+                startTransition(() => router.refresh());
+            }
             toast({
-                title: "Delete successful",
+                title: "Delete successful!",
                 description: "Your transaction has been deleted.",
             });
         }
         setDeletionInProgress(false);
-    }, [transactionId, redirectOnDelete]);
+    }, [transactionId, rerouteOnDelete]);
 
     return (
         <AlertDialogContent className="rounded-lg">

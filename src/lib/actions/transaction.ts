@@ -258,10 +258,7 @@ export async function updateTransaction(
 }
 
 // Server action for deleting a transaction
-export async function deleteTransaction(
-    transactionId: string,
-    redirectOnDelete?: boolean,
-): Promise<ServerActionResponse<void>> {
+export async function deleteTransaction(transactionId: string): Promise<ServerActionResponse<void>> {
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
@@ -317,10 +314,6 @@ export async function deleteTransaction(
         };
     }
     revalidatePath("/dashboard/transactions");
-    if (redirectOnDelete) {
-        redirect("/dashboard/transactions");
-    }
-    
     return { status: "success", code: 204 };
 }
 
