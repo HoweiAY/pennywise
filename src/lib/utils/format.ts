@@ -20,6 +20,10 @@ export const formatCurrencyAmount = (amount?: number | null) => {
   return amount ? (amount / 100).toFixed(2) : "";
 };
 
+export const formatAmountPercentageChange = (percentageChange: number) => {
+  return `${percentageChange.toFixed(2)}%`;
+};
+
 export const formatDateTime = (isoDateTimeString: string, shorten?: boolean) => {
   const localDateTime = new Date(isoDateTimeString);
   return shorten 

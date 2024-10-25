@@ -100,7 +100,7 @@ export default async function ViewTransaction({ params }: { params: { transactio
                             </AlertDialog>
                         </div>
                     </div>
-                    <div className="max-md:self-center max-md:flex max-md:flex-col max-md:items-center border border-slate-100 rounded-xl w-full sm:w-11/12 md:w-3/4 lg:w-1/2 max-w-full p-6 mt-6 bg-white shadow-lg duration-200">
+                    <div className="max-md:self-center max-md:flex max-md:flex-col max-md:justify-center max-md:items-center border border-slate-100 rounded-xl w-full sm:w-11/12 md:w-3/4 lg:w-1/2 max-w-full max-md:min-h-40 p-6 mt-6 bg-white shadow-lg duration-200">
                         <p className="md:text-lg font-semibold">
                             {amountMessage}
                         </p>
@@ -152,7 +152,7 @@ export default async function ViewTransaction({ params }: { params: { transactio
                     }
                     <Link
                         href={"/dashboard/transactions"}
-                        className="flex items-center rounded-md w-fit max-md:w-36 px-4 py-2 mt-4 mr-6 max-md:mr-3 text-center max-md:text-sm font-semibold bg-white hover:bg-sky-100 hover:text-blue-600 shadow-md shadow-slate-300 transition-colors duration-200"
+                        className="flex items-center rounded-md w-fit px-4 py-2 mt-4 mr-6 max-md:mr-3 text-center max-md:text-sm font-semibold bg-white hover:bg-sky-100 hover:text-blue-600 shadow-md shadow-slate-300 transition-colors duration-200"
                     >
                         Back
                     </Link>

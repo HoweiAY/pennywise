@@ -31,12 +31,12 @@ export default function TopBar() {
     }, []);
 
     return (
-        <div className="flex flex-row justify-end max-md:justify-between items-center h-20 ps-6 pe-12 py-6 max-md:px-6 border shadow-sm bg-white sticky top-0 z-10">
+        <div className="flex flex-row justify-end max-md:justify-between items-center h-20 ps-6 pe-12 py-6 max-md:px-6 border border-gray-200 shadow-sm bg-sky-50 max-md:bg-white sticky top-0 z-10">
             <PennyWiseLogo hiddenOnLargeScreen={true} />
             <div className="flex flex-row justify-end items-center gap-6 max-md:gap-4">
                 <Link 
                     href={"/dashboard/notifications"}
-                    className="flex justify-center items-center rounded-full w-12 h-12 hover:bg-sky-100 text-gray-700 hover:text-blue-600 hover:shadow-sm duration-200"
+                    className="flex justify-center items-center rounded-full w-12 h-12 hover:bg-sky-200 max-md:hover:bg-sky-100 text-gray-700 hover:text-blue-600 hover:shadow-sm duration-200"
                 >
                     <BellIcon className="w-7 h-7" />
                 </Link>

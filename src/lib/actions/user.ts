@@ -1,10 +1,33 @@
 "use server";
 
 import { ServerActionResponse } from "@/lib/types/action";
-import { UserBalanceData } from "@/lib/types/user";
+import { UserData, UserBalanceData } from "@/lib/types/user";
 import { createSupabaseServerClient } from "@/lib/utils/supabase/server";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { unstable_noStore as noStore } from "next/cache";
+
+export async function getUserDataById(userId: string): Promise<ServerActionResponse<UserData>> {
+    noStore();
+
+    const supabase = await createSupabaseServerClient();
+    const { data: userData, error } = await supabase
+        .from("users")
+        .select("username, email, first_name, last_name, country, avatar_url")
+        .eq("user_id", userId)
+        .limit(1);
+    if (error) {
+        return {
+            status: "error",
+            code: 500,
+            message: error.message,
+        };
+    }
+    return {
+        status: "success",
+        code: 200,
+        data: { userData: userData[0] as UserData },
+    };
+}
 
 // Server action for fetching users' account balance information
 export async function getUserBalanceData(userId: string): Promise<ServerActionResponse<UserBalanceData>> {
@@ -21,7 +44,7 @@ export async function getUserBalanceData(userId: string): Promise<ServerActionRe
             status: "error",
             code: 500,
             message: error.message,
-        }
+        };
     }
     return {
         status: "success",
