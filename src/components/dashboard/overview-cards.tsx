@@ -73,9 +73,7 @@ export default async function OverviewCards({ userId }: { userId: string }) {
         } else {
             const prevIncomeInCents = prevMonthIncomeData["transactionAmount"];
             overviewData.incomeChange = prevIncomeInCents
-                ? prevIncomeInCents !== overviewData.incomeInCents
-                    ? amountPercentageChange(prevIncomeInCents, overviewData.incomeInCents)
-                    : 0
+                ? amountPercentageChange(prevIncomeInCents, overviewData.incomeInCents)
                 : null;
         }
     } else {
@@ -91,9 +89,7 @@ export default async function OverviewCards({ userId }: { userId: string }) {
         } else {
             const prevExpenditureInCents = prevMonthExpenditureData["transactionAmount"];
             overviewData.expenditureChange = prevExpenditureInCents 
-                ? prevExpenditureInCents !== overviewData.expenditureInCents
-                    ? amountPercentageChange(prevExpenditureInCents, overviewData.expenditureInCents)
-                    : 0
+                ? amountPercentageChange(prevExpenditureInCents, overviewData.expenditureInCents)
                 : null;
         }
     } else {

@@ -391,8 +391,12 @@ export async function getFilteredTransactions(
                 amount,
                 transaction_type,
                 category_id,
-                payer_data:users!transactions_payer_id_fkey(avatar_url),
-                recipient_data:users!transactions_recipient_id_fkey(avatar_url),
+                payer_id,
+                recipient_id,
+                budget_id,
+                payer_data:users!transactions_payer_id_fkey(username, first_name, last_name, avatar_url),
+                recipient_data:users!transactions_recipient_id_fkey(username, first_name, last_name, avatar_url),
+                budget_data:budgets!transactions_budget_id_fkey(category_id),
                 description,
                 created_at
             `)
@@ -430,13 +434,34 @@ export async function getFilteredTransactions(
 }
 
 // Server action for fetching a transaction with a given ID
-export async function getTransactionById(transactionId: string): Promise<ServerActionResponse<TransactionFormData>> {
+export async function getTransactionById(
+    transactionId: string,
+    asForm?: boolean,
+): Promise<ServerActionResponse<TransactionItem | TransactionFormData>> {
     noStore();
 
     const supabase = await createSupabaseServerClient();
-    const { data: transactionData, error } = await supabase
-        .from("transactions")
-        .select(`
+    let supabaseQuery;
+    if (!asForm) {
+        supabaseQuery = supabase.from("transactions").select(`
+            title,
+            transaction_type,
+            category_id,
+            payer_currency,
+            recipient_currency,
+            exchange_rate,
+            amount,
+            payer_id,
+            recipient_id,
+            budget_id,
+            payer_data:users!transactions_payer_id_fkey(username, avatar_url),
+            recipient_data:users!transactions_recipient_id_fkey(username, avatar_url),
+            budget_data:budgets!transactions_budget_id_fkey(name, category_id),
+            description,
+            created_at
+        `);
+    } else {
+        supabaseQuery = supabase.from("transactions").select(`
             title,
             transaction_type,
             category_id,
@@ -449,9 +474,10 @@ export async function getTransactionById(transactionId: string): Promise<ServerA
             budget_id,
             description,
             created_at
-        `)
-        .eq("transaction_id", transactionId)
-        .limit(1);
+        `);
+    }
+    supabaseQuery = supabaseQuery.eq("transaction_id", transactionId).limit(1);
+    const { data: transactionData, error } = await supabaseQuery;
     if (error) {
         return {
             status: "error",
@@ -462,7 +488,11 @@ export async function getTransactionById(transactionId: string): Promise<ServerA
     return {
         status: "success",
         code: 200,
-        data: { transactionData: transactionData[0] as TransactionFormData },
+        data: {
+            transactionData: asForm
+                ? transactionData[0] as TransactionFormData
+                : transactionData[0] as TransactionItem
+        },
     };
 }
 

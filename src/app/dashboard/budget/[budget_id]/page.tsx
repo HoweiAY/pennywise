@@ -105,7 +105,7 @@ export default async function ViewBudget({ params }: { params: { budget_id: stri
                         <span className="text-gray-800 font-normal">{!description && " none"}</span>
                     </p>
                     {description && 
-                        <p className="border border-gray-200 rounded-lg min-h-20 p-2 mt-2 text-gray-800 max-md:text-sm bg-white">
+                        <p className="border rounded-lg min-h-20 p-2 mt-2 text-gray-800 max-md:text-sm bg-gray-50">
                             {description}
                         </p>
                     }

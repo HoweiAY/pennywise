@@ -3,10 +3,9 @@ import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { ArrowRightIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { getAuthUser } from "@/lib/actions/auth";
 import { getTransactionById } from "@/lib/actions/transaction";
-import { getUserBudgetById } from "@/lib/actions/budget";
 import { transactionCategories } from "@/lib/utils/constant";
 import { formatCurrency, formatDateTime } from "@/lib/utils/format";
-import { TransactionCategoryId } from "@/lib/types/transactions";
+import { TransactionCategoryId, TransactionItem } from "@/lib/types/transactions";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import clsx from "clsx";
@@ -14,13 +13,9 @@ import clsx from "clsx";
 
 export default async function ViewTransaction({ params }: { params: { transaction_id: string } }) {
     const { user } = await getAuthUser();
-    const {
-        status: userTransactionStatus,
-        message: userTransactionMessage,
-        data: userTransactionData
-    } = await getTransactionById(params.transaction_id);
-    if (userTransactionStatus !== "success" || !userTransactionData) {
-        throw new Error(userTransactionMessage || "Error: transaction not found");
+    const { status, message, data } = await getTransactionById(params.transaction_id);
+    if (status !== "success" || !data) {
+        throw new Error(message || "Error: transaction not found");
     }
     const {
         title,
@@ -33,25 +28,12 @@ export default async function ViewTransaction({ params }: { params: { transactio
         payer_id,
         recipient_id,
         budget_id,
+        budget_data,
         description,
         created_at,
-    } = userTransactionData["transactionData"];
+    } = data["transactionData"] as TransactionItem;
     if (payer_id !== user.id && recipient_id !== user.id) {
         redirect("/dashboard");
-    }
-
-    let budgetData = null;
-    if (budget_id) {
-        const {
-            status: userBudgetStatus,
-            message: userBudgetMessage,
-            data: userBudgetData,
-        } = await getUserBudgetById(budget_id);
-        if (userBudgetStatus !== "success") {
-            console.error(userBudgetMessage);
-        } else if (userBudgetData) {
-            budgetData = userBudgetData["budgetData"];
-        }
     }
 
     let amountInCents = amount, amountMessage = "You deposited:";
@@ -121,15 +103,15 @@ export default async function ViewTransaction({ params }: { params: { transactio
                         <span className="text-gray-800 font-normal">
                             {category_id
                                 ? transactionCategories[category_id as TransactionCategoryId].name
-                                : budgetData
-                                ? transactionCategories[budgetData.category_id as TransactionCategoryId].name
+                                : budget_data && budget_data.category_id
+                                ? transactionCategories[budget_data.category_id].name
                                 : "--"
                             }
                         </span>
                     </p>
-                    {budgetData &&
+                    {budget_data &&
                         <p className="mt-3 font-semibold">
-                            Budget: <span className="text-gray-800 font-normal">{budgetData.name}</span>
+                            Budget: <span className="text-gray-800 font-normal">{budget_data.name}</span>
                         </p>
                     }
                     <p className="mt-3 font-semibold">
@@ -141,7 +123,7 @@ export default async function ViewTransaction({ params }: { params: { transactio
                             {description}
                         </p>
                     }
-                    {budgetData &&
+                    {budget_id &&
                         <Link
                             href={`/dashboard/budget/${budget_id}`}
                             className="flex flex-row justify-between items-center rounded-md w-40 max-md:w-36 px-4 py-2 mt-4 mr-6 max-md:mr-3 text-center max-md:text-sm font-semibold bg-white hover:bg-sky-100 hover:text-blue-600 shadow-md shadow-slate-300 transition-colors duration-200"
@@ -152,7 +134,7 @@ export default async function ViewTransaction({ params }: { params: { transactio
                     }
                     <Link
                         href={"/dashboard/transactions"}
-                        className="flex items-center rounded-md w-fit px-4 py-2 mt-4 mr-6 max-md:mr-3 text-center max-md:text-sm font-semibold bg-white hover:bg-sky-100 hover:text-blue-600 shadow-md shadow-slate-300 transition-colors duration-200"
+                        className="flex items-center rounded-md w-fit px-4 py-2 mt-6 mr-6 max-md:mr-3 text-center max-md:text-sm font-semibold bg-white hover:bg-sky-100 hover:text-blue-600 shadow-md shadow-slate-300 transition-colors duration-200"
                     >
                         Back
                     </Link>

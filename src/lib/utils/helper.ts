@@ -2,7 +2,7 @@ import { AuthFormState, TransactionFormState, BudgetFormState } from "@/lib/type
 import { unescape } from "querystring";
 
 export function amountPercentageChange(oldAmountInCents: number, newAmountInCents: number): number {
-    return ((newAmountInCents - oldAmountInCents) / oldAmountInCents) * 100;
+    return ((newAmountInCents - oldAmountInCents) / Math.max(oldAmountInCents, 1)) * 100;
 }
 
 export function authErrorMessage(error: AuthFormState | undefined): string {

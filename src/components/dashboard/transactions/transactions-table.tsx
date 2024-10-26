@@ -11,6 +11,7 @@ import { EllipsisVerticalIcon, InformationCircleIcon, PencilIcon, TrashIcon } fr
 import { getFilteredTransactions } from "@/lib/actions/transaction";
 import { transactionCategories } from "@/lib/utils/constant";
 import { formatCurrency, formatDateTime } from "@/lib/utils/format";
+import { TransactionItem } from "@/lib/types/transactions";
 import Link from "next/link";
 import clsx from "clsx";
 
@@ -29,7 +30,7 @@ export default async function TransactionsTable({
     if (status !== "success") {
         console.error(message);
     }
-    const transactionItems = data ? data["transactionItems"] : [];
+    const transactionItems = data ? data["transactionItems"] as TransactionItem[] : [];
 
     return (
         <section className="flex flex-col border border-slate-100 rounded-xl min-h-96 px-6 pb-6 max-md:px-3 mb-10 bg-white shadow-lg">
@@ -95,7 +96,12 @@ export default async function TransactionsTable({
                                     {transaction.transaction_type}
                                 </td>
                                 <td className="max-w-24 px-3 font-medium whitespace-nowrap text-ellipsis overflow-hidden">
-                                    {transaction.category_id ? transactionCategories[transaction.category_id].name : "--"}
+                                    {transaction.category_id
+                                        ? transactionCategories[transaction.category_id].name
+                                        : transaction.budget_id && transaction.budget_data && transaction.budget_data.category_id
+                                        ? transactionCategories[transaction.budget_data.category_id].name
+                                        : "--"
+                                    }
                                 </td>
                                 <td className="max-w-24 px-3 font-medium whitespace-nowrap text-ellipsis overflow-hidden">
                                     {transaction.created_at ? formatDateTime(transaction.created_at) : "--"}

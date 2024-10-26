@@ -3,8 +3,7 @@ import { getAuthUser } from "@/lib/actions/auth";
 import { getUserBalanceData } from "@/lib/actions/user";
 import { getTransactionById, getTotalTransactionAmount } from "@/lib/actions/transaction";
 import { getUserBudgets } from "@/lib/actions/budget";
-import { BudgetFormData, TransactionFormData } from "@/lib/types/form-state";
-import { UserBalanceData } from "@/lib/types/user";
+import { TransactionFormData } from "@/lib/types/form-state";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 
@@ -15,7 +14,7 @@ export const metadata: Metadata = {
 export default async function EditTransaction({ params }: { params: { transaction_id: string } }) {
     const { user } = await getAuthUser();
     const transactionAndBalanceData = await Promise.all([
-        getTransactionById(params.transaction_id),
+        getTransactionById(params.transaction_id, true),
         getUserBalanceData(user.id),
         getUserBudgets(user.id),
     ]);
@@ -28,7 +27,7 @@ export default async function EditTransaction({ params }: { params: { transactio
     if (transactionStatus !== "success" || !transactionData) {
         throw new Error(transactionMessage || "Error: transaction not found");
     }
-    const userTransactionData = transactionData["transactionData"];
+    const userTransactionData = transactionData["transactionData"] as TransactionFormData;
     if (userTransactionData.payer_id !== user.id && userTransactionData.recipient_id !== user.id) {
         redirect("/dashboard");
     }
