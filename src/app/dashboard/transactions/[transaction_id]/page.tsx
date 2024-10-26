@@ -6,10 +6,24 @@ import { getTransactionById } from "@/lib/actions/transaction";
 import { transactionCategories } from "@/lib/utils/constant";
 import { formatCurrency, formatDateTime } from "@/lib/utils/format";
 import { TransactionCategoryId, TransactionItem } from "@/lib/types/transactions";
+import { Metadata, ResolvingMetadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import clsx from "clsx";
 
+export async function generateMetadata(
+    { params }: { params: { transaction_id: string } },
+    parent: ResolvingMetadata,
+): Promise<Metadata> {
+    const { status, data } = await getTransactionById(params.transaction_id);
+    if (status === "success" && data) {
+        const transactionData = data["transactionData"];
+        if (transactionData) {
+            return { title: `${transactionData.title} - PennyWise` };
+        }
+    }
+    return { title: "Budget Details - PennyWise" };
+}
 
 export default async function ViewTransaction({ params }: { params: { transaction_id: string } }) {
     const { user } = await getAuthUser();
@@ -78,7 +92,7 @@ export default async function ViewTransaction({ params }: { params: { transactio
                                         <TrashIcon className="w-4 h-4" />
                                     </button>
                                 </AlertDialogTrigger>
-                                <DeleteTransactionDialog transactionId={params.transaction_id} rerouteOnDelete={true} />
+                                <DeleteTransactionDialog transactionId={params.transaction_id} redirectOnDelete={true} />
                             </AlertDialog>
                         </div>
                     </div>

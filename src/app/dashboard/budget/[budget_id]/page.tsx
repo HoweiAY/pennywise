@@ -6,7 +6,7 @@ import { budgetCategories } from "@/lib/utils/constant";
 import { formatCurrency, formatCurrencySymbol } from "@/lib/utils/format";
 import { getAuthUser } from "@/lib/actions/auth";
 import { getUserBudgetById, getBudgetAmountSpent } from "@/lib/actions/budget";
-import { BudgetFormData } from "@/lib/types/form-state";
+import { BudgetItem } from "@/lib/types/budget";
 import { Metadata, ResolvingMetadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -17,7 +17,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
     const { status, data } = await getUserBudgetById(params.budget_id);
     if (status === "success" && data) {
-        const { name: budgetName } = data["budgetData"] as BudgetFormData;
+        const { name: budgetName } = data["budgetData"] as BudgetItem;
         return {
             title: `${budgetName} - PennyWise`,
         }
@@ -42,7 +42,7 @@ export default async function ViewBudget({ params }: { params: { budget_id: stri
         amount: amountInCents,
         user_id,
         description,
-    } = userBudgetData["budgetData"];
+    } = userBudgetData["budgetData"] as BudgetItem;
     if (user_id !== user.id) {
         redirect("/dashboard");
     }
@@ -83,7 +83,7 @@ export default async function ViewBudget({ params }: { params: { budget_id: stri
                                         <TrashIcon className="w-4 h-4" />
                                     </button>
                                 </AlertDialogTrigger>
-                                <DeleteBudgetDialog budgetId={params.budget_id} rerouteOnDelete={true} />
+                                <DeleteBudgetDialog budgetId={params.budget_id} redirectOnDelete={true} />
                             </AlertDialog>
                         </div>
                     </div>

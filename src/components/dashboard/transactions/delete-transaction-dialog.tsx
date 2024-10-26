@@ -12,26 +12,25 @@ import {
 import { ToastAction } from "@/components/ui/toast";
 import { deleteTransaction } from "@/lib/actions/transaction";
 import { useCallback, useState, useTransition } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 
 export default function DeleteTransactionDialog({
     transactionId,
-    rerouteOnDelete,
+    redirectOnDelete,
 }: {
     transactionId: string,
-    rerouteOnDelete?: boolean,
+    redirectOnDelete?: boolean,
 }) {
     const [ isPending, startTransition ] = useTransition();
     const [ deletionInProgress, setDeletionInProgress ] = useState<boolean>(false);
-    const pathname = usePathname();
-    const router = useRouter();
+    const { refresh } = useRouter();
     const { toast } = useToast();
 
-    const handleDeleteTransaction = useCallback( async () => {
+    const handleDeleteTransaction = useCallback(async () => {
         setDeletionInProgress(true);
-        const { status, message } = await deleteTransaction(transactionId);
-        if (status !== "success") {
+        const error = await deleteTransaction(transactionId, redirectOnDelete);
+        if (error) {
             toast({
                 variant: "destructive",
                 title: "Delete transaction failed",
@@ -42,12 +41,10 @@ export default function DeleteTransactionDialog({
                     </ToastAction>
                 )
             });
-            console.error(message);
+            console.error(error.message);
         } else {
-            if (rerouteOnDelete) {
-                router.push("/dashboard/transactions");
-            } else {
-                startTransition(() => router.refresh());
+            if (!redirectOnDelete) {
+                startTransition(refresh);
             }
             toast({
                 title: "Delete successful!",
@@ -55,7 +52,7 @@ export default function DeleteTransactionDialog({
             });
         }
         setDeletionInProgress(false);
-    }, [transactionId, rerouteOnDelete]);
+    }, [transactionId, redirectOnDelete]);
 
     return (
         <AlertDialogContent className="rounded-lg">

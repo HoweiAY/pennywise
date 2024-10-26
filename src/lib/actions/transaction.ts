@@ -258,15 +258,14 @@ export async function updateTransaction(
 }
 
 // Server action for deleting a transaction
-export async function deleteTransaction(transactionId: string): Promise<ServerActionResponse<void>> {
+export async function deleteTransaction(
+    transactionId: string,
+    redirectOnDelete?: boolean,
+): Promise<TransactionFormState | undefined> {
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-            return {
-                status: "error",
-                code: 401,
-                message: "Error: user not found",
-            };
+            return { message: "Error: user not found" };
         }
     
     const { data: transactionData, error: transactionDataError } = await supabase
@@ -275,11 +274,7 @@ export async function deleteTransaction(transactionId: string): Promise<ServerAc
         .eq("transaction_id", transactionId)
         .limit(1);
     if (transactionDataError) {
-        return {
-            status: "error",
-            code: 500,
-            message: transactionDataError.message,
-        };
+        return { message: transactionDataError.message };
     }
     const {
         transaction_type: transactionType,
@@ -293,28 +288,22 @@ export async function deleteTransaction(transactionId: string): Promise<ServerAc
         : addUserBalance(user.id, amount, supabase);
 
     const [
-        { status: changeBalanceStatus, code: changeBalanceCode, message: changeBalanceMessage },
+        { status: changeBalanceStatus, message: changeBalanceMessage },
         { error: deleteTransactionError },
     ] = await Promise.all([
         changeBalanceAction,
         supabase.from("transactions").delete().eq("transaction_id", transactionId),
     ]);
     if (changeBalanceStatus !== "success") {
-        return {
-            status: changeBalanceStatus,
-            code: changeBalanceCode,
-            message: changeBalanceMessage || "Failed to update user balance",
-        };
+        return { message: changeBalanceMessage || "Failed to update user balance" };
     }
     if (deleteTransactionError) {
-        return {
-            status: "error",
-            code: 500,
-            message: deleteTransactionError.message,
-        };
+        return { message: deleteTransactionError.message };
     }
     revalidatePath("/dashboard/transactions");
-    return { status: "success", code: 204 };
+    if (redirectOnDelete) {
+        redirect("/dashboard/transactions");
+    }
 }
 
 // Server action for transactions table pagination
@@ -488,11 +477,13 @@ export async function getTransactionById(
     return {
         status: "success",
         code: 200,
-        data: {
-            transactionData: asForm
-                ? transactionData[0] as TransactionFormData
-                : transactionData[0] as TransactionItem
-        },
+        data: transactionData.length > 0
+            ? {
+                transactionData: asForm
+                    ? transactionData[0] as TransactionFormData
+                    : transactionData[0] as TransactionItem
+            }
+            : null,
     };
 }
 

@@ -11,11 +11,11 @@ export const metadata: Metadata = {
 
 export default async function EditBudget({ params }: { params: { budget_id: string } }) {
     const { user } = await getAuthUser();
-    const { status, message, data } = await getUserBudgetById(params.budget_id);
+    const { status, message, data } = await getUserBudgetById(params.budget_id, true);
     if (status !== "success" || !data) {
         throw new Error(message || "Error: budget not found");
     }
-    const budgetData = data["budgetData"];
+    const budgetData = data["budgetData"] as BudgetFormData;
     if (budgetData.user_id !== user.id) {
         redirect("/dashboard");
     }

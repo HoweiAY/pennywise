@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/utils/supabase/server";
 import { BudgetFormState, BudgetFormData } from "@/lib/types/form-state";
+import { BudgetItem } from "@/lib/types/budget";
 import { ServerActionResponse } from "@/lib/types/action";
 import { unstable_noStore as noStore, revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -129,21 +130,22 @@ export async function updateBudget(
     redirect("/dashboard/budget");
 }
 
-export async function deleteBudget(budgetId: string): Promise<ServerActionResponse<void>> {
+export async function deleteBudget(
+    budgetId: string,
+    redirectOnDelete?: boolean,
+): Promise<BudgetFormState | undefined> {
     const supabase = await createSupabaseServerClient();
     const { error } = await supabase
         .from("budgets")
         .delete()
         .eq("budget_id", budgetId);
     if (error) {
-        return {
-            status: "error",
-            code: 500,
-            message: error.message,
-        };
+        return { message: error.message };
     }
     revalidatePath("/dashboard/budget");
-    return { status: "success", code: 204 };
+    if (redirectOnDelete) {
+        redirect("/dashboard/budget");
+    }
 }
 
 export async function getUserBudgets(userId: string): Promise<ServerActionResponse<BudgetFormData[]>> {
@@ -170,7 +172,10 @@ export async function getUserBudgets(userId: string): Promise<ServerActionRespon
     };
 }
 
-export async function getUserBudgetById(budgetId: string): Promise<ServerActionResponse<BudgetFormData>> {
+export async function getUserBudgetById(
+    budgetId: string,
+    asForm?: boolean,
+): Promise<ServerActionResponse<BudgetItem | BudgetFormData>> {
     noStore();
 
     const supabase = await createSupabaseServerClient();
@@ -189,7 +194,13 @@ export async function getUserBudgetById(budgetId: string): Promise<ServerActionR
     return {
         status: "success",
         code: 200,
-        data: { budgetData: budgetData[0] as BudgetFormData },
+        data: budgetData.length > 0
+            ? {
+                budgetData: asForm
+                    ? budgetData[0] as BudgetFormData
+                    : budgetData[0] as BudgetItem
+            }
+            : null,
      };
 }
 
