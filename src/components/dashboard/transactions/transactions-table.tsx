@@ -38,8 +38,8 @@ export default async function TransactionsTable({
                 Latest Transactions
             </h1>
             <table className="table-auto border-0 rounded-lg min-w-full bg-slate-50 overflow-hidden max-lg:hidden">
-                <thead className="text-left font-normal">
-                    <tr>
+                <thead className="text-left">
+                    <tr className="border-b">
                         <th scope="col" className="px-3 py-5 font-semibold">
                             <span className="sr-only">User avatar</span>
                         </th>

@@ -16,9 +16,11 @@ import clsx from "clsx";
 export default function TransactionsTablePagination({
     currPage,
     totalPageCount,
+    disabled,
 }: {
     currPage: number,
     totalPageCount: number,
+    disabled?: boolean,
 }) {
     const searchParams = useSearchParams();
     const pathname = usePathname();
@@ -69,7 +71,7 @@ export default function TransactionsTablePagination({
                 <PaginationItem>
                     <PaginationPrevious
                         href={getPaginationLinkUrl(currPage - 1)}
-                        aria-disabled={currPage === 1}
+                        aria-disabled={disabled || currPage === 1}
                         className={clsx(
                             "aria-disabled:cursor-not-allowed aria-disabled:opacity-50",
                             { "pointer-events-none": currPage === 1 },
@@ -77,7 +79,15 @@ export default function TransactionsTablePagination({
                     />
                 </PaginationItem>
                 <PaginationItem>
-                    <PaginationLink href={getPaginationLinkUrl(1)} isActive={currPage === 1}>
+                    <PaginationLink
+                        href={getPaginationLinkUrl(1)}
+                        isActive={currPage === 1}
+                        aria-disabled={disabled}
+                        className={clsx(
+                            "aria-disabled:cursor-not-allowed aria-disabled:opacity-50",
+                            { "pointer-events-none": disabled },
+                        )}
+                    >
                         1
                     </PaginationLink>
                 </PaginationItem>
@@ -87,7 +97,15 @@ export default function TransactionsTablePagination({
                 {getMidPaginationPages().map((pageNum) => {
                     return (
                         <PaginationItem key={`page_${pageNum}`}>
-                            <PaginationLink href={getPaginationLinkUrl(pageNum)} isActive={currPage === pageNum}>
+                            <PaginationLink
+                                href={getPaginationLinkUrl(pageNum)}
+                                isActive={currPage === pageNum}
+                                aria-disabled={disabled}
+                                className={clsx(
+                                    "aria-disabled:cursor-not-allowed aria-disabled:opacity-50",
+                                    { "pointer-events-none": disabled },
+                                )}
+                            >
                                 {pageNum}
                             </PaginationLink>
                         </PaginationItem>
@@ -97,7 +115,15 @@ export default function TransactionsTablePagination({
                     <PaginationEllipsis />
                 </PaginationItem>
                 <PaginationItem hidden={totalPageCount <= 1}>
-                    <PaginationLink href={getPaginationLinkUrl(totalPageCount)} isActive={currPage === totalPageCount}>
+                    <PaginationLink
+                        href={getPaginationLinkUrl(totalPageCount)}
+                        isActive={currPage === totalPageCount}
+                        aria-disabled={disabled}
+                        className={clsx(
+                            "aria-disabled:cursor-not-allowed aria-disabled:opacity-50",
+                            { "pointer-events-none": disabled },
+                        )}
+                    >
                         {totalPageCount}
                     </PaginationLink>
                 </PaginationItem>
@@ -107,7 +133,7 @@ export default function TransactionsTablePagination({
                         aria-disabled={currPage >= totalPageCount}
                         className={clsx(
                             "aria-disabled:cursor-not-allowed aria-disabled:opacity-50",
-                            { "pointer-events-none": currPage >= totalPageCount },
+                            { "pointer-events-none": disabled || currPage >= totalPageCount },
                         )}
                     />
                 </PaginationItem>
