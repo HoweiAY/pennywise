@@ -1,6 +1,6 @@
 import clsx from "clsx";
 
-export function CardSkeleton({ type }: { type: "balance" | "income" | "expenditure" }) {
+function CardSkeleton({ type }: { type: "balance" | "income" | "expenditure" }) {
     return (
         <div className={clsx(
             "rounded-xl border border-slate-100 bg-white h-36 max-sm:h-32 min-w-56 max-sm:min-w-40 p-6 shadow-lg",

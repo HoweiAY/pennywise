@@ -1,4 +1,4 @@
-import TransactionsTablePagination from "@/components/dashboard/transactions/transactions-table-pagination"
+import TransactionsTablePagination from "@/components/dashboard/transactions/transactions-table-pagination";
 
 export default function TransactionsTableSkeleton({
     itemsPerPage,
@@ -40,7 +40,7 @@ export default function TransactionsTableSkeleton({
                 </thead>
             </table>
             <ol>
-                {Array.from(new Array(itemsPerPage)).map((_, idx) => {
+                {Array.from({ length: itemsPerPage }).map((_, idx) => {
                     return (
                         <li
                             key={`transaction_${idx}_skeleton`}
