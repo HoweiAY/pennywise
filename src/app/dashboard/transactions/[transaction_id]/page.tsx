@@ -1,8 +1,8 @@
 import DeleteTransactionDialog from "@/components/dashboard/transactions/delete-transaction-dialog";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { ArrowRightIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { getAuthUser } from "@/lib/actions/auth";
-import { getTransactionById } from "@/lib/actions/transaction";
+import { getAuthUser } from "@/lib/data/auth";
+import { getTransactionById } from "@/lib/data/transaction";
 import { transactionCategories } from "@/lib/utils/constant";
 import { formatCurrency, formatDateTime } from "@/lib/utils/format";
 import { TransactionCategoryId, TransactionItem } from "@/lib/types/transactions";

@@ -1,8 +1,8 @@
 import TransactionForm from "@/components/dashboard/transactions/transaction-form";
-import { getAuthUser } from "@/lib/actions/auth";
-import { getUserBalanceData } from "@/lib/actions/user";
-import { getTransactionById, getTotalTransactionAmount } from "@/lib/actions/transaction";
-import { getUserBudgets } from "@/lib/actions/budget";
+import { getAuthUser } from "@/lib/data/auth";
+import { getUserBalanceData } from "@/lib/data/user";
+import { getTransactionById, getTotalTransactionAmount } from "@/lib/data/transaction";
+import { getUserBudgets } from "@/lib/data/budget";
 import { TransactionFormData } from "@/lib/types/form-state";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";

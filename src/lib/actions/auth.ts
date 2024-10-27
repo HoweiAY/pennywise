@@ -112,12 +112,3 @@ export async function logout(): Promise<AuthFormState | undefined> {
 
     redirect("/login");
 }
-
-export async function getAuthUser(): Promise<{ user: User }> {
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-        redirect("/login");
-    }
-    return { user };
-}

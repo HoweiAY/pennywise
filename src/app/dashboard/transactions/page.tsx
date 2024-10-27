@@ -2,7 +2,7 @@ import TransactionsSearchBar from "@/components/dashboard/transactions/transacti
 import TransactionsTable from "@/components/dashboard/transactions/transactions-table";
 import TransactionsTableSkeleton from "@/ui/skeletons/transactions-table-skeleton";
 import { PlusIcon } from "@heroicons/react/24/outline";
-import { getTransactionsPages } from "@/lib/actions/transaction";
+import { getTransactionsPages } from "@/lib/data/transaction";
 import { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";

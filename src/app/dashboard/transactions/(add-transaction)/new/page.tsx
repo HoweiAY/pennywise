@@ -1,8 +1,7 @@
 import TransactionForm from "@/components/dashboard/transactions/transaction-form";
-import { getAuthUser } from "@/lib/actions/auth";
-import { getUserBalanceData } from "@/lib/actions/user";
-import { getTotalTransactionAmount } from "@/lib/actions/transaction";
-import { UserBalanceData } from "@/lib/types/user";
+import { getAuthUser } from "@/lib/data/auth";
+import { getUserBalanceData } from "@/lib/data/user";
+import { getTotalTransactionAmount } from "@/lib/data/transaction";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {

@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { EllipsisVerticalIcon, InformationCircleIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { getFilteredTransactions } from "@/lib/actions/transaction";
+import { getFilteredTransactions } from "@/lib/data/transaction";
 import { transactionCategories } from "@/lib/utils/constant";
 import { formatCurrency, formatDateTime } from "@/lib/utils/format";
 import { TransactionItem } from "@/lib/types/transactions";

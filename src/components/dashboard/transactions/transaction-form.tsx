@@ -2,17 +2,18 @@
 
 import { ChevronDownIcon, QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
 import { ExclamationCircleIcon } from "@heroicons/react/24/solid";
-import { transactionCategories } from "@/lib/utils/constant";
+import { baseUrl, transactionCategories } from "@/lib/utils/constant";
 import { transactionErrorMessage } from "@/lib/utils/helper";
 import { formatCurrency, formatCurrencyAmount } from "@/lib/utils/format";
-import { TransactionFormData, BudgetFormData } from "@/lib/types/form-state";
+import { RouteHandlerResponse } from "@/lib/types/data";
+import { TransactionFormState, TransactionFormData, BudgetFormData } from "@/lib/types/form-state";
 import { TransactionType, TransactionCategoryId } from "@/lib/types/transactions";
 import { createTransaction, updateTransaction } from "@/lib/actions/transaction";
-import { getUserBudgets, getBudgetAmountSpent } from "@/lib/actions/budget";
 import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { useDebouncedCallback } from "use-debounce";
+import { useToast } from "@/hooks/use-toast";
 import clsx from "clsx";
 
 export default function TransactionForm({
@@ -32,6 +33,8 @@ export default function TransactionForm({
     prevTransactionData?: TransactionFormData,
     userBudgetData?: BudgetFormData[],
 }) {
+    const { toast } = useToast();
+
     const [ descriptionTextboxWidth, setDescriptionTextboxWidth ] = useState<number>(0);
     const [ titlePlaceholder, setTitlePlaceholder ] = useState<string>("My new transaction 💲");
     const [ amountInCents, setAmountInCents ] = useState<number | null>(0);
@@ -62,25 +65,39 @@ export default function TransactionForm({
             const budgetAmount = budget.amount;
             const currDateTime = new Date();
             const monthStartDateTime = new Date(currDateTime.getFullYear(), currDateTime.getMonth(), 1, 0, 0, 0, 0);
-            const {
-                status: spentBudgetStatus,
-                message: spentBudgetMessage,
-                data: spentBudgetData
-            } = await getBudgetAmountSpent(budgetId, monthStartDateTime, currDateTime);
-            if (spentBudgetStatus === "success" && spentBudgetData) {
-                const remainingBudget = budgetAmount - spentBudgetData["spentBudget"];
+            const res = await fetch(
+                `${baseUrl}/api/budget/${budgetId}/amount-spent?from=${monthStartDateTime.toISOString()}&to=${currDateTime.toISOString()}`,
+                { cache: "no-store" },
+            );
+            if (res.status !== 200) {
+                console.error(res.statusText);
+            } else {
+                const { data: { spentBudget } } = await res.json() as { data: { spentBudget: number } };
+                const remainingBudget = budgetAmount - spentBudget;
                 let deductedBudget = amountInCents !== null ? remainingBudget - amountInCents : remainingBudget;
                 if (prevTransactionData && prevTransactionData.budget_id !== budgetId) {
                     deductedBudget -= amountInCents !== prevTransactionData.amount ? prevTransactionData.amount : -amountInCents;
                 }
                 setRemainingBudgetAmountInCents(Math.min(budgetAmount, remainingBudget));
                 setDeductedBudgetAmountInCents(Math.min(budgetAmount, deductedBudget));
-            } else {
-                console.error(spentBudgetMessage);
             }
             break;
         }
     }, [prevTransactionData, userBudgets, amountInCents]);
+
+    const handleSubmit = useCallback(async (prevState: TransactionFormState | undefined, formData: FormData) => {
+        const formAction = prevTransactionData ? updateTransaction : createTransaction;
+        const formState = await formAction(prevState, formData);
+        if (formState?.error || formState?.message) {
+            console.error(formState.message);
+        } else {
+            toast({
+                title: `${prevTransactionData ? "Update" : "Add"} successful!`,
+                description: `Your transaction has been successfully ${prevTransactionData ? "updated" : "added"}.`,
+            });
+        }
+        return formState;
+    }, [prevTransactionData]);
 
     const handleAmountChange = useDebouncedCallback((amount: string) => {
         let inputAmountInCents = Math.floor(parseFloat(amount) * 100);
@@ -118,11 +135,14 @@ export default function TransactionForm({
 
     useEffect(() => {
         const fetchUserBudgets = async () => {
-            const { status, message, data } = await getUserBudgets(userId);
-            if (status === "success" && data) { 
-                setUserBudgets(data["userBudgetData"]);
+            const res = await fetch(`${baseUrl}/api/budget?userId=${userId}`, { cache: "no-store" });
+            if (res.status !== 200) {
+                console.error(res.statusText);
             } else {
-                console.error(message);
+                const { data: userBudgetData } = await res.json() as RouteHandlerResponse<BudgetFormData[]>;
+                if (userBudgetData) {
+                    setUserBudgets(userBudgetData);
+                }
             }
         };
         if (userBudgetData) return;
@@ -137,7 +157,7 @@ export default function TransactionForm({
         setTitlePlaceholder(getTitlePlaceholder(type));
     }, [type, categoryId]);
 
-    const [ error, dispatch ] = useFormState(prevTransactionData ? updateTransaction : createTransaction, undefined);
+    const [ error, dispatch ] = useFormState(handleSubmit, undefined);
 
     return (
         <form

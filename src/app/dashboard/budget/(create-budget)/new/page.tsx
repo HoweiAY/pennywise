@@ -1,6 +1,6 @@
 import BudgetForm from "@/components/dashboard/budget/budget-form";
-import { getAuthUser } from "@/lib/actions/auth";
-import { getUserCurrency } from "@/lib/actions/user";
+import { getAuthUser } from "@/lib/data/auth";
+import { getUserCurrency } from "@/lib/data/user";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {

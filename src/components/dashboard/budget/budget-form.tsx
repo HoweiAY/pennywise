@@ -2,14 +2,15 @@
 
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { ExclamationCircleIcon } from "@heroicons/react/24/solid";
-import { BudgetFormData } from "@/lib/types/form-state";
+import { BudgetFormState, BudgetFormData } from "@/lib/types/form-state";
 import { budgetCategories } from "@/lib/utils/constant";
 import { budgetErrorMessage } from "@/lib/utils/helper";
 import { formatCurrencyAmount } from "@/lib/utils/format";
 import { createBudget, updateBudget } from "@/lib/actions/budget";
-import { useState, useEffect } from "react";
-import { useFormState, useFormStatus } from "react-dom";
 import Link from "next/link";
+import { useState, useEffect, useCallback } from "react";
+import { useFormState, useFormStatus } from "react-dom";
+import { useToast } from "@/hooks/use-toast";
 import clsx from "clsx";
 
 export default function BudgetForm({
@@ -21,13 +22,29 @@ export default function BudgetForm({
     budgetId?: string,
     prevBudgetData?: BudgetFormData,
 }) {
+    const { toast } = useToast();
+
     const [ descriptionTextboxWidth, setDescriptionTextboxWidth ] = useState<number>(0);
+
+    const handleSubmit = useCallback(async (prevState: BudgetFormState | undefined, formData: FormData) => {
+        const formAction = budgetId && prevBudgetData ? updateBudget : createBudget;
+        const formState = await formAction(prevState, formData);
+        if (formState?.error || formState?.message) {
+            console.error(formState.message);
+        } else {
+            toast({
+                title: `${budgetId && prevBudgetData ? "Update" : "Add"} successful!`,
+                description: `Your budget has been successfully ${budgetId && prevBudgetData ? "updated" : "added"}.`,
+            });
+        }
+        return formState;
+    }, [budgetId, prevBudgetData]);
 
     useEffect(() => {
         setDescriptionTextboxWidth(window.innerWidth);
     }, []);
 
-    const [ error, dispatch ] = useFormState(budgetId && prevBudgetData ? updateBudget : createBudget, undefined);
+    const [ error, dispatch ] = useFormState(handleSubmit, undefined);
     
     return (
         <form

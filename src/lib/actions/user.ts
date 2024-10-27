@@ -1,81 +1,8 @@
 "use server";
 
 import { ServerActionResponse } from "@/lib/types/action";
-import { UserData, UserBalanceData } from "@/lib/types/user";
 import { createSupabaseServerClient } from "@/lib/utils/supabase/server";
 import { SupabaseClient } from "@supabase/supabase-js";
-import { unstable_noStore as noStore } from "next/cache";
-
-export async function getUserDataById(userId: string): Promise<ServerActionResponse<UserData>> {
-    noStore();
-
-    const supabase = await createSupabaseServerClient();
-    const { data: userData, error } = await supabase
-        .from("users")
-        .select("username, email, first_name, last_name, country, avatar_url")
-        .eq("user_id", userId)
-        .limit(1);
-    if (error) {
-        return {
-            status: "error",
-            code: 500,
-            message: error.message,
-        };
-    }
-    return {
-        status: "success",
-        code: 200,
-        data: { userData: userData[0] as UserData },
-    };
-}
-
-// Server action for fetching users' account balance information
-export async function getUserBalanceData(userId: string): Promise<ServerActionResponse<UserBalanceData>> {
-    noStore();
-
-    const supabase = await createSupabaseServerClient();
-    const { data: userBalanceData, error } = await supabase
-        .from("users")
-        .select("currency, balance, spending_limit")
-        .eq("user_id", userId)
-        .limit(1);
-    if (error) {
-        return {
-            status: "error",
-            code: 500,
-            message: error.message,
-        };
-    }
-    return {
-        status: "success",
-        code: 200,
-        data: { userBalanceData: userBalanceData[0] as UserBalanceData },
-    };
-}
-
-// Server action for getting a user's currency
-export async function getUserCurrency(userId: string): Promise<ServerActionResponse<string>> {
-    noStore();
-    
-    const supabase = await createSupabaseServerClient();
-    const { data: userCurrencyData, error } = await supabase
-        .from("users")
-        .select("currency")
-        .eq("user_id", userId)
-        .limit(1);
-    if (error) {
-        return {
-            status: "error",
-            code: 500,
-            message: error.message,
-        };
-    }
-    return {
-        status: "success",
-        code: 200,
-        data: { userCurrency: userCurrencyData[0].currency as string },
-    };
-}
 
 // Server action for increasing users' balance amount
 export async function addUserBalance(
@@ -98,7 +25,7 @@ export async function addUserBalance(
             .update({ balance: balanceInCents })
             .eq("user_id", userId);
         if (updateError) throw updateError;
-        return { status: "success", code: 204 };
+        return { status: "success" };
     } catch (error) {
         let message = "Failed to add user balance";
         if (error instanceof Error) {
@@ -106,7 +33,6 @@ export async function addUserBalance(
         }
         return {
             status: "error",
-            code: 500,
             message,
         };
     }
@@ -130,7 +56,6 @@ export async function deductUserBalance(
         if (balanceInCents < amountInCents) {
             return {
                 status: "fail",
-                code: 400,
                 message: "Deduction amount exceeds account balance",
             };
         }
@@ -140,7 +65,7 @@ export async function deductUserBalance(
             .update({ balance: balanceInCents })
             .eq("user_id", userId);
         if (updateError) throw updateError;
-        return { status: "success", code: 204 };
+        return { status: "success" };
     } catch (error) {
         let message = "Failed to deduct user balance";
         if (error instanceof Error) {
@@ -148,7 +73,6 @@ export async function deductUserBalance(
         }
         return {
             status: "error",
-            code: 500,
             message,
         };
     }

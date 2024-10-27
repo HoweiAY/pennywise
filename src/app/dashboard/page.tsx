@@ -2,8 +2,8 @@ import OverviewCards from "@/components/dashboard/overview-cards";
 import TransactionChart from "@/components/dashboard/transaction-chart";
 import ExpenseBreakdownCard from "@/components/dashboard/expense-breakdown-card";
 import OverviewCardsSkeleton from "@/ui/skeletons/overview-cards-skeleton";
-import { getAuthUser } from "@/lib/actions/auth";
-import { getUserDataById } from "@/lib/actions/user";
+import { getAuthUser } from "@/lib/data/auth";
+import { getUserDataById } from "@/lib/data/user";
 import { Metadata } from "next";
 import { Suspense } from "react";
 

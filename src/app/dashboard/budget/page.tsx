@@ -1,7 +1,7 @@
 import UserBudgetCardCarousel from "@/components/dashboard/budget/user-budget-card-carousel";
 import UserBudgetCardCarouselSkeleton from "@/ui/skeletons/user-budget-card-carousel-skeleton";
 import { PlusIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
-import { getAuthUser } from "@/lib/actions/auth";
+import { getAuthUser } from "@/lib/data/auth";
 import { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";

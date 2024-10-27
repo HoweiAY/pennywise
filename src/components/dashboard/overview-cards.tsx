@@ -4,8 +4,8 @@ import {
     BanknotesIcon,
 } from "@heroicons/react/24/outline";
 import { ExclamationCircleIcon } from "@heroicons/react/24/solid";
-import { getUserBalanceData } from "@/lib/actions/user";
-import { getTotalTransactionAmount } from "@/lib/actions/transaction";
+import { getUserBalanceData } from "@/lib/data/user";
+import { getTotalTransactionAmount } from "@/lib/data/transaction";
 import { formatCurrency, formatCurrencySymbol, formatAmountPercentageChange } from "@/lib/utils/format";
 import { amountPercentageChange } from "@/lib/utils/helper";
 import clsx from "clsx";

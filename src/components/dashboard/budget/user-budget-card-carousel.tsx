@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { formatCurrency, formatCurrencySymbol } from "@/lib/utils/format";
 import { budgetCategories } from "@/lib/utils/constant";
-import { getUserBudgets, getBudgetAmountSpent } from "@/lib/actions/budget";
+import { getUserBudgets, getBudgetAmountSpent } from "@/lib/data/budget";
 import { BudgetCategoryId } from "@/lib/types/budget";
 import { TransactionCategoryId } from "@/lib/types/transactions";
 import Link from "next/link";

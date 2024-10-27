@@ -1,6 +1,6 @@
 import BudgetForm from "@/components/dashboard/budget/budget-form";
-import { getAuthUser } from "@/lib/actions/auth";
-import { getUserBudgetById } from "@/lib/actions/budget";
+import { getAuthUser } from "@/lib/data/auth";
+import { getUserBudgetById } from "@/lib/data/budget";
 import { BudgetFormData } from "@/lib/types/form-state";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
