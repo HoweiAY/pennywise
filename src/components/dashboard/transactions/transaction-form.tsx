@@ -135,7 +135,7 @@ export default function TransactionForm({
 
     useEffect(() => {
         const fetchUserBudgets = async () => {
-            const res = await fetch(`${baseUrl}/api/budget?userId=${userId}`, { cache: "no-store" });
+            const res = await fetch(`${baseUrl}/api/users/${userId}/budget`, { cache: "no-store" });
             if (res.status !== 200) {
                 console.error(res.statusText);
             } else {
