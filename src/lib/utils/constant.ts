@@ -1,3 +1,6 @@
+// Base URL for calling APIs in route handler
+export const baseUrl = process.env.NEXT_PUBLIC_BASE_URL!;
+
 /*
     Country codes and corresponding names
     (Note: All country codes adhere to the ISO-3166-alpha-2 standard)

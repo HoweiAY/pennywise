@@ -1,14 +1,33 @@
 import TransactionsSearchBar from "@/components/dashboard/transactions/transactions-search-bar";
 import TransactionsTable from "@/components/dashboard/transactions/transactions-table";
+import TransactionsTableSkeleton from "@/ui/skeletons/transactions-table-skeleton";
 import { PlusIcon } from "@heroicons/react/24/outline";
+import { getTransactionsPages } from "@/lib/data/transaction";
 import { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
     title: "Transactions - PennyWise",
 };
 
-export default function Transactions() {
+export default async function Transactions({
+    searchParams,
+}: {
+    searchParams?: {
+        search?: string,
+        page?: string,
+    };
+}) {
+    const searchQuery = searchParams?.search || "";
+    const currPage = Number(searchParams?.page) || 1;
+    const itemsPerPage = 10;
+    const { status, message, data } = await getTransactionsPages(itemsPerPage, searchQuery);
+    if (status !== "success") {
+        console.error(message);
+    }
+    const totalPageCount = data ? data["totalPageCount"] : 1;
+
     return (
         <main className="h-fit mb-2 overflow-hidden">
             <div className="px-6">
@@ -19,7 +38,14 @@ export default function Transactions() {
                     <TransactionsSearchBar />
                     <AddTransactionButton />
                 </div>
-                <TransactionsTable />
+                <Suspense fallback={<TransactionsTableSkeleton itemsPerPage={itemsPerPage} totalPageCount={totalPageCount} />}>
+                    <TransactionsTable
+                        searchQuery={searchQuery}
+                        currPage={currPage}
+                        totalPageCount={totalPageCount}
+                        itemsPerPage={itemsPerPage}
+                    />
+                </Suspense>
             </div>
         </main>
     )

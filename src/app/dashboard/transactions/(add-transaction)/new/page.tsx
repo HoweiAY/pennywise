@@ -1,33 +1,39 @@
-import AddTransactionForm from "@/components/dashboard/transactions/add-transaction-form";
-import { createSupabaseServerClient } from "@/lib/utils/supabase/server";
+import TransactionForm from "@/components/dashboard/transactions/transaction-form";
+import { getAuthUser } from "@/lib/data/auth";
+import { getUserBalanceData } from "@/lib/data/user";
+import { getTotalTransactionAmount } from "@/lib/data/transaction";
 import { Metadata } from "next";
-import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
     title: "New Transaction - PennyWise",
 }
 
 export default async function AddTransaction() {
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-        redirect("/login");
+    const { user } = await getAuthUser();
+    const { status, message, data } = await getUserBalanceData(user.id);
+    if (status != "success" || !data) {
+        throw new Error(message || "Error: user balance information not found");
     }
-    const { data: userData, error } = await supabase
-        .from("users")
-        .select("currency, balance, spending_limit")
-        .eq("user_id", user.id)
-        .limit(1);
-    if (error) throw error;
-    const {
-        currency,
+    let {
+        currency, 
         balance: balanceInCents,
-        spending_limit: spendingLimitInCents,
-    }: {
-        currency: string,
-        balance: number,
-        spending_limit: number | null,
-    } = userData[0];
+        spending_limit: remainingSpendingLimitInCents,
+    } = data["userBalanceData"];
+
+    if (remainingSpendingLimitInCents) {
+        const currDateTime = new Date();
+        const monthStartDateTime = new Date(currDateTime.getFullYear(), currDateTime.getMonth(), 1, 0, 0, 0, 0);
+        const {
+            status: transactionAmountStatus,
+            message: transactionAmountMessage,
+            data: transactionAmountData,
+        } = await getTotalTransactionAmount(user.id, "Expenditure", monthStartDateTime, currDateTime);
+        if (transactionAmountStatus !== "success") {
+            console.error(transactionAmountMessage);
+        } else if (transactionAmountData) {
+            remainingSpendingLimitInCents -= transactionAmountData["transactionAmount"] as number;
+        }
+    }
 
     return (
         <main className="h-fit mb-2 overflow-hidden">
@@ -40,11 +46,11 @@ export default async function AddTransaction() {
                         Create a new transaction by entering the details below
                     </p>
                 </header>
-                <AddTransactionForm
+                <TransactionForm
                     userId={user.id}
                     currency={currency}
                     balanceInCents={balanceInCents}
-                    spendingLimitInCents={spendingLimitInCents}
+                    remainingSpendingLimitInCents={remainingSpendingLimitInCents}
                 />
             </div>
         </main>

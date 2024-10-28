@@ -1,6 +1,10 @@
 import { AuthFormState, TransactionFormState, BudgetFormState } from "@/lib/types/form-state";
 import { unescape } from "querystring";
 
+export function amountPercentageChange(oldAmountInCents: number, newAmountInCents: number): number {
+    return ((newAmountInCents - oldAmountInCents) / Math.max(oldAmountInCents, 1)) * 100;
+}
+
 export function authErrorMessage(error: AuthFormState | undefined): string {
     let errorMessage = "An error has occurred";
     if (error) {
