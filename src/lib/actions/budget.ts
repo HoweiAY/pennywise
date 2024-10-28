@@ -44,6 +44,18 @@ export async function createBudget(
         if (!user) {
             return { message: "Error: user not found" };
         }
+        const { data: budgetCountData, error: budgetCountError } = await supabase
+            .from("budgets")
+            .select("budgetCount:count()")
+            .eq("user_id", user.id)
+            .limit(1);
+        if (budgetCountError) throw budgetCountError;
+        if (budgetCountData) {
+            const { budgetCount } = budgetCountData[0] as { budgetCount: number };
+            if (budgetCount >= 12) {
+                return { message: "You can only have at most 12 budgets at once" };
+            }
+        }
         const amountInCents = Math.floor(validatedBudgetData.data.amount * 100);
         const budgetFormData: BudgetFormData = {
             name: validatedBudgetData.data.name,
@@ -53,9 +65,9 @@ export async function createBudget(
             user_id: user.id,
             description: validatedBudgetData.data.description,
         };
-        const { error } = await supabase.from("budgets").insert(budgetFormData);
-        if (error) {
-            return { message: error.message };
+        const { error: createBudgetError } = await supabase.from("budgets").insert(budgetFormData);
+        if (createBudgetError) {
+            return { message: createBudgetError.message };
         }
     } catch (error) {
         if (error instanceof Error) {
