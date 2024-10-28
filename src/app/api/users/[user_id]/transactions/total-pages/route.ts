@@ -9,6 +9,7 @@ export async function GET(
     const searchParams = request.nextUrl.searchParams;
     const itemsPerPage = searchParams.get("itemsPerPage");
     const searchQuery = searchParams.get("search");
+    const budgetId = searchParams.get("budgetId");
     const { user_id: userId } = await params;
     const supabase = await createSupabaseServerClient();
     let supabaseQuery = supabase
@@ -21,6 +22,9 @@ export async function GET(
     }
     if (userId) {
         supabaseQuery = supabaseQuery.or(`payer_id.eq.${userId}, recipient_id.eq.${userId}`);
+    }
+    if (budgetId) {
+        supabaseQuery = supabaseQuery.eq("budget_id", budgetId);
     }
     supabaseQuery = supabaseQuery.limit(1);
     const { data: transactionCountData, error } = await supabaseQuery;

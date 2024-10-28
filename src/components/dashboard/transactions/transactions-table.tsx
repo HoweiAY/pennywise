@@ -115,11 +115,12 @@ export default async function TransactionsTable({
                                         </DropdownMenuTrigger>
                                         <OptionsMenu
                                             transactionId={transaction.transaction_id ?? "#"}
+                                            editable={transaction.transaction_type !== "Pay friend"}
                                             deletable={transaction.transaction_type !== "Pay friend"}
                                         />
                                     </DropdownMenu>
                                 </td>
-                            </tr>        
+                            </tr>
                         )
                     })}
                 </tbody>
@@ -181,6 +182,7 @@ export default async function TransactionsTable({
                                 </DropdownMenuTrigger>
                                 <OptionsMenu
                                     transactionId={transaction.transaction_id ?? "#"}
+                                    editable={transaction.transaction_type !== "Pay friend"}
                                     deletable={transaction.transaction_type !== "Pay friend"}
                                 />
                             </DropdownMenu>
@@ -189,7 +191,7 @@ export default async function TransactionsTable({
                 })}
             </div>
             {transactionItems?.length === 0 && 
-                <div className="flex flex-col justify-center items-center w-full h-48 my-6 border-0 rounded-lg bg-gray-100">
+                <div className="flex flex-col justify-center items-center w-full h-48 mb-6 border-0 rounded-b-lg bg-gray-100">
                     <p className="text-center text-xl max-md:text-lg font-semibold">
                         {searchQuery ? "No results found" : "No transactions"}
                     </p>
@@ -203,7 +205,7 @@ export default async function TransactionsTable({
     )
 }
 
-function OptionsMenu({ transactionId, deletable }: { transactionId: string, deletable: boolean }) {
+function OptionsMenu({ transactionId, editable, deletable }: { transactionId: string, editable: boolean, deletable: boolean }) {
     return (
         <AlertDialog>
             <DropdownMenuContent>
@@ -214,7 +216,10 @@ function OptionsMenu({ transactionId, deletable }: { transactionId: string, dele
                     </DropdownMenuItem>
                 </Link>
                 <Link href={`/dashboard/transactions/${transactionId}/edit`} scroll={false}>
-                    <DropdownMenuItem className="w-full hover:cursor-pointer max-lg:text-sm">
+                    <DropdownMenuItem className={clsx(
+                        "w-full hover:cursor-pointer max-lg:text-sm",
+                        {"hidden": !editable},
+                        )}>
                         <PencilIcon className="w-4 h-4" />
                         <p>Edit</p>
                     </DropdownMenuItem>

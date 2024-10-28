@@ -49,7 +49,7 @@ export async function GET(
         const searchTerms = splitSearchQuery.reduce((prevTerms, term) => term ? `${prevTerms ? prevTerms + " & " : ""}'${term}'` : prevTerms, ``);
         supabaseQuery = supabaseQuery.textSearch("title", searchTerms);
     }
-    supabaseQuery = supabaseQuery.order("updated_at", { ascending: false });
+    supabaseQuery = supabaseQuery.order("created_at", { ascending: false });
     if (itemsOffset) {
         supabaseQuery = supabaseQuery.range(itemsOffset, itemsOffset + itemsCount - 1);
     } else if (items) {

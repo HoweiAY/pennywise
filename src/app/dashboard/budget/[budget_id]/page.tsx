@@ -1,15 +1,18 @@
 import BudgetTransactionsTable from "@/components/dashboard/budget/budget-transactions-table";
+import BudgetTransactionsTableSkeleton from "@/ui/skeletons/budget-transactions-table-skeleton";
 import DeleteBudgetDialog from "@/components/dashboard/budget/delete-budget-dialog";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { budgetCategories } from "@/lib/utils/constant";
 import { formatCurrency, formatCurrencySymbol } from "@/lib/utils/format";
 import { getAuthUser } from "@/lib/data/auth";
+import { getTransactionsPages } from "@/lib/data/transaction";
 import { getUserBudgetById, getBudgetAmountSpent } from "@/lib/data/budget";
 import { BudgetItem } from "@/lib/types/budget";
 import { Metadata, ResolvingMetadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { Suspense } from "react";
 
 export async function generateMetadata(
     { params }: { params: { budget_id: string } },
@@ -25,13 +28,23 @@ export async function generateMetadata(
     return { title: "Budget Details - PennyWise" };
 }
 
-export default async function ViewBudget({ params }: { params: { budget_id: string } }) {
+export default async function ViewBudget({
+    params,
+    searchParams,
+}: {
+    params: { budget_id: string },
+    searchParams?: { page?: string };
+}) {
+    const currPage = Number(searchParams?.page) || 1;
+    const itemsPerPage = 10;
     const { user } = await getAuthUser();
-    const {
-        status: userBudgetStatus,
-        message: userBudgetMessage,
-        data: userBudgetData,
-    } = await getUserBudgetById(params.budget_id);
+    const [
+        { status: userBudgetStatus, message: userBudgetMessage, data: userBudgetData },
+        { status: transactionsPageStatus, message: transactionsPageMessage, data: transactionsPageData },
+    ] = await Promise.all([
+        getUserBudgetById(params.budget_id),
+        getTransactionsPages(itemsPerPage, null, params.budget_id),
+    ]);
     if (userBudgetStatus !== "success" || !userBudgetData) {
         throw new Error(userBudgetMessage || "Error: budget not found");
     }
@@ -46,6 +59,10 @@ export default async function ViewBudget({ params }: { params: { budget_id: stri
     if (user_id !== user.id) {
         redirect("/dashboard");
     }
+    if (transactionsPageStatus !== "success") {
+        console.error(transactionsPageMessage);
+    }
+    const totalPageCount = transactionsPageData ? transactionsPageData["totalPageCount"] : 1;
 
     const currDateTime = new Date();
     const monthStartDateTime = new Date(currDateTime.getFullYear(), currDateTime.getMonth(), 1, 0, 0, 0, 0);
@@ -110,10 +127,17 @@ export default async function ViewBudget({ params }: { params: { budget_id: stri
                         </p>
                     }
                 </section>
-                <h1 className="mt-8 pb-1 text-2xl max-md:text-xl font-semibold overflow-hidden whitespace-nowrap text-ellipsis">
+                <h1 className="mt-8 pb-3 text-2xl max-md:text-xl font-semibold overflow-hidden whitespace-nowrap text-ellipsis">
                     Related Transactions
                 </h1>
-                <BudgetTransactionsTable />
+                <Suspense fallback={<BudgetTransactionsTableSkeleton itemsPerPage={itemsPerPage} totalPageCount={totalPageCount} />} >
+                    <BudgetTransactionsTable
+                        budgetId={params.budget_id}
+                        currPage={currPage}
+                        totalPageCount={totalPageCount}
+                        itemsPerPage={itemsPerPage}
+                    />
+                </Suspense>
             </div>
         </main>
     )
