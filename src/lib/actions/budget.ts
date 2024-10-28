@@ -76,7 +76,7 @@ export async function createBudget(
         return { message: "An error has occurred" };
     }
 
-    redirect("/dashboard/budget");
+    redirect("/dashboard/budget/my-budgets");
 }
 
 export async function updateBudget(
@@ -137,7 +137,7 @@ export async function updateBudget(
         return { message: "An error has occurred" };
     }
 
-    redirect("/dashboard/budget");
+    redirect("/dashboard/budget/my-budgets");
 }
 
 export async function deleteBudget(
@@ -154,6 +154,6 @@ export async function deleteBudget(
     }
     revalidatePath("/dashboard/budget");
     if (redirectOnDelete) {
-        redirect("/dashboard/budget");
+        redirect("/dashboard/budget/my-budgets");
     }
 }

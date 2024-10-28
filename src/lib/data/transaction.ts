@@ -29,10 +29,9 @@ export async function getTransactionsPages(
         if (budgetId) {
             supabaseQuery = supabaseQuery.eq("budget_id", budgetId);
         } else {
-            supabaseQuery = supabaseQuery
-                .or(`payer_id.eq.${user.id}, recipient_id.eq.${user.id}`)
-                .limit(1);
+            supabaseQuery = supabaseQuery.or(`payer_id.eq.${user.id}, recipient_id.eq.${user.id}`);
         }
+        supabaseQuery = supabaseQuery.limit(1);
         const { data: transactionCountData, error } = await supabaseQuery;
         if (error) throw error;
         const { transactionCount } = transactionCountData[0] as { transactionCount: number };

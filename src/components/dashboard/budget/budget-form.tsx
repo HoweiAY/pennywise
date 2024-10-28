@@ -148,7 +148,7 @@ export default function BudgetForm({
             </p>
             <div className="flex flex-row justify-between items-center my-6">
                 <Link
-                    href={"/dashboard/budget"}
+                    href={"/dashboard/budget/my-budgets"}
                     className="border rounded-md px-4 py-2 text-center max-md:text-sm font-semibold bg-white hover:bg-sky-100 hover:text-blue-600 shadow-md shadow-slate-300 duration-200"
                 >
                     Cancel
