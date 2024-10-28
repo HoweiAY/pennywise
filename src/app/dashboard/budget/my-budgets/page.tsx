@@ -5,8 +5,13 @@ import { getAuthUser } from "@/lib/data/auth";
 import { getUserBudgets } from "@/lib/data/budget";
 import { BudgetFormData } from "@/lib/types/form-state";
 import { TransactionCategoryId } from "@/lib/types/transactions";
+import { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+
+export const metadata: Metadata = {
+    title: "My Budgets - PennyWise",
+};
 
 export default async function MyBudgets() {
     const { user } = await getAuthUser();
@@ -26,22 +31,21 @@ export default async function MyBudgets() {
                     <p className="mt-1 md:me-4 max-md:my-1 max-md:text-sm text-gray-500">
                         View and manage all your budget plans
                     </p>
-                    <div className="flex justify-start items-center w-full mt-6 mb-2">
-                        <Link
-                            href={"/dashboard/budget/new"}
-                            className="flex flex-row items-center gap-2 max-md:gap-1 border-0 rounded-lg w-fit h-10 px-6 max-md:px-3 text-white font-semibold bg-blue-500 hover:bg-blue-600 transition-colors duration-200"
-                        >
-                            <PlusIcon className="w-5 h-5 max-md:w-4 max-md:h-4" />
-                            <span className="mr-1 max-md:text-sm">New Budget</span>
-                        </Link>
-                    </div>
                 </header>
+                <div className="flex justify-start items-center w-full mt-6 mb-2">
+                    <Link
+                        href={"/dashboard/budget/new"}
+                        className="flex flex-row items-center gap-2 max-md:gap-1 border-0 rounded-lg w-fit h-10 px-6 max-md:px-3 text-white font-semibold bg-blue-500 hover:bg-blue-600 transition-colors duration-200"
+                    >
+                        <PlusIcon className="w-5 h-5 max-md:w-4 max-md:h-4" />
+                        <span className="mr-1 max-md:text-sm">New Budget</span>
+                    </Link>
+                </div>
                 <div className="grid grid-flow-row grid-cols-3 max-lg:grid-cols-2 max-md:grid-cols-1 gap-4 py-4">
                     {userBudgetData.map((budget, idx) => {
                         return (
-                            <Suspense fallback={<UserBudgetCardSkeleton />}>
+                            <Suspense key={idx} fallback={<UserBudgetCardSkeleton />}>
                                 <UserBudgetCard
-                                    key={idx}
                                     budget_id={budget.budget_id!}
                                     name={budget.name}
                                     categoryId={budget.category_id as TransactionCategoryId}
