@@ -8,14 +8,13 @@ import {
 } from "@/components/ui/carousel";
 import { getUserBudgets } from "@/lib/data/budget";
 import { BudgetFormData } from "@/lib/types/form-state";
-import { TransactionCategoryId } from "@/lib/types/transactions";
 
 export default async function UserBudgetCardCarousel({ userId }: { userId: string }) {
     const { status, message, data } = await getUserBudgets(userId);
     if (status !== "success") {
         throw new Error(message || "Error: failed to fetch user budgets");
     }
-    const userBudgetData = data ? data["userBudgetData"] as BudgetFormData[] : [];
+    const userBudgetData = data ? data["userBudgetData"] satisfies BudgetFormData[] : [];
 
     return (
         <Carousel
@@ -31,7 +30,7 @@ export default async function UserBudgetCardCarousel({ userId }: { userId: strin
                             <UserBudgetCard
                                 budget_id={budget.budget_id!}
                                 name={budget.name}
-                                categoryId={budget.category_id as TransactionCategoryId}
+                                categoryId={budget.category_id}
                                 currency={budget.currency}
                                 amountInCents={budget.amount}
                             />

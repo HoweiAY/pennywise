@@ -19,7 +19,7 @@ export async function GET(
         return NextResponse.json({}, { status: 500, statusText: error.message });
     }
     return NextResponse.json(
-        { data: userBudgetData as BudgetFormData[] },
+        { data: userBudgetData satisfies BudgetFormData[] },
         { status: 200 },
     );
 }

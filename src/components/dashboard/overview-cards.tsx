@@ -63,7 +63,9 @@ export default async function OverviewCards({ userId }: { userId: string }) {
     }
 
     let prevNetBalance = overviewData.balanceInCents;
-    if (currMonthIncomeStatus === "success" && currMonthIncomeData) {
+    if (currMonthIncomeStatus !== "success" || !currMonthIncomeData) {
+        console.error(currMonthIncomeMessage || "Error fetching income amount this month");
+    } else if (currMonthIncomeData["transactionAmount"]) {
         overviewData.incomeInCents = currMonthIncomeData["transactionAmount"];
         if (prevNetBalance) {
             prevNetBalance -= overviewData.incomeInCents;
@@ -76,10 +78,10 @@ export default async function OverviewCards({ userId }: { userId: string }) {
                 ? amountPercentageChange(prevIncomeInCents, overviewData.incomeInCents)
                 : null;
         }
-    } else {
-        console.error(currMonthIncomeMessage || "Error fetching income amount this month");
     }
-    if (currMonthExpenditureStatus === "success" && currMonthExpenditureData) {
+    if (currMonthExpenditureStatus !== "success" || !currMonthExpenditureData) {
+        console.error(currMonthExpenditureMessage || "Error fetching expenditure amount this month");
+    } else if (currMonthExpenditureData["transactionAmount"]) {
         overviewData.expenditureInCents = currMonthExpenditureData["transactionAmount"];
         if (prevNetBalance) {
             prevNetBalance += overviewData.expenditureInCents;
@@ -92,8 +94,6 @@ export default async function OverviewCards({ userId }: { userId: string }) {
                 ? amountPercentageChange(prevExpenditureInCents, overviewData.expenditureInCents)
                 : null;
         }
-    } else {
-        console.error(currMonthExpenditureMessage || "Error fetching expenditure amount this month");
     }
     if (prevNetBalance && overviewData.balanceInCents) {
         overviewData.balanceChange = overviewData.incomeChange && overviewData.expenditureChange
@@ -172,7 +172,7 @@ export function Card({
                     "text-3xl max-sm:text-2xl font-semibold overflow-hidden whitespace-nowrap text-ellipsis",
                     { "max-sm:text-lg": type !== "balance" }
                 )}>
-                    {amountInCents 
+                    {amountInCents !== null
                         ? formatCurrency(amountInCents, currency)
                         : currency 
                         ? `${formatCurrencySymbol(currency)} --`

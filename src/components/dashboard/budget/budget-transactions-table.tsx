@@ -29,7 +29,7 @@ export default async function BudgetTransactionsTable({
     if (status !== "success") {
         console.error(message);
     }
-    const transactionItems = data ? data["transactionItems"] as TransactionItem[] : [];
+    const transactionItems = data ? data["transactionItems"] satisfies TransactionItem[] : [];
 
     return (
         <section className="flex flex-col border border-slate-100 rounded-xl min-h-96 px-6 py-6 max-md:px-3 mb-10 bg-white shadow-lg">

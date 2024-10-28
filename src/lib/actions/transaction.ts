@@ -4,7 +4,7 @@ import { z } from "zod";
 import { addUserBalance, deductUserBalance } from "@/lib/actions/user";
 import { createSupabaseServerClient } from "@/lib/utils/supabase/server";
 import { TransactionFormState, TransactionFormData } from "@/lib/types/form-state";
-import { TransactionType } from "@/lib/types/transactions";
+import { TransactionCategoryId, TransactionType } from "@/lib/types/transactions";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
@@ -20,6 +20,7 @@ const TransactionSchema = z.object({
     category: z.coerce.number().nullable(),
     description: z.string().trim().nullable(),
 });
+const TransactionCategorySchema = z.custom<TransactionCategoryId>().nullable();
 
 // Server action for creating a new transaction
 export async function createTransaction(
@@ -57,6 +58,12 @@ export async function createTransaction(
             }
         }
 
+        const validatedTransactionCategory = TransactionCategorySchema.safeParse(validatedTransactionData.data.category);
+        if (!validatedTransactionCategory.success) {
+            return { message: "Invalid category ID" };
+        }
+        const categoryId = validatedTransactionCategory.data;
+
         const amountInCents = Math.floor(validatedTransactionData.data.amount * 100);
         const {
             balance: balanceInCents,
@@ -65,7 +72,6 @@ export async function createTransaction(
             type: transactionType,
         } = validatedTransactionData.data;
         const budgetId = validatedTransactionData.data.budget;
-        const categoryId = validatedTransactionData.data.category;
         if (transactionType !== "Deposit") {
             const message = (amountInCents > balanceInCents)
                 ? "Transaction amount has exceeded your available balance"
@@ -176,6 +182,13 @@ export async function updateTransaction(
                 message: "Invalid field input(s)",
             }
         }
+
+        const validatedTransactionCategory = TransactionCategorySchema.safeParse(validatedTransactionData.data.category);
+        if (!validatedTransactionCategory.success) {
+            return { message: "Invalid category ID" };
+        }
+        const categoryId = validatedTransactionCategory.data;
+
         const amountInCents = Math.floor(validatedTransactionData.data.amount * 100);
         const prevAmountInCents = prevAmount ? parseInt(prevAmount.toString()) : amountInCents;
         const netAmountInCents = amountInCents - prevAmountInCents;
@@ -186,7 +199,6 @@ export async function updateTransaction(
             type: transactionType,
         } = validatedTransactionData.data;
         const budgetId = validatedTransactionData.data.budget;
-        const categoryId = validatedTransactionData.data.category;
         if (transactionType !== "Deposit") {
             const message = (netAmountInCents > balanceInCents)
                 ? "Transaction amount has exceeded your available balance"

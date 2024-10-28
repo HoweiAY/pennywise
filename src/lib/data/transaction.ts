@@ -227,11 +227,7 @@ export async function getTransactionById(
     return {
         status: "success",
         data: transactionData.length > 0
-            ? {
-                transactionData: asForm
-                    ? transactionData[0] as TransactionFormData
-                    : transactionData[0] as TransactionItem
-            }
+            ? { transactionData: asForm ? transactionData[0] as TransactionFormData : transactionData[0] as TransactionItem }
             : null,
     };
 }
@@ -241,7 +237,7 @@ export async function getTotalTransactionAmount(
     type: "Income" | "Expenditure",
     from: Date,
     to: Date,
-): Promise<DataResponse<number>> {
+): Promise<DataResponse<number | null>> {
     noStore();
 
     const matchingColumn = type === "Income" ? "recipient_id" : "payer_id";
@@ -260,6 +256,6 @@ export async function getTotalTransactionAmount(
     }
     return {
         status:"success",
-        data: { transactionAmount: transactionAmountData[0].totalAmount as number },
+        data: { transactionAmount: transactionAmountData[0].totalAmount as number || null },
     };
 }

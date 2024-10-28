@@ -50,7 +50,7 @@ export default function TransactionForm({
     const getTitlePlaceholder = useCallback((type: TransactionType) => {
         return type === "Deposit"
             ? "My first paycheck 💵"
-            : categoryId && (categoryId satisfies TransactionCategoryId)
+            : categoryId
             ? transactionCategories[categoryId].titlePlaceholder
             : "My new transaction 💲";
     }, [categoryId]);
@@ -127,8 +127,8 @@ export default function TransactionForm({
         }
         if (prevTransactionData) {
             setAmountInCents(0);
-            if (prevTransactionData.transaction_type !== "Deposit") {
-                setCategoryId(prevTransactionData.category_id as TransactionCategoryId);
+            if (prevTransactionData.transaction_type !== "Deposit" && prevTransactionData.category_id) {
+                setCategoryId(prevTransactionData.category_id satisfies TransactionCategoryId);
             }
         }
     }, []);

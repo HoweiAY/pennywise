@@ -25,8 +25,8 @@ export async function GET(
     }
     return NextResponse.json(
         { data: asForm
-            ? budgetData[0] as BudgetFormData
-            : budgetData[0] as BudgetItem
+            ? budgetData[0] satisfies BudgetFormData
+            : budgetData[0] satisfies BudgetItem
         },
         { status: 200 },
     );

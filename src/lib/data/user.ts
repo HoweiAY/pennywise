@@ -20,7 +20,7 @@ export async function getUserDataById(userId: string): Promise<DataResponse<User
     }
     return {
         status: "success",
-        data: { userData: userData[0] as UserData },
+        data: { userData: userData[0] satisfies UserData },
     };
 }
 
@@ -41,7 +41,7 @@ export async function getUserBalanceData(userId: string): Promise<DataResponse<U
     }
     return {
         status: "success",
-        data: { userBalanceData: userBalanceData[0] as UserBalanceData },
+        data: { userBalanceData: userBalanceData[0] satisfies UserBalanceData },
     };
 }
 

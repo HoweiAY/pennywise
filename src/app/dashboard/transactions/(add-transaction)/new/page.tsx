@@ -31,7 +31,7 @@ export default async function AddTransaction() {
         if (transactionAmountStatus !== "success") {
             console.error(transactionAmountMessage);
         } else if (transactionAmountData) {
-            remainingSpendingLimitInCents -= transactionAmountData["transactionAmount"] as number;
+            remainingSpendingLimitInCents -= transactionAmountData["transactionAmount"] ?? 0;
         }
     }
 

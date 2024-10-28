@@ -19,14 +19,14 @@ export default async function MyBudgets() {
     if (status !== "success") {
         throw new Error(message || "Error: failed to fetch user budgets");
     }
-    const userBudgetData = data ? data["userBudgetData"] as BudgetFormData[] : [];
+    const userBudgetData = data ? data["userBudgetData"] satisfies BudgetFormData[] : [];
 
     return (
         <main className="h-fit mb-2 overflow-hidden">
             <div className="px-6">
                 <header>
                     <h1 className="mt-8 pb-1 text-3xl max-md:text-2xl font-semibold overflow-hidden whitespace-nowrap text-ellipsis">
-                        My Budgets
+                        My budgets
                     </h1>
                     <p className="mt-1 md:me-4 max-md:my-1 max-md:text-sm text-gray-500">
                         View and manage all your budget plans

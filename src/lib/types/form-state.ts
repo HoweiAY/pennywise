@@ -1,4 +1,5 @@
-import { TransactionType } from "@/lib/types/transactions";
+import { TransactionCategoryId, TransactionType } from "@/lib/types/transactions";
+import { BudgetCategoryId } from "@/lib/types/budget";
 
 export type AuthFormState = {
     error?: {
@@ -39,7 +40,7 @@ export type TransactionFormData = {
     transaction_id?: string,
     title: string,
     transaction_type: TransactionType,
-    category_id?: number | null,
+    category_id?: TransactionCategoryId | null,
     payer_currency?: string | null,
     recipient_currency?: string | null,
     exchange_rate?: number | null,
@@ -64,7 +65,7 @@ export type BudgetFormState = {
 export type BudgetFormData = {
     budget_id?: string,
     name: string,
-    category_id: number,
+    category_id: BudgetCategoryId,
     currency: string,
     amount: number,
     user_id: string,

@@ -22,7 +22,7 @@ export async function getUserBudgets(userId: string): Promise<DataResponse<Budge
     }
     return {
         status: "success",
-        data: { userBudgetData: userBudgetData as BudgetFormData[] },
+        data: { userBudgetData: userBudgetData satisfies BudgetFormData[] },
     };
 }
 

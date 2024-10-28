@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/utils/supabase/server";
 import { BudgetFormState, BudgetFormData } from "@/lib/types/form-state";
+import { BudgetCategoryId } from "@/lib/types/budget";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -13,6 +14,7 @@ const BudgetSchema = z.object({
     category: z.coerce.number().gt(0, { message: "Please select a category" }),
     description: z.string().trim().nullable(),
 });
+const BudgetCategorySchema = z.custom<BudgetCategoryId>();
 
 export async function createBudget(
     prevState: BudgetFormState | undefined,
@@ -39,6 +41,12 @@ export async function createBudget(
             }
         }
 
+        const validatedBudgetCategory = BudgetCategorySchema.safeParse(validatedBudgetData.data.category);
+        if (!validatedBudgetCategory.success) {
+            return { message: "Please select a category for this budget" };
+        }
+        const categoryId = validatedBudgetCategory.data;
+
         const supabase = await createSupabaseServerClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
@@ -59,7 +67,7 @@ export async function createBudget(
         const amountInCents = Math.floor(validatedBudgetData.data.amount * 100);
         const budgetFormData: BudgetFormData = {
             name: validatedBudgetData.data.name,
-            category_id: validatedBudgetData.data.category,
+            category_id: categoryId,
             currency: validatedBudgetData.data.currency,
             amount: amountInCents,
             user_id: user.id,
@@ -108,6 +116,12 @@ export async function updateBudget(
             }
         }
 
+        const validatedBudgetCategory = BudgetCategorySchema.safeParse(validatedBudgetData.data.category);
+        if (!validatedBudgetCategory.success) {
+            return { message: "Please select a category for this budget" };
+        }
+        const categoryId = validatedBudgetCategory.data;
+
         const supabase = await createSupabaseServerClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
@@ -116,7 +130,7 @@ export async function updateBudget(
         const amountInCents = Math.floor(validatedBudgetData.data.amount * 100);
         const budgetFormData: BudgetFormData = {
             name: validatedBudgetData.data.name,
-            category_id: validatedBudgetData.data.category,
+            category_id: categoryId,
             currency: validatedBudgetData.data.currency,
             amount: amountInCents,
             user_id: user.id,

@@ -55,7 +55,7 @@ export default async function EditTransaction({ params }: { params: { transactio
         if (transactionAmountStatus !== "success") {
             console.error(transactionAmountMessage);
         } else if (transactionAmountData) {
-            remainingSpendingLimitInCents -= transactionAmountData["transactionAmount"] as number;
+            remainingSpendingLimitInCents -= transactionAmountData["transactionAmount"] ?? 0;
         }
     }
 

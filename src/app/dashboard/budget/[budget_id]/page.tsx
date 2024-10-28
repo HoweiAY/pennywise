@@ -55,7 +55,7 @@ export default async function ViewBudget({
         amount: amountInCents,
         user_id,
         description,
-    } = userBudgetData["budgetData"] as BudgetItem;
+    } = userBudgetData["budgetData"] satisfies BudgetItem;
     if (user_id !== user.id) {
         redirect("/dashboard");
     }
