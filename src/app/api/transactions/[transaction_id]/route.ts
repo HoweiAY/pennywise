@@ -53,7 +53,7 @@ export async function GET(
         return NextResponse.json({}, { status: 500, statusText: error.message });
     }
     if (transactionData.length === 0) {
-        return NextResponse.json({}, { status: 500, statusText: "Transaction not found" });
+        return NextResponse.json({}, { status: 404, statusText: "Transaction not found" });
     }
     return NextResponse.json(
         { data: asForm ? transactionData[0] as TransactionFormData : transactionData[0] as TransactionItem },
