@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/utils/supabase/server";
 import { BudgetFormData } from "@/lib/types/form-state";
-import { BudgetItem } from "@/lib/types/budget";
+import { BudgetCategoryId, BudgetItem } from "@/lib/types/budget";
+import { TransactionCategoryId } from "@/lib/types/transactions";
 import { DataResponse } from "@/lib/types/data";
 import { unstable_noStore as noStore } from "next/cache";
 
@@ -79,5 +80,38 @@ export async function getBudgetAmountSpent(
     return {
         status: "success",
         data: { spentBudget: spentBudgetData[0].spentBudget as number },
+    };
+}
+
+export async function getBudgetAmountSpentByCategory(
+    userId: string,
+    categoryId: TransactionCategoryId | BudgetCategoryId,
+    from?: Date,
+    to?: Date,
+): Promise<DataResponse<number>> {
+    noStore();
+
+    const supabase = await createSupabaseServerClient();
+    let supabaseQuery = supabase
+        .from("transactions")
+        .select("spentBudget:amount.sum(), budgets!inner(category_id)")
+        .eq("payer_id", userId)
+        .eq("budgets.category_id", categoryId);
+    if (from) {
+        supabaseQuery = supabaseQuery.gte("created_at", from.toISOString());
+    }
+    if (to) {
+        supabaseQuery = supabaseQuery.lt("created_at", to.toISOString());
+    }
+    const { data: spentBudgetData, error } = await supabaseQuery;
+    if (error) {
+        return {
+            status: "error",
+            message: error.message,
+        };
+    }
+    return {
+        status: "success",
+        data: { spentBudget: spentBudgetData.length > 0 ? spentBudgetData[0].spentBudget as number : 0 },
     };
 }

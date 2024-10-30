@@ -1,7 +1,9 @@
 import { createSupabaseServerClient } from "@/lib/utils/supabase/server";
 import { DataResponse } from "@/lib/types/data";
 import { TransactionFormData } from "@/lib/types/form-state";
-import { TransactionItem } from "@/lib/types/transactions";
+import { TransactionCategoryId, TransactionItem } from "@/lib/types/transactions";
+import { BudgetCategoryId } from "@/lib/types/budget";
+import { getBudgetAmountSpentByCategory } from "@/lib/data/budget";
 import { unstable_noStore as noStore } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -234,18 +236,19 @@ export async function getTransactionById(
 
 export async function getTotalTransactionAmount(
     userId: string,
-    type: "Income" | "Expenditure",
+    type: "income" | "expenditure",
     from: Date,
     to: Date,
 ): Promise<DataResponse<number | null>> {
     noStore();
 
-    const matchingColumn = type === "Income" ? "recipient_id" : "payer_id";
+    const matchingColumn = type === "income" ? "recipient_id" : "payer_id";
     const supabase = await createSupabaseServerClient();
     const { data: transactionAmountData, error } = await supabase
         .from("transactions")
         .select("totalAmount:amount.sum()")
         .eq(matchingColumn, userId)
+        .is("exchange_rate", null)
         .lt("created_at", to.toISOString())
         .gte("created_at", from.toISOString());
     if (error) {
@@ -257,5 +260,54 @@ export async function getTotalTransactionAmount(
     return {
         status:"success",
         data: { transactionAmount: transactionAmountData[0].totalAmount as number || null },
+    };
+}
+
+export async function getTotalExpenseByCategoryId(
+    userId: string,
+    categoryId: TransactionCategoryId | BudgetCategoryId,
+    from?: Date,
+    to?: Date,
+): Promise<DataResponse<number | null>> {
+    noStore();
+
+    const supabase = await createSupabaseServerClient();
+    let supabaseTransactionsQuery = supabase
+        .from("transactions")
+        .select("transactionsAmount:amount.sum()")
+        .eq("payer_id", userId)
+        .eq("category_id", categoryId);
+    if (to) {
+        supabaseTransactionsQuery = supabaseTransactionsQuery.lt("created_at", to.toISOString());
+    }
+    if (from) {
+        supabaseTransactionsQuery = supabaseTransactionsQuery.gte("created_at", from.toISOString());
+    }
+
+    const [
+        { data: transactionsAmountData, error: transactionsAmountError },
+        { status: spentBudgetStatus, message: spentBudgetMessage, data: spentBudgetData },
+    ] = await Promise.all([
+        supabaseTransactionsQuery,
+        getBudgetAmountSpentByCategory(userId, categoryId, from, to),
+    ]);
+    if (transactionsAmountError) {
+        return {
+            status: "error",
+            message: transactionsAmountError.message,
+        };
+    }
+    if (spentBudgetStatus !== "success") {
+        return {
+            status: "error",
+            message: spentBudgetMessage,
+        }
+    }
+    const totalAmount = spentBudgetData
+        ? transactionsAmountData[0].transactionsAmount + (spentBudgetData["spentBudget"] ?? 0)
+        : transactionsAmountData[0].transactionsAmount;
+    return {
+        status:"success",
+        data: { expenseAmount: totalAmount as number || null },
     };
 }

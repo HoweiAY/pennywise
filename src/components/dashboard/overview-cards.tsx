@@ -4,8 +4,8 @@ import {
     BanknotesIcon,
 } from "@heroicons/react/24/outline";
 import { ExclamationCircleIcon } from "@heroicons/react/24/solid";
-import { getUserBalanceData } from "@/lib/data/user";
 import { getTotalTransactionAmount } from "@/lib/data/transaction";
+import { UserBalanceData } from "@/lib/types/user";
 import { formatCurrency, formatCurrencySymbol, formatAmountPercentageChange } from "@/lib/utils/format";
 import { amountPercentageChange } from "@/lib/utils/helper";
 import clsx from "clsx";
@@ -16,7 +16,13 @@ const cardIcons = {
     expenditure: BanknotesIcon,
 };
 
-export default async function OverviewCards({ userId }: { userId: string }) {
+export default async function OverviewCards({
+    userId,
+    userBalanceData,
+}: {
+    userId: string,
+    userBalanceData: UserBalanceData | null,
+}) {
     const overviewData: {
         balanceInCents: number | null,
         incomeInCents: number | null,
@@ -35,32 +41,28 @@ export default async function OverviewCards({ userId }: { userId: string }) {
         currency: null,
     };
 
+    const balanceData = userBalanceData;
+    if (balanceData) {
+        overviewData.balanceInCents = balanceData.balance;
+        overviewData.currency = balanceData.currency;
+    }
+
     const currDateTime = new Date();
     const currMonthStartDateTime = new Date(currDateTime.getFullYear(), currDateTime.getMonth(), 1, 0, 0, 0, 0);
     const prevMonthStartDateTime = new Date(currDateTime.getFullYear(), currDateTime.getMonth() - 1, 1, 0, 0, 0, 0);
     const prevMonthEndDateTime = new Date(currDateTime.getFullYear(), currDateTime.getMonth(), 0, 23, 59, 59, 999); 
 
     const [
-        { status: balanceStatus, message: balanceMessage, data: balanceData },
         { status: currMonthIncomeStatus, message: currMonthIncomeMessage, data: currMonthIncomeData },
         { status: prevMonthIncomeStatus, message: prevMonthIncomeMessage, data: prevMonthIncomeData },
         { status: currMonthExpenditureStatus, message: currMonthExpenditureMessage, data: currMonthExpenditureData },
         { status: prevMonthExpenditureStatus, message: prevMonthExpenditureMessage, data: prevMonthExpenditureData },
     ] = await Promise.all([
-        getUserBalanceData(userId),
-        getTotalTransactionAmount(userId, "Income", currMonthStartDateTime, currDateTime),
-        getTotalTransactionAmount(userId, "Income", prevMonthStartDateTime, prevMonthEndDateTime),
-        getTotalTransactionAmount(userId, "Expenditure", currMonthStartDateTime, currDateTime),
-        getTotalTransactionAmount(userId, "Expenditure", prevMonthStartDateTime, prevMonthEndDateTime),
+        getTotalTransactionAmount(userId, "income", currMonthStartDateTime, currDateTime),
+        getTotalTransactionAmount(userId, "income", prevMonthStartDateTime, prevMonthEndDateTime),
+        getTotalTransactionAmount(userId, "expenditure", currMonthStartDateTime, currDateTime),
+        getTotalTransactionAmount(userId, "expenditure", prevMonthStartDateTime, prevMonthEndDateTime),
     ]);
-
-    if (balanceStatus === "success" && balanceData) {
-        const { balance, currency } = balanceData["userBalanceData"];
-        overviewData.balanceInCents = balance;
-        overviewData.currency = currency;
-    } else {
-        console.error(balanceMessage || "Failed to fetch user balance data");
-    }
 
     let prevNetBalance = overviewData.balanceInCents;
     if (currMonthIncomeStatus !== "success" || !currMonthIncomeData) {
@@ -109,7 +111,7 @@ export default async function OverviewCards({ userId }: { userId: string }) {
                 amountChange={overviewData.balanceChange}
                 currency={overviewData.currency}
                 type="balance"
-                error={balanceStatus !== "success"}
+                error={!balanceData}
             />
             <Card
                 title="Income"

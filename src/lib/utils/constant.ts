@@ -290,26 +290,26 @@ export const currencyData = {
     - 4: Housing
     - 5: Shopping
     - 6: Sports and Entertainment
-    - 7: HousingTravelling and Transportation
+    - 7: Travel and Transportation
     - 8: Utilities
     - 9: Others
-    (Note: ID starts from one to avoid clashing with null value)
+    (Note: ID starts from one to avoid clashing with nullish value)
 */
 export const transactionCategories = {
-    1: { name: "Food and Drinks", titlePlaceholder: "Dinner at Five Guys 🍔" },
-    2: { name: "Groceries", titlePlaceholder: "Ingredients for chicken casserole 🍲"},
-    3: { name: "Health and Personal Care", titlePlaceholder: "Medicines for my fever 🤒"},
-    4: { name: "Housing", titlePlaceholder: "Paying off my mortgage 🏡"},
-    5: { name: "Shopping", titlePlaceholder: "New dress from Balenciaga 👗"},
-    6: { name: "Sports and Entertainment", titlePlaceholder: "Movies with the boys 🎞️"},
-    7: { name: "Travel and Transportation", titlePlaceholder: "Flight to Mumbai ✈️"},
-    8: { name: "Utilities", titlePlaceholder: "Electricity bill for next month ⚡"},
-    9: { name: "Others", titlePlaceholder: "My new transaction 💲"},
+    1: { name: "Food and Drinks", titlePlaceholder: "Dinner at Five Guys 🍔", color: "#ec4899" },
+    2: { name: "Groceries", titlePlaceholder: "Ingredients for chicken casserole 🍲", color: "#f9a8d4" },
+    3: { name: "Health and Personal Care", titlePlaceholder: "Medicines for my fever 🤒", color: "#fb7185" },
+    4: { name: "Housing", titlePlaceholder: "Paying off my mortgage 🏡", color: "#bfdbfe" },
+    5: { name: "Shopping", titlePlaceholder: "New dress from Balenciaga 👗", color: "#38bdf8" },
+    6: { name: "Sports and Entertainment", titlePlaceholder: "Movies with the boys 🎞️", color: "#2563eb" },
+    7: { name: "Travel and Transportation", titlePlaceholder: "Flight to Mumbai ✈️", color: "#6d28d9" },
+    8: { name: "Utilities", titlePlaceholder: "Electricity bill for next month ⚡", color: "#a855f7" },
+    9: { name: "Others", titlePlaceholder: "My new transaction 💲", color: "#c4b5fd" },
 };
 
 // Budget categories with IDs, same as transaction categories but without placeholder for input fields
 export const budgetCategories = Object.entries(transactionCategories)
-    .reduce((categories: {[id: string]: {name: string}}, [id, categoryData]) => {
-        categories[parseInt(id)] = { name: categoryData.name };
+    .reduce((categories: { [id: string]: { name: string, color: string } }, [id, categoryData]) => {
+        categories[parseInt(id)] = { name: categoryData.name, color: categoryData.color };
         return categories;
     }, {});

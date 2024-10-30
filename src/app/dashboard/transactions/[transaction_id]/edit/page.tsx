@@ -51,7 +51,7 @@ export default async function EditTransaction({ params }: { params: { transactio
             status: transactionAmountStatus,
             message: transactionAmountMessage,
             data: transactionAmountData,
-        } = await getTotalTransactionAmount(user.id, "Expenditure", monthStartDateTime, currDateTime);
+        } = await getTotalTransactionAmount(user.id, "expenditure", monthStartDateTime, currDateTime);
         if (transactionAmountStatus !== "success") {
             console.error(transactionAmountMessage);
         } else if (transactionAmountData) {
