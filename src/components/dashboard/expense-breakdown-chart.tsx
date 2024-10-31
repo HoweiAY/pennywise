@@ -58,7 +58,7 @@ export default function ExpenseBreakdownChart({
     chartData,
     currency,
 }: {
-    chartData: ExpenseBreakdownChartData,
+    chartData: ExpenseBreakdownChartData | null,
     currency: string,
 }) {
     const [ chartConfig, setChartConfig ] = useState<ChartConfig>(defaultChartConfig);
@@ -66,6 +66,19 @@ export default function ExpenseBreakdownChart({
     useEffect(() => {
         setChartConfig(prevConfig => ({ ...prevConfig, amount: { label: `Amount (in ${currency})` } }));
     }, [currency]);
+
+    if (!chartData) {
+        return (
+            <div className="flex flex-col justify-center items-center w-full h-full border-0 rounded-lg bg-gray-100">
+                    <p className="text-center text-xl max-md:text-lg font-semibold">
+                        No data
+                    </p>
+                    <p className="px-2 text-center text-sm">
+                        Start adding expenses to view breakdown
+                    </p>
+            </div>
+        )
+    }
 
     return (
         <div className="flex flex-col justify-between w-full h-full">

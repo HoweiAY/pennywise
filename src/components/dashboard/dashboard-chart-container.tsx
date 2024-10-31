@@ -76,6 +76,7 @@ async function getExpenseBreakdownChartData(userId: string) {
     const res = await Promise.all(fetchExpenseAmountData);
 
     categoryId = 1;
+    let noData = true;
     res.forEach(expenseAmountData => {
         const categoryName = transactionCategories[categoryId].name;
         const categoryExpenseData = {
@@ -87,12 +88,15 @@ async function getExpenseBreakdownChartData(userId: string) {
             console.error(expenseAmountData.message || `Failed to fetch user expense amount for category '${categoryName}'`);
         } else {
             categoryExpenseData.amount = Number(formatCurrencyAmount(expenseAmountData.data["expenseAmount"] ?? 0));
+            if (categoryExpenseData.amount > 0) {
+                noData = false;
+            }
         }
         expenseData.push(categoryExpenseData);
         categoryId++;
     });
 
-    return expenseData satisfies ExpenseBreakdownChartData;
+    return !noData ? expenseData satisfies ExpenseBreakdownChartData : null;
 }
 
 export default async function DashboardChartContainer({
@@ -128,7 +132,7 @@ export default async function DashboardChartContainer({
             </div>
             {type === "transaction-chart"
                 ? <TransactionChart chartData={chartData as TransactionChartData} currency={currency} />
-                : <ExpenseBreakdownChart chartData={chartData as ExpenseBreakdownChartData} currency={currency} />
+                : <ExpenseBreakdownChart chartData={chartData as ExpenseBreakdownChartData | null} currency={currency} />
             }
         </div>
     )

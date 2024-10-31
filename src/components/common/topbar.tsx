@@ -1,8 +1,8 @@
 "use client";
 
 import { BellIcon } from "@heroicons/react/24/outline";
-import { PennyWiseLogo } from "./logo";
 import avatarDefault from "@/ui/icons/avatar-default.png";
+import { PennyWiseLogo } from "@/components/common/logo";
 import { createSupabaseBrowserClient } from "@/lib/utils/supabase/client";
 import { StaticImport } from "next/dist/shared/lib/get-img-props";
 import Image from "next/image";

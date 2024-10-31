@@ -1,6 +1,6 @@
 import clsx from "clsx";
 
-export default function DashboardChartSkeleton({ colSpan }: { colSpan?: 1 | 2 | 3 }) {
+function ChartSkeleton({ colSpan }: { colSpan?: 1 | 2 | 3 }) {
     return (
         <div className={clsx(
             "max-lg:col-span-full flex flex-col rounded-xl border border-slate-100 bg-white h-[420px] max-lg:h-96 px-6 pt-6 pb-4 shadow-lg",
@@ -17,5 +17,14 @@ export default function DashboardChartSkeleton({ colSpan }: { colSpan?: 1 | 2 | 
                 <div className="w-full h-full rounded-md bg-gray-300" />
             </div>
         </div>
+    )
+}
+
+export default function DashboardChartSkeleton() {
+    return (
+        <>
+            <ChartSkeleton colSpan={2} />
+            <ChartSkeleton />
+        </>
     )
 }

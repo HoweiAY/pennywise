@@ -1,3 +1,10 @@
+import {
+    HomeIcon,
+    ArrowsRightLeftIcon,
+    ChartPieIcon,
+    BellIcon,
+} from "@heroicons/react/24/outline";
+
 // Base URL for calling APIs in route handler
 export const baseUrl = process.env.NEXT_PUBLIC_BASE_URL!;
 
@@ -313,3 +320,10 @@ export const budgetCategories = Object.entries(transactionCategories)
         categories[parseInt(id)] = { name: categoryData.name, color: categoryData.color };
         return categories;
     }, {});
+
+export const navLinks = [
+    { name: "Home", href: "/dashboard", urlRegex: /\/dashboard$/g, icon: HomeIcon },
+    { name: "Transactions", href: "/dashboard/transactions", urlRegex: /\/dashboard\/transactions[\/.]*/g, icon: ArrowsRightLeftIcon },
+    { name: "Budget", href: "/dashboard/budget", urlRegex: /\/dashboard\/budget[\/.]*/g, icon: ChartPieIcon },
+    { name: "Notifications", href: "/dashboard/notifications", urlRegex: /\/dashboard\/notifications[\/.]*/g, icon: BellIcon },
+];

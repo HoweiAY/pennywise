@@ -30,7 +30,7 @@ export default async function Dashboard() {
     const currency = userBalanceData ? userBalanceData["userBalanceData"].currency : "USD";
 
     return (
-        <main className="h-fit mb-2 overflow-hidden">
+        <main className="h-fit max-md:min-h-screen mb-2 overflow-hidden">
             <div className="px-6">
                 <p className="my-8 text-2xl font-bold overflow-hidden whitespace-nowrap text-ellipsis">
                     Welcome, {username} 👋
@@ -45,7 +45,7 @@ export default async function Dashboard() {
                             userBalanceData={userBalanceData ? userBalanceData["userBalanceData"] : null}
                         />
                     </Suspense>
-                    <Suspense fallback={<DashboardChartSkeleton colSpan={2} />}>
+                    <Suspense fallback={<DashboardChartSkeleton />}>
                         <DashboardChartContainer
                             title="Transactions overview"
                             type="transaction-chart"
@@ -53,8 +53,6 @@ export default async function Dashboard() {
                             currency={currency}
                             colSpan={2}
                         />
-                    </Suspense>
-                    <Suspense fallback={<DashboardChartSkeleton />}>
                         <DashboardChartContainer
                             title="Expense breakdown"
                             type="expense-breakdown-card"

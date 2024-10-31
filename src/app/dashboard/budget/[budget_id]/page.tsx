@@ -76,7 +76,7 @@ export default async function ViewBudget({
     }
 
     return (
-        <main className="h-fit mb-2 overflow-hidden">
+        <main className="h-fit max-md:min-h-[80%] mb-2 overflow-hidden">
             <div className="px-6">
                 <h1 className="mt-8 pb-1 text-3xl max-md:text-2xl font-semibold overflow-hidden whitespace-nowrap text-ellipsis">
                     Budget Details

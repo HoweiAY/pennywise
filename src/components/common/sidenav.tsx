@@ -2,28 +2,18 @@
 
 import {
     Bars4Icon,
-    HomeIcon,
-    ArrowsRightLeftIcon,
-    ChartPieIcon,
-    BellIcon,
     Cog8ToothIcon,
     ArrowLeftEndOnRectangleIcon,
 } from "@heroicons/react/24/outline";
-import { PennyWiseLogo } from "./logo";
+import { PennyWiseLogo } from "@/components/common/logo";
 import Link from "next/link";
 import { logout } from "@/lib/actions/auth";
+import { navLinks } from "@/lib/utils/constant";
 import { AuthError } from "@supabase/supabase-js";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import clsx from "clsx";
-
-const navLinks = [
-    { name: "Home", href: "/dashboard", urlRegex: /\/dashboard$/g, icon: HomeIcon },
-    { name: "Transactions", href: "/dashboard/transactions", urlRegex: /\/dashboard\/transactions[\/.]*/g, icon: ArrowsRightLeftIcon },
-    { name: "Budget", href: "/dashboard/budget", urlRegex: /\/dashboard\/budget[\/.]*/g, icon: ChartPieIcon },
-    { name: "Notifications", href: "/dashboard/notifications", urlRegex: /\/dashboard\/notifications[\/.]*/g, icon: BellIcon },
-];
 
 export default function SideNav() {
     const pathname = usePathname();
