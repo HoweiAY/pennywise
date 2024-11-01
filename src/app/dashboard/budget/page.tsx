@@ -1,7 +1,10 @@
 import UserBudgetCardCarousel from "@/components/dashboard/budget/user-budget-card-carousel";
+import BudgetBreakdownContainer from "@/components/dashboard/budget/budget-breakdown-container";
 import UserBudgetCardCarouselSkeleton from "@/ui/skeletons/user-budget-card-carousel-skeleton";
+import BudgetBreakdownSkeleton from "@/ui/skeletons/budget-breakdown-skeleton";
 import { PlusIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
 import { getAuthUser } from "@/lib/data/auth";
+import { getUserBalanceData } from "@/lib/data/user";
 import { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -12,6 +15,15 @@ export const metadata: Metadata = {
 
 export default async function Budget() {
     const { user } = await getAuthUser();
+    const {
+        status: userBalanceStatus,
+        message: userBalanceMessage,
+        data: userBalanceData
+    } = await getUserBalanceData(user.id);
+    if (userBalanceStatus !== "success") {
+        console.error(userBalanceMessage || "Failed to fetch user balance information");
+    }
+    const currency = userBalanceData ? userBalanceData["userBalanceData"].currency : "USD";
 
     return (
         <main className="h-fit max-md:min-h-[80%] mb-2 overflow-hidden">
@@ -47,6 +59,22 @@ export default async function Budget() {
                     <h2 className="text-2xl max-md:text-xl font-semibold">
                         Budget Breakdown
                     </h2>
+                    <div className="grid gap-x-6 gap-y-6 max-md:gap-x-3 grid-cols-2 my-6">
+                        <Suspense fallback={<BudgetBreakdownSkeleton />}>
+                            <BudgetBreakdownContainer
+                                title="Expense & budget"
+                                type="expense-budget-comparison-chart"
+                                userId={user.id}
+                                currency={currency}
+                            />
+                            <BudgetBreakdownContainer
+                                title="Budget allocation"
+                                type="budget-allocation-chart"
+                                userId={user.id}
+                                currency={currency}
+                            />
+                        </Suspense>
+                    </div>
                 </section>
             </div>
         </main>

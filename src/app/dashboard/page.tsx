@@ -55,7 +55,7 @@ export default async function Dashboard() {
                         />
                         <DashboardChartContainer
                             title="Expense breakdown"
-                            type="expense-breakdown-card"
+                            type="expense-breakdown-chart"
                             userId={user.id}
                             currency={currency}
                         />

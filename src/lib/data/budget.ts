@@ -57,6 +57,30 @@ export async function getUserBudgetById(
      };
 }
 
+export async function getUserTotalBudgetAmountByCategory(
+    userId: string,
+    categoryId: TransactionCategoryId | BudgetCategoryId,
+): Promise<DataResponse<number>> {
+    noStore();
+
+    const supabase = await createSupabaseServerClient();
+    const { data: budgetAmountData, error } = await supabase
+        .from("budgets")
+        .select("totalAmount:amount.sum()")
+        .eq("user_id", userId)
+        .eq("category_id", categoryId)
+    if (error) {
+        return {
+            status: "error",
+            message: error.message,
+        }
+    }
+    return {
+        status: "success",
+        data: { budgetAmount: budgetAmountData.length > 0 ? budgetAmountData[0].totalAmount : 0},
+    }
+}
+
 export async function getBudgetAmountSpent(
     budgetId: string,
     from: Date,
@@ -97,6 +121,38 @@ export async function getBudgetAmountSpentByCategory(
         .select("spentBudget:amount.sum(), budgets!inner(category_id)")
         .eq("payer_id", userId)
         .eq("budgets.category_id", categoryId);
+    if (from) {
+        supabaseQuery = supabaseQuery.gte("created_at", from.toISOString());
+    }
+    if (to) {
+        supabaseQuery = supabaseQuery.lt("created_at", to.toISOString());
+    }
+    const { data: spentBudgetData, error } = await supabaseQuery;
+    if (error) {
+        return {
+            status: "error",
+            message: error.message,
+        };
+    }
+    return {
+        status: "success",
+        data: { spentBudget: spentBudgetData.length > 0 ? spentBudgetData[0].spentBudget as number : 0 },
+    };
+}
+
+export async function getTotalBudgetAmountSpent(
+    userId: string,
+    from?: Date,
+    to?: Date,
+): Promise<DataResponse<number>> {
+    noStore();
+
+    const supabase = await createSupabaseServerClient();
+    let supabaseQuery = supabase
+        .from("transactions")
+        .select("spentBudget:amount.sum()")
+        .eq("payer_id", userId)
+        .not("budget_id", "is", null);
     if (from) {
         supabaseQuery = supabaseQuery.gte("created_at", from.toISOString());
     }

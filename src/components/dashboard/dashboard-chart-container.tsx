@@ -107,7 +107,7 @@ export default async function DashboardChartContainer({
     colSpan,
 }: {
     title: string,
-    type: "transaction-chart" | "expense-breakdown-card",
+    type: "transaction-chart" | "expense-breakdown-chart",
     userId: string,
     currency: string,
     colSpan?: 1 | 2 | 3,

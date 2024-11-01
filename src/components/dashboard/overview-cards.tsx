@@ -67,8 +67,8 @@ export default async function OverviewCards({
     let prevNetBalance = overviewData.balanceInCents;
     if (currMonthIncomeStatus !== "success" || !currMonthIncomeData) {
         console.error(currMonthIncomeMessage || "Error fetching income amount this month");
-    } else if (currMonthIncomeData["transactionAmount"]) {
-        overviewData.incomeInCents = currMonthIncomeData["transactionAmount"];
+    } else {
+        overviewData.incomeInCents = currMonthIncomeData["transactionAmount"] ?? 0;
         if (prevNetBalance) {
             prevNetBalance -= overviewData.incomeInCents;
         }
@@ -83,8 +83,8 @@ export default async function OverviewCards({
     }
     if (currMonthExpenditureStatus !== "success" || !currMonthExpenditureData) {
         console.error(currMonthExpenditureMessage || "Error fetching expenditure amount this month");
-    } else if (currMonthExpenditureData["transactionAmount"]) {
-        overviewData.expenditureInCents = currMonthExpenditureData["transactionAmount"];
+    } else {
+        overviewData.expenditureInCents = currMonthExpenditureData["transactionAmount"] ?? 0;
         if (prevNetBalance) {
             prevNetBalance += overviewData.expenditureInCents;
         }
@@ -98,7 +98,7 @@ export default async function OverviewCards({
         }
     }
     if (prevNetBalance && overviewData.balanceInCents) {
-        overviewData.balanceChange = overviewData.incomeChange && overviewData.expenditureChange
+        overviewData.balanceChange = overviewData.incomeChange || overviewData.expenditureChange
             ? amountPercentageChange(prevNetBalance, overviewData.balanceInCents)
             : null;
     }
