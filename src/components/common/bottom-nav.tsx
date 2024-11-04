@@ -15,7 +15,7 @@ export default function BottomNav() {
     const pathname = usePathname();
 
     return (
-        <nav className="flex flex-row justify-around items-center border-t border-t-gray-200 h-20 p-2 bg-sky-50 sticky bottom-0 z-10 md:hidden">
+        <nav className="flex flex-row justify-around items-center border-t border-t-gray-200 h-20 p-2 bg-sky-50 sticky bottom-0 z-20 md:hidden">
             {navLinks.map(link => {
                 const LinkIcon = link.icon;
                 return (
