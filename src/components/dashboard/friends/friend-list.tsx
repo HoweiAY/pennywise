@@ -12,26 +12,26 @@ import { EllipsisVerticalIcon, UserCircleIcon, UserMinusIcon } from "@heroicons/
 import Image from "next/image";
 import Link from "next/link";
 
-export default function FriendsList({
+export default function FriendList({
     length,
     infiniteScroll,
 }: {
-    length: number,
+    length?: number,
     infiniteScroll?: boolean,
 }) {
     return (
         <ul className="flex flex-col items-center gap-3 w-full">
-            {Array.from({ length: 3 }).map((_, idx) => {
+            {Array.from({ length: length ?? 5 }).map((_, idx) => {
                 return (
                     <li
                         key={`friend_${idx}`}
-                        className="relative border border-slate-100 rounded-xl w-full h-24 bg-white shadow-md text-gray-800 hover:scale-[101%] duration-200"
+                        className="relative border border-slate-100 rounded-xl w-full h-20 max-md:h-16 bg-white shadow-md text-gray-800 hover:scale-[101%] duration-200"
                     >
-                        <FriendsListItem />
-                        <div className="absolute bottom-7 right-6 max-md:right-4 flex flex-row justify-between items-center gap-2">
+                        <FriendListItem />
+                        <div className="absolute bottom-5 right-6 max-md:bottom-4 max-md:right-4 flex flex-row justify-between items-center gap-2">
                             <Link
                                 href={"/dashboard/transactions/new"}
-                                className="flex justify-center items-center border border-blue-500 hover:border-blue-600 rounded-lg w-fit h-10 px-6 max-md:px-4 text-blue-500 hover:text-white max-md:text-sm font-semibold bg-sky-100 hover:bg-blue-600 transition-colors duration-200"
+                                className="flex justify-center items-center border border-blue-500 hover:border-blue-600 rounded-lg w-fit h-10 max-md:h-8 px-6 max-md:px-4 text-blue-500 hover:text-white max-md:text-sm font-semibold bg-sky-100 hover:bg-blue-600 transition-colors duration-200"
                             >
                                 Pay friend
                             </Link>
@@ -66,14 +66,14 @@ export default function FriendsList({
     )
 }
 
-function FriendsListItem() {
+function FriendListItem() {
     return (
         <Link
             href={"/dashboard/friends"}
             className="flex w-full h-full p-3"
         >
             <div className="flex shrink-0 items-center gap-2 w-2/3 max-lg:w-1/2 overflow-hidden">
-                <div className="w-10 h-10 min-w-10 border-2 border-gray-700 rounded-full">
+                <div className="w-10 h-10 min-w-10 max-md:w-8 max-md:h-8 max-md:min-w-8 border-2 border-gray-700 rounded-full">
                     <Image
                         priority
                         loader={({ src, width, quality }) => `${src}?w=${width}&q=${quality}`}
@@ -87,7 +87,7 @@ function FriendsListItem() {
                     <p className="whitespace-nowrap font-semibold text-ellipsis overflow-hidden">
                         username
                     </p>
-                    <p className="whitespace-nowrap text-sm text-ellipsis overflow-hidden">
+                    <p className="whitespace-nowrap text-sm max-md:text-xs text-ellipsis overflow-hidden">
                         Firstname Lastname
                     </p>
                 </div>

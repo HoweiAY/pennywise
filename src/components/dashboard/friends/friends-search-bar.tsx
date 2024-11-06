@@ -4,6 +4,7 @@ import avatarDefault from "@/ui/icons/avatar-default.png";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { useState, useCallback, ChangeEvent } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import clsx from "clsx";
@@ -15,18 +16,22 @@ export default function FriendsSearchBar({
     hideSearchResults?: boolean,
     hideSearchButton?: boolean,
 }) {
+    const searchParams = useSearchParams();
+    const pathname = usePathname();
+    const { replace } = useRouter();
+
     const [ searchFocused, setSearchFocused ] = useState<boolean>(false);
-    const [ showSearchAutocomplete, setShowSearchAutocomplete ] = useState<boolean>(hideSearchResults ?? false);
+    const [ showSearchAutocomplete, setShowSearchAutocomplete ] = useState<boolean>(false);
     const [ searchTerm, setSearchTerm ] = useState<string>("");
 
     const searchUsers = useCallback(async (search: string) => {
         setSearchTerm(search);
-        if (searchFocused && search.length > 0) {
+        if (!hideSearchResults && searchFocused && search.length > 0) {
             setShowSearchAutocomplete(true);
             return;
         }
         setShowSearchAutocomplete(false);
-    }, [setShowSearchAutocomplete, setSearchTerm, searchFocused]);
+    }, [hideSearchResults, searchFocused]);
 
     const toggleSearchResults = useCallback((focus: boolean) => {
         setTimeout(() => {
@@ -36,7 +41,7 @@ export default function FriendsSearchBar({
 
     const handleSearch = useDebouncedCallback(async (e: ChangeEvent<HTMLInputElement>) => {
         e.preventDefault();
-        const search = e.target.value;
+        const search = e.target.value.trim();
         await searchUsers(search);
     }, 300);
 
@@ -53,7 +58,7 @@ export default function FriendsSearchBar({
                     name="search"
                     id="search"
                     placeholder="Enter username here..."
-                    defaultValue={""}
+                    defaultValue={searchTerm}
                     className="w-full h-10 border border-gray-300 rounded-md p-3 bg-white"
                     onChange={handleSearch}
                     onFocus={() => toggleSearchResults(true)}
@@ -61,7 +66,7 @@ export default function FriendsSearchBar({
                 />
                 {searchFocused && showSearchAutocomplete &&
                     <div className="absolute top-12 border border-slate-100 rounded-lg w-full p-3 bg-white shadow-sm z-10">
-                        <FriendSearchAutocomplete s={searchTerm} />
+                        <FriendSearchAutocompleteList s={searchTerm} />
                     </div>
                 }
                 <MagnifyingGlassIcon className="absolute right-3 bottom-2.5 w-5 h-5 text-gray-500" />
@@ -79,7 +84,7 @@ export default function FriendsSearchBar({
     )
 }
 
-function FriendSearchAutocomplete({
+function FriendSearchAutocompleteList({
     s,
 }: {
     s?: string,

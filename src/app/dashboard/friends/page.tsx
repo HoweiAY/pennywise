@@ -29,7 +29,7 @@ export default async function Friends() {
                     </h2>
                     <FriendInvitationsCarousel />
                     <Link
-                        href={"/dashboard/friends/list?tab=pending"}
+                        href={"/dashboard/friends/list?tab=pending-invitations"}
                         className="self-end flex flex-row items-center gap-2 mr-6 max-md:mr-3 md:text-lg font-semibold hover:underline"
                     >
                         View all
@@ -46,10 +46,10 @@ export default async function Friends() {
                             className="flex flex-row items-center gap-2 max-md:gap-1 border-0 rounded-lg w-fit h-10 px-6 max-md:px-3 text-white font-semibold bg-blue-500 hover:bg-blue-600 transition-colors duration-200"
                         >
                             <UserGroupIcon className="w-5 h-5 max-md:w-4 max-md:h-4" />
-                            <span className="mr-1 max-md:text-sm">Friends list</span>
+                            <span className="mr-1 max-md:text-sm">Friend list</span>
                         </Link>
                     </div>
-                    <ListContainer />
+                    <ListContainer type="friends" />
                 </section>
             </div>
         </main>
