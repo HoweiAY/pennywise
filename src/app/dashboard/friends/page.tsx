@@ -29,7 +29,7 @@ export default async function Friends() {
                     </h2>
                     <FriendInvitationsCarousel />
                     <Link
-                        href={"/dashboard/friends/list?tab=pending-invitations"}
+                        href={"/dashboard/friends/list?tab=pending"}
                         className="self-end flex flex-row items-center gap-2 mr-6 max-md:mr-3 md:text-lg font-semibold hover:underline"
                     >
                         View all
@@ -49,7 +49,7 @@ export default async function Friends() {
                             <span className="mr-1 max-md:text-sm">Friend list</span>
                         </Link>
                     </div>
-                    <ListContainer type="friends" />
+                    <ListContainer type="my-friends" limit={5} />
                 </section>
             </div>
         </main>

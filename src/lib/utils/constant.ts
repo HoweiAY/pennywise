@@ -323,8 +323,8 @@ export const budgetCategories = Object.entries(transactionCategories)
     }, {});
 
 export const navLinks = [
-    { name: "Home", href: "/dashboard", urlRegex: /\/dashboard$/g, icon: HomeIcon },
+    { name: "Home", href: "/dashboard", urlRegex: /\/dashboard[\/(my\-profile|settings)\/.]*$/g, icon: HomeIcon },
     { name: "Transactions", href: "/dashboard/transactions", urlRegex: /\/dashboard\/transactions[\/.]*/g, icon: ArrowsRightLeftIcon },
     { name: "Budget", href: "/dashboard/budget", urlRegex: /\/dashboard\/budget[\/.]*/g, icon: ChartPieIcon },
-    { name: "Friends", href: "/dashboard/friends", urlRegex: /\/dashboard\/friends[\/.]*/g, icon: UsersIcon },
+    { name: "Friends", href: "/dashboard/friends", urlRegex: /\/dashboard\/(friends|profile)[\/.]*/g, icon: UsersIcon },
 ];

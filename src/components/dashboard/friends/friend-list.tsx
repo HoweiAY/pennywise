@@ -20,7 +20,7 @@ export default function FriendList({
     infiniteScroll?: boolean,
 }) {
     return (
-        <ul className="flex flex-col items-center gap-3 w-full">
+        <ul className="flex flex-col items-center gap-3 w-full pt-4 max-md:pt-3">
             {Array.from({ length: length ?? 5 }).map((_, idx) => {
                 return (
                     <li
@@ -87,7 +87,7 @@ function FriendListItem() {
                     <p className="whitespace-nowrap font-semibold text-ellipsis overflow-hidden">
                         username
                     </p>
-                    <p className="whitespace-nowrap text-sm max-md:text-xs text-ellipsis overflow-hidden">
+                    <p className="whitespace-nowrap text-gray-500 text-sm max-md:text-xs text-ellipsis overflow-hidden">
                         Firstname Lastname
                     </p>
                 </div>

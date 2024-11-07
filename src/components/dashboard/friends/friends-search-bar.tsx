@@ -115,7 +115,7 @@ function FriendSearchAutocompleteList({
                                 <p className="min-w-fit whitespace-nowrap font-semibold text-ellipsis overflow-hidden">
                                     {s}
                                 </p>
-                                <p className="whitespace-nowrap text-sm text-ellipsis overflow-hidden">
+                                <p className="whitespace-nowrap text-gray-500 text-sm text-ellipsis overflow-hidden">
                                     {s}
                                 </p>
                             </div>

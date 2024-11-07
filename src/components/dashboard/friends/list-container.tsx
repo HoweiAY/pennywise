@@ -6,7 +6,7 @@ export default async function ListContainer({
     limit,
     infiniteScroll,
 }: {
-    type: "pending" | "invited" | "friends" | "all",
+    type: "pending" | "invited" | "my-friends" | "all",
     title?: string,
     limit?: number,
     infiniteScroll?: boolean,
@@ -14,7 +14,7 @@ export default async function ListContainer({
     return (
         <div className="w-full mt-4">
             {title && 
-                <h2 className="py-4 max-md:pb-3 text-2xl max-md:text-xl font-semibold">
+                <h2 className="pt-4 max-md:pt-3 text-2xl max-md:text-xl font-semibold">
                     {title}
                 </h2>
             }

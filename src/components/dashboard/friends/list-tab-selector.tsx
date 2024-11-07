@@ -5,10 +5,10 @@ import { useState, useCallback } from "react";
 import clsx from "clsx";
 
 const listTabs = [
-    { name: "All", tab: "all" },
-    { name: "Pending", tab: "pending" },
-    { name: "Invited", tab: "invited" },
-    { name: "My friends", tab: "my-friends" },
+    { name: "All", type: "all" },
+    { name: "Pending", type: "pending" },
+    { name: "Invited", type: "invited" },
+    { name: "My friends", type: "my-friends" },
 ];
 
 export default function ListTabSelector({ initialTab }: { initialTab?: string }) {
@@ -33,9 +33,9 @@ export default function ListTabSelector({ initialTab }: { initialTab?: string })
                         key={`tab_${idx}`}
                         className={clsx(
                             "px-6 py-2 max-md:px-4 max-md:text-sm border-b-2 border-transparent hover:rounded-t-sm hover:border-b-blue-500 hover:text-blue-500 hover:bg-sky-100 duration-200",
-                            {"border-b-2 border-b-blue-500 rounded-t-sm text-blue-500 font-semibold bg-sky-100": activeTab === tab.tab || (tab.tab === "all" && !activeTab) },
+                            {"border-b-2 border-b-blue-500 rounded-t-sm text-blue-500 font-semibold bg-sky-100": activeTab === tab.type || (tab.type === "all" && !activeTab) },
                         )}
-                        onClick={() => handleSwitchTab(tab.tab)}
+                        onClick={() => handleSwitchTab(tab.type)}
                     >
                         {tab.name}
                     </button>

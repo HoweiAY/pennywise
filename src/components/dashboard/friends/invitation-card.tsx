@@ -27,7 +27,7 @@ export default function InvitationCard() {
                         <p className="whitespace-nowrap font-semibold text-ellipsis overflow-hidden">
                             username
                         </p>
-                        <p className="whitespace-nowrap text-sm text-ellipsis overflow-hidden">
+                        <p className="whitespace-nowrap text-gray-500 text-sm text-ellipsis overflow-hidden">
                             Firstname Lastname
                         </p>
                     </div>
