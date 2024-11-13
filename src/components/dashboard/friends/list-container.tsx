@@ -1,16 +1,28 @@
-import FriendList from "@/components/dashboard/friends/friend-list";
+import {
+    FriendList,
+    UserList,
+} from "@/components/dashboard/friends/lists";
+import { getFilteredUsers } from "@/lib/data/user";
 
 export default async function ListContainer({
     type,
     title,
+    search,
     limit,
     infiniteScroll,
 }: {
     type: "pending" | "invited" | "my-friends" | "all",
     title?: string,
+    search?: string,
     limit?: number,
     infiniteScroll?: boolean,
 }) {
+    const { status, message, data } = await getFilteredUsers(search, limit, undefined, true);
+    if (status !== "success" || !data) {
+        console.error(message || "Error fetching users");
+    }
+    const users = data && data["usersData"] ? data["usersData"] : [];
+
     return (
         <div className="w-full mt-4">
             {title && 
@@ -18,7 +30,8 @@ export default async function ListContainer({
                     {title}
                 </h2>
             }
-            <FriendList
+            <UserList
+                users={users}
                 length={limit}
                 infiniteScroll={infiniteScroll}
             />

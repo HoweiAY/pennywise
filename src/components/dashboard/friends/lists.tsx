@@ -1,18 +1,26 @@
 "use client";
 
+import ListItem from "@/components/dashboard/friends/list-item";
+import {
+    MyProfileOptions,
+    FriendProfileOptions,
+    UserProfileOptions,
+    PendingProfileOptions,
+    InvitedProfileOptions,
+    BlockedProfileOptions,
+} from "@/components/dashboard/profile/profile-options";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import avatarDefault from "@/ui/icons/avatar-default.png";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { EllipsisVerticalIcon, UserCircleIcon, UserMinusIcon } from "@heroicons/react/24/outline";
-import Image from "next/image";
+import { UserData } from "@/lib/types/user";
 import Link from "next/link";
 
-export default function FriendList({
+export function FriendList({
     length,
     infiniteScroll,
 }: {
@@ -27,7 +35,7 @@ export default function FriendList({
                         key={`friend_${idx}`}
                         className="relative border border-slate-100 rounded-xl w-full h-20 max-md:h-16 bg-white shadow-md text-gray-800 hover:scale-[101%] duration-200"
                     >
-                        <FriendListItem />
+                        <ListItem />
                         <div className="absolute bottom-5 right-6 max-md:bottom-4 max-md:right-4 flex flex-row justify-between items-center gap-2">
                             <Link
                                 href={"/dashboard/transactions/new"}
@@ -66,32 +74,30 @@ export default function FriendList({
     )
 }
 
-function FriendListItem() {
+export function UserList({
+    users,
+    length,
+    infiniteScroll,
+}: {
+    users: UserData[],
+    length?: number,
+    infiniteScroll?: boolean,
+}) {
     return (
-        <Link
-            href={"/dashboard/friends"}
-            className="flex w-full h-full p-3"
-        >
-            <div className="flex shrink-0 items-center gap-2 w-2/3 max-lg:w-1/2 overflow-hidden">
-                <div className="w-10 h-10 min-w-10 max-md:w-8 max-md:h-8 max-md:min-w-8 border-2 border-gray-700 rounded-full">
-                    <Image
-                        priority
-                        loader={({ src, width, quality }) => `${src}?w=${width}&q=${quality}`}
-                        src={avatarDefault.src}
-                        width={40}
-                        height={40}
-                        alt={"User avatar"}
-                    />
-                </div>
-                <div className="flex flex-col justify-center overflow-hidden">
-                    <p className="whitespace-nowrap font-semibold text-ellipsis overflow-hidden">
-                        username
-                    </p>
-                    <p className="whitespace-nowrap text-gray-500 text-sm max-md:text-xs text-ellipsis overflow-hidden">
-                        Firstname Lastname
-                    </p>
-                </div>
-            </div>
-        </Link>
+        <ul className="flex flex-col items-center gap-3 w-full pt-4 max-md:pt-3">
+            {users.map((userData, idx) => {
+                return (
+                    <li
+                        key={`friend_${idx}`}
+                        className="relative border border-slate-100 rounded-xl w-full h-20 max-md:h-16 bg-white shadow-md text-gray-800 hover:scale-[101%] duration-200"
+                    >
+                        <ListItem userData={userData} />
+                        <div className="absolute right-6 bottom-4 max-md:bottom-3 max-md:right-4">
+                            <FriendProfileOptions />
+                        </div>
+                    </li>
+                )
+            })}
+        </ul>
     )
 }

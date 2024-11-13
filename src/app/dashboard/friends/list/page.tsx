@@ -24,18 +24,18 @@ export default async function List({
     const showListTab = () => {
         switch (tab) {
             case "pending":
-                return <ListContainer type="pending" infiniteScroll={true} />;
+                return <ListContainer type="pending" search={search} infiniteScroll={true} />;
             case "invited":
-                return <ListContainer type="invited" infiniteScroll={true} />;
+                return <ListContainer type="invited" search={search} infiniteScroll={true} />;
             case "my-friends":
-                return <ListContainer type="my-friends" infiniteScroll={true} />;
+                return <ListContainer type="my-friends" search={search} infiniteScroll={true} />;
             default:
                 return (
                     <>
-                        <ListContainer type="pending" title="Pending" limit={3} />
-                        <ListContainer type="invited" title="Invited" limit={3} />
-                        <ListContainer type="my-friends" title="My friends" limit={3} />
-                        <ListContainer type="all" title="All users" infiniteScroll={true} />
+                        <ListContainer type="pending" title="Pending" search={search} limit={3} />
+                        <ListContainer type="invited" title="Invited" search={search} limit={3} />
+                        <ListContainer type="my-friends" title="My friends" search={search} limit={3} />
+                        <ListContainer type="all" title="All users" search={search} infiniteScroll={true} />
                     </>
                 );
         };
