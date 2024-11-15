@@ -64,7 +64,7 @@ export async function createTransaction(
         }
         const categoryId = validatedTransactionCategory.data;
 
-        const amountInCents = Math.floor(validatedTransactionData.data.amount * 100);
+        const amountInCents = Math.trunc(validatedTransactionData.data.amount * 10 * 10);
         const {
             balance: balanceInCents,
             remainingSpendingLimit: remainingSpendingLimitInCents,
@@ -189,7 +189,7 @@ export async function updateTransaction(
         }
         const categoryId = validatedTransactionCategory.data;
 
-        const amountInCents = Math.floor(validatedTransactionData.data.amount * 100);
+        const amountInCents = Math.trunc(validatedTransactionData.data.amount * 10 * 10);
         const prevAmountInCents = prevAmount ? parseInt(prevAmount.toString()) : amountInCents;
         const netAmountInCents = amountInCents - prevAmountInCents;
         const {

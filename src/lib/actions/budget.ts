@@ -64,7 +64,7 @@ export async function createBudget(
                 return { message: "You can only have at most 12 budgets at once" };
             }
         }
-        const amountInCents = Math.floor(validatedBudgetData.data.amount * 100);
+        const amountInCents = Math.trunc(validatedBudgetData.data.amount * 10 * 10);
         const budgetFormData: BudgetFormData = {
             name: validatedBudgetData.data.name,
             category_id: categoryId,
@@ -127,7 +127,7 @@ export async function updateBudget(
         if (!user) {
             return { message: "Error: user not found" };
         }
-        const amountInCents = Math.floor(validatedBudgetData.data.amount * 100);
+        const amountInCents = Math.trunc(validatedBudgetData.data.amount * 10 * 10);
         const budgetFormData: BudgetFormData = {
             name: validatedBudgetData.data.name,
             category_id: categoryId,
