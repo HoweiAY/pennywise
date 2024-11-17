@@ -23,6 +23,7 @@ export default async function MyProfile() {
                 </h1>
                 <section className="w-full my-6">
                     <UserProfileCard
+                        currUserId={user.id}
                         userProfileData={userProfileData}
                         type="my-profile"
                     />

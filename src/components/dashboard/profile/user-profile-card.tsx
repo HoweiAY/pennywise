@@ -10,32 +10,34 @@ import {
 } from "@/components/dashboard/profile/profile-options";
 import avatarDefault from "@/ui/icons/avatar-default.png";
 import { UserData } from "@/lib/types/user";
-import { FrinedshipTypes } from "@/lib/types/friend";
+import { FrinedshipStatus } from "@/lib/types/friend";
 import { countryCodes } from "@/lib/utils/constant";
 import Image from "next/image";
 import { useCallback } from "react";
 
 export default function UserProfileCard({
+    currUserId,
     userProfileData,
     type,
 }: {
+    currUserId: string,
     userProfileData: UserData,
-    type: "my-profile" | FrinedshipTypes,
+    type: "my-profile" | FrinedshipStatus,
 }) {
     const showProfileOptions = useCallback(() => {
         switch (type) {
             case "my-profile":
                 return <MyProfileOptions />;
             case "friend":
-                return <FriendProfileOptions />;
+                return <FriendProfileOptions currUserId={currUserId} targetUserId={userProfileData.user_id!} />;
             case "user":
-                return <UserProfileOptions />;
+                return <UserProfileOptions currUserId={currUserId} targetUserId={userProfileData.user_id!} />;
             case "pending":
-                return <PendingProfileOptions />;
+                return <PendingProfileOptions currUserId={currUserId} targetUserId={userProfileData.user_id!} />;
             case "invited":
-                return <InvitedProfileOptions />;
+                return <InvitedProfileOptions currUserId={currUserId} targetUserId={userProfileData.user_id!} />;
             case "blocked":
-                return <BlockedProfileOptions />;
+                return <BlockedProfileOptions currUserId={currUserId} targetUserId={userProfileData.user_id!} />;
             default:
                 return <></>;
         }

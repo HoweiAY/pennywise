@@ -3,6 +3,7 @@ import FriendInvitationsCarousel from "@/components/dashboard/friends/friend-inv
 import ListContainer from "@/components/dashboard/friends/list-container";
 import { ArrowRightIcon } from "@heroicons/react/24/outline";
 import { UserGroupIcon } from "@heroicons/react/24/solid";
+import { getAuthUser } from "@/lib/data/auth";
 import { Metadata } from "next";
 import Link from "next/link";
 
@@ -11,6 +12,8 @@ export const metadata: Metadata = {
 };
 
 export default async function Friends() {
+    const { user } = await getAuthUser();
+
     return (
         <main className="h-fit max-md:min-h-screen mb-2 overflow-hidden">
             <div className="px-6">
@@ -27,7 +30,7 @@ export default async function Friends() {
                     <h2 className="self-start text-2xl max-md:text-xl font-semibold">
                         Pending invitations
                     </h2>
-                    <FriendInvitationsCarousel />
+                    <FriendInvitationsCarousel currUserId={user.id} />
                     <Link
                         href={"/dashboard/friends/list?tab=pending"}
                         className="self-end flex flex-row items-center gap-2 mr-6 max-md:mr-3 md:text-lg font-semibold hover:underline"
@@ -49,7 +52,11 @@ export default async function Friends() {
                             <span className="mr-1 max-md:text-sm">Friend list</span>
                         </Link>
                     </div>
-                    <ListContainer type="my-friends" limit={5} />
+                    <ListContainer
+                        currUserId={user.id}
+                        type="friend"
+                        limit={5}
+                    />
                 </section>
             </div>
         </main>

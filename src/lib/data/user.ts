@@ -15,7 +15,7 @@ export async function getFilteredUsers(
     const supabase = await createSupabaseServerClient();
     let supabaseQuery = supabase
         .from("users")
-        .select("username, email, first_name, last_name, country, avatar_url");
+        .select("user_id, username, email, first_name, last_name, country, avatar_url");
     if (search) {
         supabaseQuery = supabaseQuery.ilike("username", `%${search}%`);
     }

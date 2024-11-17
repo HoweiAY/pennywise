@@ -1,14 +1,15 @@
 "use client";
 
 import { UserData } from "@/lib/types/user";
+import { FriendProfileData } from "@/lib/types/friend";
 import avatarDefault from "@/ui/icons/avatar-default.png";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function ListItem({ userData }: { userData?: UserData }) {
+export default function ListItem({ userData }: { userData?: UserData | FriendProfileData }) {
     return (
         <Link
-            href={"/dashboard/friends"}
+            href={`/dashboard/profile/${userData?.username}`}
             className="flex w-full h-full p-3"
         >
             <div className="flex shrink-0 items-center gap-2 w-2/3 max-lg:w-1/2 overflow-hidden">

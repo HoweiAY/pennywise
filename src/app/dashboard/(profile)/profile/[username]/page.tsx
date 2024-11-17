@@ -1,20 +1,24 @@
 import UserProfileCard from "@/components/dashboard/profile/user-profile-card";
 import { UserData } from "@/lib/types/user";
-import { FrinedshipTypes } from "@/lib/types/friend";
+import { FrinedshipStatus } from "@/lib/types/friend";
 import { getAuthUser } from "@/lib/data/auth";
 import { getUserDataByUsername } from "@/lib/data/user";
 import { getFriendshipData } from "@/lib/data/friend";
 
 export default async function UserProfile({ params }: { params: { username: string } }) {
+    const targetUsername = decodeURIComponent(params.username);
     const [
         { user },
         { status: userDataStatus, message: userDataMessage, data: userData },
     ] = await Promise.all([
         getAuthUser(),
-        getUserDataByUsername(params.username),
+        getUserDataByUsername(targetUsername),
     ]);
     if (userDataStatus !== "success" || !userData) {
         throw new Error(userDataMessage || "Error fetching user profile");
+    }
+    if (!userData["userData"]) {
+        throw new Error("User profile not found");
     }
     const userProfileData = userData["userData"] satisfies UserData;
 
@@ -26,7 +30,10 @@ export default async function UserProfile({ params }: { params: { username: stri
     if (frienshipDataStatus !== "success" || !frienshipData) {
         throw new Error(frienshipDataMessage || "Error fetching user relationship data");
     }
-    const type = frienshipData["friendshipData"].length === 0 ? "user" : frienshipData["friendshipData"][0].status as FrinedshipTypes;
+    let type: FrinedshipStatus = frienshipData["friendshipData"].length === 0 ? "user" : frienshipData["friendshipData"][0].status;
+    if (type === "pending" && frienshipData["friendshipData"][0].inviter_id === user.id) {
+        type = "invited";
+    }
     
     return (
         <main className="h-fit max-md:min-h-screen mb-2 overflow-hidden">
@@ -36,6 +43,7 @@ export default async function UserProfile({ params }: { params: { username: stri
                 </h1>
                 <section className="w-full my-6">
                     <UserProfileCard
+                        currUserId={user.id}
                         userProfileData={userProfileData}
                         type={type}
                     />

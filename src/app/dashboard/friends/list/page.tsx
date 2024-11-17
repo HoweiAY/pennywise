@@ -1,6 +1,7 @@
 import FriendsSearchBar from "@/components/dashboard/friends/friends-search-bar";
 import ListTabSelector from "@/components/dashboard/friends/list-tab-selector";
 import ListContainer from "@/components/dashboard/friends/list-container";
+import { getAuthUser } from "@/lib/data/auth";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -15,6 +16,8 @@ export default async function List({
         search?: string,
     }
 }) {
+    const { user } = await getAuthUser();
+
     const search = searchParams?.search || "";
     let tab: string | undefined = searchParams?.tab;
     if (tab !== "all" && tab !== "pending" && tab !== "invited" && tab !== "my-friends") {
@@ -24,18 +27,18 @@ export default async function List({
     const showListTab = () => {
         switch (tab) {
             case "pending":
-                return <ListContainer type="pending" search={search} infiniteScroll={true} />;
+                return <ListContainer currUserId={user.id} type="pending" search={search} infiniteScroll={true} />;
             case "invited":
-                return <ListContainer type="invited" search={search} infiniteScroll={true} />;
+                return <ListContainer currUserId={user.id} type="invited" search={search} infiniteScroll={true} />;
             case "my-friends":
-                return <ListContainer type="my-friends" search={search} infiniteScroll={true} />;
+                return <ListContainer currUserId={user.id} type="friend" search={search} infiniteScroll={true} />;
             default:
                 return (
                     <>
-                        <ListContainer type="pending" title="Pending" search={search} limit={3} />
-                        <ListContainer type="invited" title="Invited" search={search} limit={3} />
-                        <ListContainer type="my-friends" title="My friends" search={search} limit={3} />
-                        <ListContainer type="all" title="All users" search={search} infiniteScroll={true} />
+                        <ListContainer currUserId={user.id} type="pending" title="Pending" search={search} limit={3} />
+                        <ListContainer currUserId={user.id} type="invited" title="Invited" search={search} limit={3} />
+                        <ListContainer currUserId={user.id} type="friend" title="My friends" search={search} limit={3} />
+                        <ListContainer currUserId={user.id} type="all" title="All users" search={search} infiniteScroll={true} />
                     </>
                 );
         };

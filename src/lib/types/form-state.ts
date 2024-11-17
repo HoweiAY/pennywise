@@ -72,3 +72,7 @@ export type BudgetFormData = {
     description: string | null,
     updated_at?: string | null,
 };
+
+export type FriendFormState = {
+    message?: string | null,
+};
