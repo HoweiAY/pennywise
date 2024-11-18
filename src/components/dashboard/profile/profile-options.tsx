@@ -1,5 +1,6 @@
 "use client";
 
+import { RemoveFriendDialog, BlockFriendDialog } from "@/components/dashboard/friends/friend-options-dialog";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -22,8 +23,8 @@ import {
     acceptFriendInvite,
     declineFriendInvite,
     cancelFriendInvite,
+    removeFriend,
 } from "@/lib/actions/friend";
-import { UserData } from "@/lib/types/user";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useCallback, useTransition } from "react";
@@ -46,9 +47,11 @@ export function MyProfileOptions() {
 export function FriendProfileOptions({
     currUserId,
     targetUserId,
+    targetUsername,
 }: {
     currUserId: string,
     targetUserId: string,
+    targetUsername: string,
 }) {
     return (
         <div className="flex flex-row justify-end max-md:justify-center items-center gap-3 max-md:gap-1 max-md:mx-3">
@@ -66,12 +69,6 @@ export function FriendProfileOptions({
                 </DropdownMenuTrigger>
                 <AlertDialog>
                     <DropdownMenuContent>
-                        <button className="w-full">
-                            <DropdownMenuItem className="w-full hover:cursor-pointer max-lg:text-sm">
-                                <NoSymbolIcon className="w-4 h-4" />
-                                <p>Block</p>
-                            </DropdownMenuItem>
-                        </button>
                         <AlertDialogTrigger asChild>
                             <DropdownMenuItem className="w-full hover:cursor-pointer max-lg:text-sm">
                                 <UserMinusIcon className="w-4 h-4 text-rose-600" />
@@ -79,6 +76,11 @@ export function FriendProfileOptions({
                             </DropdownMenuItem>
                         </AlertDialogTrigger>
                     </DropdownMenuContent>
+                    <RemoveFriendDialog
+                        currUserId={currUserId}
+                        targetUserId={targetUserId}
+                        targetUsername={targetUsername}
+                    />
                 </AlertDialog>
             </DropdownMenu>
         </div>
@@ -88,9 +90,11 @@ export function FriendProfileOptions({
 export function UserProfileOptions({
     currUserId,
     targetUserId,
+    targetUsername,
 }: {
     currUserId: string,
     targetUserId: string,
+    targetUsername: string,
 }) {
     const [ processingInvitation, setProcessingInvitation ] = useState<boolean>(false);
     const [ isPending, startTransition ] = useTransition();
@@ -140,13 +144,20 @@ export function UserProfileOptions({
                 </DropdownMenuTrigger>
                 <AlertDialog>
                     <DropdownMenuContent>
-                        <button className="w-full">
-                            <DropdownMenuItem className="w-full hover:cursor-pointer max-lg:text-sm">
-                                <NoSymbolIcon className="w-4 h-4" />
-                                <p>Block</p>
-                            </DropdownMenuItem>
-                        </button>
+                        <AlertDialogTrigger asChild>
+                            <button className="w-full">
+                                <DropdownMenuItem className="w-full hover:cursor-pointer max-lg:text-sm">
+                                    <NoSymbolIcon className="w-4 h-4" />
+                                    <p>Block</p>
+                                </DropdownMenuItem>
+                            </button>
+                        </AlertDialogTrigger>
                     </DropdownMenuContent>
+                    <BlockFriendDialog
+                        currUserId={currUserId}
+                        blockedId={targetUserId}
+                        blockedUsername={targetUsername}
+                    />
                 </AlertDialog>
             </DropdownMenu>
         </div>
@@ -156,9 +167,11 @@ export function UserProfileOptions({
 export function PendingProfileOptions({
     currUserId,
     targetUserId,
+    targetUsername,
 }: {
     currUserId: string,
     targetUserId: string,
+    targetUsername: string,
 }) {
     const [ processingSelection, setProcessingSelection ] = useState<boolean>(false);
     const [ isPending, startTransition ] = useTransition();
@@ -223,13 +236,20 @@ export function PendingProfileOptions({
                 </DropdownMenuTrigger>
                 <AlertDialog>
                     <DropdownMenuContent>
-                        <button className="w-full">
-                            <DropdownMenuItem className="w-full hover:cursor-pointer max-lg:text-sm">
-                                <NoSymbolIcon className="w-4 h-4" />
-                                <p>Block</p>
-                            </DropdownMenuItem>
-                        </button>
+                        <AlertDialogTrigger asChild>
+                            <button className="w-full">
+                                <DropdownMenuItem className="w-full hover:cursor-pointer max-lg:text-sm">
+                                    <NoSymbolIcon className="w-4 h-4" />
+                                    <p>Block</p>
+                                </DropdownMenuItem>
+                            </button>
+                        </AlertDialogTrigger>
                     </DropdownMenuContent>
+                    <BlockFriendDialog
+                        currUserId={currUserId}
+                        blockedId={targetUserId}
+                        blockedUsername={targetUsername}
+                    />
                 </AlertDialog>
             </DropdownMenu>
         </div>
@@ -239,9 +259,11 @@ export function PendingProfileOptions({
 export function InvitedProfileOptions({
     currUserId,
     targetUserId,
+    targetUsername,
 }: {
     currUserId: string,
     targetUserId: string,
+    targetUsername: string,
 }) {
     const [ cancelling, setCancellng ] = useState<boolean>(false);
     const [ isPending, startTransition ] = useTransition();
@@ -272,13 +294,20 @@ export function InvitedProfileOptions({
                 </DropdownMenuTrigger>
                 <AlertDialog>
                     <DropdownMenuContent>
-                        <button className="w-full">
-                            <DropdownMenuItem className="w-full hover:cursor-pointer max-lg:text-sm">
-                                <NoSymbolIcon className="w-4 h-4" />
-                                <p>Block</p>
-                            </DropdownMenuItem>
-                        </button>
+                        <AlertDialogTrigger asChild>
+                            <button className="w-full">
+                                <DropdownMenuItem className="w-full hover:cursor-pointer max-lg:text-sm">
+                                    <NoSymbolIcon className="w-4 h-4" />
+                                    <p>Block</p>
+                                </DropdownMenuItem>
+                            </button>
+                        </AlertDialogTrigger>
                     </DropdownMenuContent>
+                    <BlockFriendDialog
+                        currUserId={currUserId}
+                        blockedId={targetUserId}
+                        blockedUsername={targetUsername}
+                    />
                 </AlertDialog>
             </DropdownMenu>
         </div>
@@ -288,13 +317,38 @@ export function InvitedProfileOptions({
 export function BlockedProfileOptions({
     currUserId,
     targetUserId,
+    targetUsername,
+    blockedId,
 }: {
     currUserId: string,
     targetUserId: string,
+    targetUsername: string,
+    blockedId?: string | null,
 }) {
-    return (
-        <div>
-            
-        </div>
-    )
+    const [ cancellingBlockAction, setCancellingBlock ] = useState<boolean>(false);
+    const [ isPending, startTransition ] = useTransition();
+    const { refresh } = useRouter();
+
+    const handleCancelBlock = useCallback(async () => {
+        setCancellingBlock(true);
+        const error = await removeFriend(currUserId, targetUserId);
+        if (error) {
+            console.error(error.message);
+        }
+        startTransition(refresh);
+        setCancellingBlock(false);
+    }, [currUserId, targetUserId]);
+
+    
+    if (blockedId && currUserId !== blockedId) {
+        return (
+            <div className="flex flex-row justify-end max-md:justify-center items-center gap-3 max-md:gap-1 max-md:mx-3">
+                <button
+                    className="flex justify-center items-center border border-blue-500 hover:border-blue-600 rounded-lg w-28 max-md:w-full h-12 max-md:h-10 px-6 text-blue-500 hover:text-white max-md:text-sm font-semibold bg-sky-100 hover:bg-blue-600 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 after:content-['Blocked'] hover:after:content-['Unblock'] focus:after:content-['Unblock']"
+                    onClick={handleCancelBlock}
+                    aria-disabled={cancellingBlockAction || isPending}
+                />
+            </div>
+        )
+    }
 }

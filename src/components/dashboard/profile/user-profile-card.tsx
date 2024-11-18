@@ -10,7 +10,7 @@ import {
 } from "@/components/dashboard/profile/profile-options";
 import avatarDefault from "@/ui/icons/avatar-default.png";
 import { UserData } from "@/lib/types/user";
-import { FrinedshipStatus } from "@/lib/types/friend";
+import { FriendshipData, FrinedshipStatus } from "@/lib/types/friend";
 import { countryCodes } from "@/lib/utils/constant";
 import Image from "next/image";
 import { useCallback } from "react";
@@ -19,25 +19,58 @@ export default function UserProfileCard({
     currUserId,
     userProfileData,
     type,
+    friendshipData,
 }: {
     currUserId: string,
     userProfileData: UserData,
     type: "my-profile" | FrinedshipStatus,
+    friendshipData?: FriendshipData | null,
 }) {
     const showProfileOptions = useCallback(() => {
         switch (type) {
             case "my-profile":
                 return <MyProfileOptions />;
             case "friend":
-                return <FriendProfileOptions currUserId={currUserId} targetUserId={userProfileData.user_id!} />;
+                return (
+                    <FriendProfileOptions
+                        currUserId={currUserId}
+                        targetUserId={userProfileData.user_id!}
+                        targetUsername={userProfileData.username}
+                    />
+                );
             case "user":
-                return <UserProfileOptions currUserId={currUserId} targetUserId={userProfileData.user_id!} />;
+                return (
+                    <UserProfileOptions
+                        currUserId={currUserId}
+                        targetUserId={userProfileData.user_id!}
+                        targetUsername={userProfileData.username}
+                    />
+                );
             case "pending":
-                return <PendingProfileOptions currUserId={currUserId} targetUserId={userProfileData.user_id!} />;
+                return (
+                    <PendingProfileOptions
+                        currUserId={currUserId}
+                        targetUserId={userProfileData.user_id!}
+                        targetUsername={userProfileData.username}
+                    />
+                );
             case "invited":
-                return <InvitedProfileOptions currUserId={currUserId} targetUserId={userProfileData.user_id!} />;
+                return (
+                <InvitedProfileOptions
+                    currUserId={currUserId}
+                    targetUserId={userProfileData.user_id!}
+                    targetUsername={userProfileData.username}
+                />
+            );
             case "blocked":
-                return <BlockedProfileOptions currUserId={currUserId} targetUserId={userProfileData.user_id!} />;
+                return (
+                    <BlockedProfileOptions
+                        currUserId={currUserId}
+                        targetUserId={userProfileData.user_id!}
+                        targetUsername={userProfileData.username}
+                        blockedId={friendshipData?.blocked_id}
+                    />
+                );
             default:
                 return <></>;
         }

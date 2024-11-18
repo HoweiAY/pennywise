@@ -71,7 +71,11 @@ export function FriendList({
                     >
                         <ListItem userData={targetFriend!} />
                         <div className="absolute right-6 bottom-4 max-md:bottom-3 max-md:right-4">
-                            <FriendProfileOptions currUserId={currUserId} targetUserId={friendId} />
+                            <FriendProfileOptions
+                                currUserId={currUserId}
+                                targetUserId={friendId}
+                                targetUsername={targetFriend?.username!}
+                            />
                         </div>
                     </li>
                 )
@@ -111,7 +115,11 @@ export function PendingList({
                     >
                         <ListItem userData={friendData.inviter_data!} />
                         <div className="absolute right-6 bottom-4 max-md:bottom-3 max-md:right-4">
-                            <PendingProfileOptions currUserId={currUserId} targetUserId={friendData.inviter_id} />
+                            <PendingProfileOptions
+                                currUserId={currUserId}
+                                targetUserId={friendData.inviter_id}
+                                targetUsername={friendData.inviter_data!.username!}
+                            />
                         </div>
                     </li>
                 )
@@ -151,7 +159,11 @@ export function InvitedList({
                     >
                         <ListItem userData={friendData.invitee_data!} />
                         <div className="absolute right-6 bottom-4 max-md:bottom-3 max-md:right-4">
-                            <InvitedProfileOptions currUserId={currUserId} targetUserId={friendData.invitee_id} />
+                            <InvitedProfileOptions
+                                currUserId={currUserId}
+                                targetUserId={friendData.invitee_id}
+                                targetUsername={friendData.invitee_data!.username!}
+                            />
                         </div>
                     </li>
                 )

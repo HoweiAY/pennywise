@@ -46,6 +46,7 @@ export default async function UserProfile({ params }: { params: { username: stri
                         currUserId={user.id}
                         userProfileData={userProfileData}
                         type={type}
+                        friendshipData={frienshipData["friendshipData"][0]}
                     />
                 </section>
             </div>
