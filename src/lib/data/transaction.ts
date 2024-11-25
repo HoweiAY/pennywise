@@ -244,22 +244,38 @@ export async function getTotalTransactionAmount(
 
     const matchingColumn = type === "income" ? "recipient_id" : "payer_id";
     const supabase = await createSupabaseServerClient();
-    const { data: transactionAmountData, error } = await supabase
+    const { data: transactionAmountData, error: transactionAmountError } = await supabase
         .from("transactions")
         .select("totalAmount:amount.sum()")
         .eq(matchingColumn, userId)
         .is("exchange_rate", null)
         .lt("created_at", to.toISOString())
         .gte("created_at", from.toISOString());
-    if (error) {
+    if (transactionAmountError) {
         return {
             status: "error",
-            message: error.message,
+            message: transactionAmountError.message,
         };
     }
+    const { data: fxTransactionAmountData, error: fxTransactionAmountError } = await supabase
+        .from("transactions")
+        .select("amount, exchange_rate, payer_id, recipient_id")
+        .eq(matchingColumn, userId)
+        .not("exchange_rate", "is", null)
+        .lt("created_at", to.toISOString())
+        .gte("created_at", from.toISOString());
+    if (fxTransactionAmountError) {
+        return {
+            status: "error",
+            message: fxTransactionAmountError.message,
+        };
+    }
+    const exchangedAmount = fxTransactionAmountData.reduce((amount, transaction) => {
+        return amount += transaction.recipient_id === userId ? Math.trunc(transaction.amount * transaction.exchange_rate) : transaction.amount;
+    }, 0);
     return {
         status:"success",
-        data: { transactionAmount: transactionAmountData[0].totalAmount as number || null },
+        data: { transactionAmount: transactionAmountData[0].totalAmount + exchangedAmount as number || null },
     };
 }
 

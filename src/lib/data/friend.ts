@@ -56,6 +56,7 @@ export async function getUserFriends(
     if (limit) {
         supabaseQuery = supabaseQuery.limit(limit);
     }
+    supabaseQuery = supabaseQuery.order("username", { referencedTable: "users" });
     const { data: friendsData, error } = await supabaseQuery;
     if (error) {
         return {

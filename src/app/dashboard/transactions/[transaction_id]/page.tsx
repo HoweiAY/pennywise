@@ -1,14 +1,18 @@
 import DeleteTransactionDialog from "@/components/dashboard/transactions/delete-transaction-dialog";
+import avatarDefault from "@/ui/icons/avatar-default.png";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { ArrowRightIcon, PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { getAuthUser } from "@/lib/data/auth";
+import { getUserDataById } from "@/lib/data/user";
 import { getTransactionById } from "@/lib/data/transaction";
 import { transactionCategories } from "@/lib/utils/constant";
 import { formatCurrency, formatDateTime } from "@/lib/utils/format";
+import { UserData } from "@/lib/types/user";
 import { TransactionCategoryId, TransactionItem } from "@/lib/types/transactions";
 import { Metadata, ResolvingMetadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import clsx from "clsx";
 
 export async function generateMetadata(
@@ -27,9 +31,13 @@ export async function generateMetadata(
 
 export default async function ViewTransaction({ params }: { params: { transaction_id: string } }) {
     const { user } = await getAuthUser();
-    const { status, message, data } = await getTransactionById(params.transaction_id);
-    if (status !== "success" || !data) {
-        throw new Error(message || "Error: transaction not found");
+    const {
+        status: transactionStatus,
+        message: transactionMessage,
+        data: transactionData,
+    } = await getTransactionById(params.transaction_id);
+    if (transactionStatus !== "success" || !transactionData) {
+        throw new Error(transactionMessage || "Error: transaction not found");
     }
     const {
         title,
@@ -45,9 +53,23 @@ export default async function ViewTransaction({ params }: { params: { transactio
         budget_data,
         description,
         created_at,
-    } = data["transactionData"] as TransactionItem;
+    } = transactionData["transactionData"] as TransactionItem;
     if (payer_id !== user.id && recipient_id !== user.id) {
         redirect("/dashboard");
+    }
+
+    let targetUser = null;
+    if (transaction_type === "Pay friend" && payer_id && recipient_id) {
+        const {
+            status: targetUserStatus,
+            message: targetUserMessage,
+            data: targetUserData,
+        } = await getUserDataById(payer_id === user.id ? recipient_id : payer_id);
+        if (targetUserStatus !== "success" || !targetUserData) {
+            console.error(targetUserMessage || "Error: friend data not found");
+        } else {
+            targetUser = targetUserData["userData"] satisfies UserData;
+        }
     }
 
     let amountInCents = amount, amountMessage = "You deposited:";
@@ -61,7 +83,7 @@ export default async function ViewTransaction({ params }: { params: { transactio
                 amountInCents = -amountInCents;
                 amountMessage = "You paid:";
             } else if (payer_currency !== recipient_currency && exchange_rate) {
-                amountInCents *= exchange_rate;
+                amountInCents = Math.trunc(amountInCents * exchange_rate);
                 amountMessage = "You received:";
             }
             break;
@@ -78,7 +100,10 @@ export default async function ViewTransaction({ params }: { params: { transactio
                         <h2 className="text-2xl max-md:text-xl font-semibold overflow-hidden text-nowrap text-ellipsis">
                             {title}
                         </h2>
-                        <div className="flex flex-row justify-end items-center gap-2">
+                        <div className={clsx(
+                            "flex flex-row justify-end items-center gap-2",
+                            { "hidden": transaction_type === "Pay friend" },
+                        )}>
                             <Link
                                 href={`/dashboard/transactions/${params.transaction_id}/edit`}
                                 className="flex flex-row justify-center items-center gap-2 max-md:gap-1 border-0 rounded-lg w-fit h-10 px-6 max-md:px-4 text-white font-semibold bg-blue-500 hover:bg-blue-600 transition-colors duration-200"
@@ -106,9 +131,26 @@ export default async function ViewTransaction({ params }: { params: { transactio
                             { "text-green-500": amountInCents >= 0 },
                         )}>
                             <span className={amountInCents < 0 ? "hidden" : "inline"}>+</span>
-                            {formatCurrency(amountInCents, "USD")}
+                            {formatCurrency(amountInCents, payer_id === user.id ? payer_currency : recipient_currency)}
                         </p>
-                        <p className="mt-2 text-sm max-md:text-xs text-gray-500">
+                        {transaction_type === "Pay friend" && 
+                            <div className="flex items-center gap-2">
+                                <p>
+                                    {payer_id === user.id ? "to" : "from"}
+                                    <span className="font-semibold"> {targetUser?.username || "user"}</span>
+                                </p>
+                                <div className="h-6 w-6 border-2 border-gray-700 rounded-full overflow-clip">
+                                    <Image
+                                        priority
+                                        src={targetUser?.avatar_url || avatarDefault.src}
+                                        width={24}
+                                        height={24}
+                                        alt={"User avatar"}
+                                    />
+                                </div>
+                            </div>
+                        }
+                        <p className="mt-2 max-md:mt-1 text-sm max-md:text-xs text-gray-500">
                             on {created_at ? formatDateTime(created_at) : "--"}
                         </p>
                     </div>
@@ -123,7 +165,7 @@ export default async function ViewTransaction({ params }: { params: { transactio
                             }
                         </span>
                     </p>
-                    {budget_data &&
+                    {budget_data && payer_id === user.id &&
                         <p className="mt-3 font-semibold">
                             Budget: <span className="text-gray-800 font-normal">{budget_data.name}</span>
                         </p>
@@ -137,7 +179,7 @@ export default async function ViewTransaction({ params }: { params: { transactio
                             {description}
                         </p>
                     }
-                    {budget_id &&
+                    {budget_id && payer_id === user.id && 
                         <Link
                             href={`/dashboard/budget/${budget_id}`}
                             className="flex flex-row justify-between items-center rounded-md w-40 max-md:w-36 px-4 py-2 mt-4 mr-6 max-md:mr-3 text-center max-md:text-sm font-semibold bg-white hover:bg-sky-100 hover:text-blue-600 shadow-md shadow-slate-300 transition-colors duration-200"

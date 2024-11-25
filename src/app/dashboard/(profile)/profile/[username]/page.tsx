@@ -34,7 +34,7 @@ export default async function UserProfile({ params }: { params: { username: stri
     if (type === "pending" && frienshipData["friendshipData"][0].inviter_id === user.id) {
         type = "invited";
     }
-    
+
     return (
         <main className="h-fit max-md:min-h-screen mb-2 overflow-hidden">
             <div className="px-6">
@@ -48,6 +48,21 @@ export default async function UserProfile({ params }: { params: { username: stri
                         type={type}
                         friendshipData={frienshipData["friendshipData"][0]}
                     />
+                </section>
+                <section>
+                    <h2 className="text-2xl max-md:text-xl font-semibold">
+                        Latest Activities
+                    </h2>
+                    {type !== "friend" &&
+                        <div className="flex flex-col justify-center items-center w-full h-48 my-6 border-0 rounded-xl bg-gray-100">
+                            <p className="text-center text-xl max-md:text-lg font-semibold">
+                                No activities
+                            </p>
+                            <p className="px-2 text-center text-sm">
+                                Invite {userProfileData.username} to start interacting with them
+                            </p>
+                        </div>
+                    }
                 </section>
             </div>
         </main>

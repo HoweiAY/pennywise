@@ -8,11 +8,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { EllipsisVerticalIcon, InformationCircleIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
+import avatarDefault from "@/ui/icons/avatar-default.png";
+import { getAuthUser } from "@/lib/data/auth";
 import { getFilteredTransactions } from "@/lib/data/transaction";
 import { transactionCategories } from "@/lib/utils/constant";
 import { formatCurrency, formatDateTime } from "@/lib/utils/format";
 import { TransactionItem } from "@/lib/types/transactions";
 import Link from "next/link";
+import Image from "next/image";
 import clsx from "clsx";
 
 export default async function TransactionsTable({
@@ -26,6 +29,7 @@ export default async function TransactionsTable({
     totalPageCount: number,
     itemsPerPage: number,
 }) {
+    const { user } = await getAuthUser();
     const { status, message, data } = await getFilteredTransactions(searchQuery, currPage, itemsPerPage);
     if (status !== "success") {
         console.error(message);
@@ -71,9 +75,20 @@ export default async function TransactionsTable({
                                 className="border-b last:border-0 w-full h-16 py-3 text-sm odd:bg-gray-100 even:bg-gray-50"
                             >
                                 <td className="w-14 px-2">
-                                    <div className="h-10 w-10 border-2 border-gray-700 rounded-full">
-
-                                    </div>
+                                    {transaction.transaction_type === "Pay friend" &&
+                                        <div className="h-10 w-10 border-2 border-gray-700 rounded-full overflow-clip">
+                                            <Image
+                                                priority
+                                                src={(transaction.payer_id === user.id
+                                                    ? transaction.recipient_data?.avatar_url
+                                                    : transaction.payer_data?.avatar_url
+                                                ) ?? avatarDefault.src}
+                                                width={40}
+                                                height={40}
+                                                alt={"User avatar"}
+                                            />
+                                        </div>
+                                    }
                                 </td>
                                 <td className="max-w-32 px-3 font-medium whitespace-nowrap">
                                     <p className="font-semibold text-ellipsis overflow-hidden">{transaction.title}</p>
@@ -81,13 +96,15 @@ export default async function TransactionsTable({
                                 </td>
                                 <td className={clsx(
                                     "px-3 whitespace-nowrap font-semibold text-ellipsis overflow-hidden",
-                                    { "text-green-500": transaction.transaction_type === "Deposit" },
-                                    { "text-red-500": transaction.transaction_type !== "Deposit" },
+                                    { "text-green-500": transaction.recipient_id === user.id },
+                                    { "text-red-500": transaction.payer_id === user.id },
                                 )}>
-                                    <span>{transaction.transaction_type === "Deposit" ? "+" : "-"}</span>
+                                    <span>{transaction.recipient_id === user.id ? "+" : "-"}</span>
                                     {formatCurrency(
-                                        transaction.amount,
-                                        transaction.transaction_type === "Deposit"
+                                        Math.trunc(transaction.amount * (
+                                            transaction.recipient_id === user.id && transaction.exchange_rate ? transaction.exchange_rate : 1
+                                        )),
+                                        transaction.recipient_id === user.id
                                             ? transaction.recipient_currency || "USD"
                                             : transaction.payer_currency || "USD",
                                     )}
@@ -99,8 +116,8 @@ export default async function TransactionsTable({
                                     {transaction.category_id
                                         ? transactionCategories[transaction.category_id].name
                                         : transaction.budget_id && transaction.budget_data && transaction.budget_data.category_id
-                                        ? transactionCategories[transaction.budget_data.category_id].name
-                                        : "--"
+                                            ? transactionCategories[transaction.budget_data.category_id].name
+                                            : "--"
                                     }
                                 </td>
                                 <td className="max-w-24 px-3 font-medium whitespace-nowrap text-ellipsis overflow-hidden">
@@ -110,7 +127,7 @@ export default async function TransactionsTable({
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <button className="border-0 rounded-full p-1 hover:bg-gray-200 duration-200">
-                                                <EllipsisVerticalIcon className="w-6 h-6" /> 
+                                                <EllipsisVerticalIcon className="w-6 h-6" />
                                             </button>
                                         </DropdownMenuTrigger>
                                         <OptionsMenu
@@ -143,8 +160,22 @@ export default async function TransactionsTable({
                             className="relative grid grid-cols-2 border-b last:border-0 w-full h-16 ps-3 pe-8 max-md:ps-2 odd:bg-gray-50 even:bg-gray-100"
                         >
                             <div className="flex flex-row items-center gap-x-2 md:gap-x-4 text-ellipsis overflow-hidden">
-                                <div className="h-10 w-10 min-w-10 border-2 border-gray-700 rounded-full">
-
+                                <div className={clsx(
+                                    "h-10 w-10 min-w-10 border-2 border-gray-700 rounded-full overflow-clip",
+                                    { "border-0 border-transparent": transaction.transaction_type !== "Pay friend" },
+                                )}>
+                                {transaction.transaction_type === "Pay friend" && 
+                                    <Image
+                                        priority
+                                        src={(transaction.payer_id === user.id
+                                            ? transaction.recipient_data?.avatar_url
+                                            : transaction.payer_data?.avatar_url
+                                        ) ?? avatarDefault.src}
+                                        width={40}
+                                        height={40}
+                                        alt={"User avatar"}
+                                    />
+                                }
                                 </div>
                                 <div className="w-full whitespace-nowrap overflow-hidden">
                                     <p className="font-semibold text-sm text-ellipsis overflow-hidden">{transaction.title}</p>
@@ -154,13 +185,15 @@ export default async function TransactionsTable({
                             <div className="grid grid-cols-2 gap-2">
                                 <div className={clsx(
                                     "flex items-center px-3 whitespace-nowrap font-semibold",
-                                    { "text-green-500": transaction.transaction_type === "Deposit" },
-                                    { "text-red-500": transaction.transaction_type !== "Deposit" },
+                                    { "text-green-500": transaction.recipient_id === user.id },
+                                    { "text-red-500": transaction.payer_id === user.id },
                                 )}>
-                                    <span>{transaction.transaction_type === "Deposit" ? "+" : "-"}</span>
+                                    <span>{transaction.recipient_id === user.id ? "+" : "-"}</span>
                                     {formatCurrency(
-                                        transaction.amount,
-                                        transaction.transaction_type === "Deposit"
+                                        Math.trunc(transaction.amount * (
+                                            transaction.recipient_id === user.id && transaction.exchange_rate ? transaction.exchange_rate : 1
+                                        )),
+                                        transaction.recipient_id === user.id
                                             ? transaction.recipient_currency || "USD"
                                             : transaction.payer_currency || "USD",
                                     )}
@@ -190,7 +223,7 @@ export default async function TransactionsTable({
                     )
                 })}
             </div>
-            {transactionItems?.length === 0 && 
+            {transactionItems?.length === 0 &&
                 <div className="flex flex-col justify-center items-center w-full h-48 mb-6 border-0 rounded-b-lg bg-gray-100">
                     <p className="text-center text-xl max-md:text-lg font-semibold">
                         {searchQuery ? "No results found" : "No transactions"}
@@ -218,8 +251,8 @@ function OptionsMenu({ transactionId, editable, deletable }: { transactionId: st
                 <Link href={`/dashboard/transactions/${transactionId}/edit`} scroll={false}>
                     <DropdownMenuItem className={clsx(
                         "w-full hover:cursor-pointer max-lg:text-sm",
-                        {"hidden": !editable},
-                        )}>
+                        { "hidden": !editable },
+                    )}>
                         <PencilIcon className="w-4 h-4" />
                         <p>Edit</p>
                     </DropdownMenuItem>
@@ -227,7 +260,7 @@ function OptionsMenu({ transactionId, editable, deletable }: { transactionId: st
                 <AlertDialogTrigger asChild>
                     <DropdownMenuItem className={clsx(
                         "hover:cursor-pointer max-lg:text-sm",
-                        {"hidden": !deletable},
+                        { "hidden": !deletable },
                     )}>
                         <TrashIcon className="w-4 h-4 text-rose-600" />
                         <p className="text-rose-600">Delete</p>
