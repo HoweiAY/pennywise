@@ -192,7 +192,7 @@ export function Card({
                                 "text-red-500": (type === "expenditure" && amountChange && amountChange > 0) || (type !== "expenditure" && amountChange && amountChange < 0),
                             },
                         )}>
-                            {amountChange !== null ? `${formatAmountPercentageChange(amountChange)} ` : "--% "}
+                            {amountChange !== null ? `${amountChange > 0 ? "+" : ""}${formatAmountPercentageChange(amountChange)} ` : "--% "}
                         </span>
                         since last month
                     </p>

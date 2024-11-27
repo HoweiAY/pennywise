@@ -1,9 +1,12 @@
 import UserProfileCard from "@/components/dashboard/profile/user-profile-card";
+import LatestActivitiesList from "@/components/dashboard/profile/latest-activities-list";
 import { UserData } from "@/lib/types/user";
 import { FrinedshipStatus } from "@/lib/types/friend";
+import { TransactionItem } from "@/lib/types/transactions";
 import { getAuthUser } from "@/lib/data/auth";
 import { getUserDataByUsername } from "@/lib/data/user";
 import { getFriendshipData } from "@/lib/data/friend";
+import { getPayFriendTransactions } from "@/lib/data/transaction";
 
 export default async function UserProfile({ params }: { params: { username: string } }) {
     const targetUsername = decodeURIComponent(params.username);
@@ -34,6 +37,14 @@ export default async function UserProfile({ params }: { params: { username: stri
     if (type === "pending" && frienshipData["friendshipData"][0].inviter_id === user.id) {
         type = "invited";
     }
+    let friendId = null;
+
+    let latestFriendActivities: TransactionItem[] = [];
+    if (type === "friend") {
+        friendId = frienshipData["friendshipData"][0].inviter_id === user.id
+            ? frienshipData["friendshipData"][0].invitee_id
+            : frienshipData["friendshipData"][0].inviter_id;
+    }
 
     return (
         <main className="h-fit max-md:min-h-screen mb-2 overflow-hidden">
@@ -59,9 +70,12 @@ export default async function UserProfile({ params }: { params: { username: stri
                                 No activities
                             </p>
                             <p className="px-2 text-center text-sm">
-                                Invite {userProfileData.username} to start interacting with them
+                                Invite {userProfileData.username} to start making payments as a friend
                             </p>
                         </div>
+                    }
+                    {type === "friend" && friendId &&
+                        <LatestActivitiesList userId={user.id} friendId={friendId} friendUsername={userProfileData.username} />
                     }
                 </section>
             </div>

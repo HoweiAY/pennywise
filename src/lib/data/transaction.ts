@@ -176,6 +176,64 @@ export async function getBudgetTransactions(
     }
 }
 
+export async function getPayFriendTransactions(
+    userId: string,
+    friendId?: string,
+    itemsLimit?: number,
+): Promise<DataResponse<TransactionItem[]>> {
+    noStore();
+
+    try {
+        const supabase = await createSupabaseServerClient();
+        let supabaseQuery = supabase
+            .from("transactions")
+            .select(`
+                transaction_id,
+                title,
+                payer_currency,
+                recipient_currency,
+                exchange_rate,
+                amount,
+                transaction_type,
+                category_id,
+                payer_id,
+                recipient_id,
+                budget_id,
+                payer_data:users!transactions_payer_id_fkey(username, first_name, last_name, avatar_url),
+                recipient_data:users!transactions_recipient_id_fkey(username, first_name, last_name, avatar_url),
+                budget_data:budgets!transactions_budget_id_fkey(category_id),
+                description,
+                created_at
+            `)
+            .eq("transaction_type", "Pay friend");
+        if (friendId) {
+            supabaseQuery = supabaseQuery.or(`and(payer_id.eq.${userId},recipient_id.eq.${friendId}),and(payer_id.eq.${friendId},recipient_id.eq.${userId})`);
+        } else {
+            supabaseQuery = supabaseQuery.or(`payer_id.eq.${userId}, recipient.eq.${userId}`);
+        }
+        if (itemsLimit && !isNaN(itemsLimit)) {
+            supabaseQuery = supabaseQuery.limit(itemsLimit);
+        }
+        const { data: payFriendTransactionsData, error } = await supabaseQuery;
+        if (error) throw error;
+        return {
+            status: "success",
+            data: { transactionItems: payFriendTransactionsData as TransactionItem[] },
+        };
+    } catch (error) {
+        if (error instanceof Error) {
+            return {
+                status: "error",
+                message: error.message,
+            };
+        }
+        return {
+            status: "error",
+            message: "Pay friend transaction items fetch failed",
+        };
+    }
+}
+
 export async function getTransactionById(
     transactionId: string,
     asForm?: boolean,

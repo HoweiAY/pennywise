@@ -3,14 +3,14 @@ import { FriendshipData, FriendsData, FriendshipType } from "@/lib/types/friend"
 import { createSupabaseServerClient } from "@/lib/utils/supabase/server";
 import { unstable_noStore as noStore } from "next/cache";
 
-export async function getFriendshipData(userId: string, frinedId: string): Promise<DataResponse<FriendshipData[]>> {
+export async function getFriendshipData(userId: string, friendId: string): Promise<DataResponse<FriendshipData[]>> {
     noStore();
 
     const supabase = await createSupabaseServerClient();
     const { data: friendshipData, error } = await supabase
         .from("friendships")
         .select("inviter_id, invitee_id, status, blocked_id")
-        .or(`and(inviter_id.eq.${userId},invitee_id.eq.${frinedId}),and(inviter_id.eq.${frinedId},invitee_id.eq.${userId})`);
+        .or(`and(inviter_id.eq.${userId},invitee_id.eq.${friendId}),and(inviter_id.eq.${friendId},invitee_id.eq.${userId})`);
     if (error) {
         return {
             status: "error",
