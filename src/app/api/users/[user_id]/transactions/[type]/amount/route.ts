@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ user_id: string, type: string }> },
-): Promise<NextResponse<RouteHandlerResponse<{ transactionAmount: number }>>> {
+): Promise<NextResponse<RouteHandlerResponse<{ transactionAmount: number | null }>>> {
     const searchParams = request.nextUrl.searchParams;
     const from = searchParams.get("from");
     const to = searchParams.get("to");
@@ -36,7 +36,7 @@ export async function GET(
     }
     const { totalAmount } = transactionAmountData[0];
     return NextResponse.json(
-        { data: { transactionAmount: totalAmount ?? 0 } },
+        { data: { transactionAmount: totalAmount } },
         { status: 200 },
     );
 }

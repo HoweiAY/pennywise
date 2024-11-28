@@ -1,5 +1,6 @@
 "use client";
 
+import avatarDefault from "@/ui/icons/avatar-default.png";
 import { ChevronDownIcon, QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
 import { ExclamationCircleIcon } from "@heroicons/react/24/solid";
 import { baseUrl, transactionCategories } from "@/lib/utils/constant";
@@ -7,12 +8,15 @@ import { transactionErrorMessage } from "@/lib/utils/helper";
 import { formatCurrency, formatCurrencyAmount } from "@/lib/utils/format";
 import { RouteHandlerResponse } from "@/lib/types/data";
 import { TransactionFormState, TransactionFormData, BudgetFormData } from "@/lib/types/form-state";
+import { FriendsData } from "@/lib/types/friend";
 import { TransactionType, TransactionCategoryId } from "@/lib/types/transactions";
 import { createTransaction, updateTransaction } from "@/lib/actions/transaction";
 import Link from "next/link";
-import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { useDebouncedCallback } from "use-debounce";
+import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import clsx from "clsx";
 
@@ -21,7 +25,9 @@ export default function TransactionForm({
     currency,
     balanceInCents,
     remainingSpendingLimitInCents,
+    transactionType,
     transactionId,
+    payFriendId,
     prevTransactionData,
     userBudgetData,
 }: {
@@ -29,7 +35,9 @@ export default function TransactionForm({
     currency: string,
     balanceInCents: number,
     remainingSpendingLimitInCents: number | null,
+    transactionType?: TransactionType,
     transactionId?: string,
+    payFriendId?: string,
     prevTransactionData?: TransactionFormData,
     userBudgetData?: BudgetFormData[],
 }) {
@@ -39,18 +47,69 @@ export default function TransactionForm({
     const [ titlePlaceholder, setTitlePlaceholder ] = useState<string>("My new transaction 💲");
     const [ amountInCents, setAmountInCents ] = useState<number | null>(0);
     const [ deductedSpendingLimitInCents, setDeductedSpendingLimitInCents ] = useState<number>(0);
-    const [ type, setType ] = useState<TransactionType>(prevTransactionData?.transaction_type ?? "Deposit");
-    const [ userBudgets, setUserBudgets ] = useState<BudgetFormData[]>(userBudgetData ?? []);
+    const [ type, setType ] = useState<TransactionType>(prevTransactionData?.transaction_type ?? (transactionType || "Deposit"));
     const [ budgetId, setBudgetId ] = useState<string | null | undefined>(prevTransactionData?.budget_id ?? null);
     const [ remainingBudgetAmountInCents, setRemainingBudgetAmountInCents ] = useState<number>(0);
     const [ deductedBudgetAmountInCents, setDeductedBudgetAmountInCents ] = useState<number>(0);
     const [ categoryId, setCategoryId ] = useState<TransactionCategoryId | null>(null);
-    
+    const [ friendId, setFriendId ] = useState<string | undefined>(payFriendId ?? undefined);
+
+    const transactionTypes = useMemo(() => {
+        return ["Deposit", "Expense", "Pay friend"] satisfies TransactionType[];
+    }, []);
+
+    const { data: userFriends, isFetching: fetchingFriends } = useQuery({
+        queryKey: ["friends", userId],
+        queryFn: async () => {
+            const res = await fetch(
+                `${baseUrl}/api/users/${userId}/friends?status=friend`,
+                { cache: "no-store" },
+            );
+            if (res.status !== 200) {
+                console.error(res.statusText);
+                return [];
+            }
+            const { data: friendsData } = await res.json() as { data: FriendsData[] };
+            for (const friend of friendsData) {
+                if (friend.inviter_id === friendId) {
+                    setFriendId(friend.inviter_id);
+                    break;
+                }
+                if (friend.invitee_id === friendId) {
+                    setFriendId(friend.invitee_id);
+                    break;
+                }
+            }
+            return friendsData;
+        },
+        initialData: [],
+        refetchOnWindowFocus: false,
+    });
+
+    const { data: userBudgets } = useQuery({
+        queryKey: ["budgets", userId],
+        queryFn: async () => {
+            if (userBudgetData) return userBudgetData;
+            const res = await fetch(
+                `${baseUrl}/api/users/${userId}/budget`,
+                { cache: "no-store" },
+            );
+            if (res.status !== 200) {
+                console.error(res.statusText);
+                return [];
+            } else {
+                const { data: userBudgetData } = await res.json() as RouteHandlerResponse<BudgetFormData[]>;
+                return userBudgetData ?? [];
+            }
+        },
+        initialData: [],
+        refetchOnWindowFocus: false,
+    });
 
     const getTitlePlaceholder = useCallback((type: TransactionType) => {
         return type === "Deposit"
             ? "My first paycheck 💵"
-            : categoryId && (categoryId satisfies TransactionCategoryId)
+            : categoryId
             ? transactionCategories[categoryId].titlePlaceholder
             : "My new transaction 💲";
     }, [categoryId]);
@@ -84,6 +143,10 @@ export default function TransactionForm({
             break;
         }
     }, [prevTransactionData, userBudgets, amountInCents]);
+
+    const handleSelectFriend = useCallback((friendUserId: string) => {
+        setFriendId(friendUserId);
+    }, []);
 
     const handleSubmit = useCallback(async (prevState: TransactionFormState | undefined, formData: FormData) => {
         const formAction = prevTransactionData ? updateTransaction : createTransaction;
@@ -127,27 +190,11 @@ export default function TransactionForm({
         }
         if (prevTransactionData) {
             setAmountInCents(0);
-            if (prevTransactionData.transaction_type !== "Deposit") {
-                setCategoryId(prevTransactionData.category_id as TransactionCategoryId);
+            if (prevTransactionData.transaction_type !== "Deposit" && prevTransactionData.category_id) {
+                setCategoryId(prevTransactionData.category_id satisfies TransactionCategoryId);
             }
         }
     }, []);
-
-    useEffect(() => {
-        const fetchUserBudgets = async () => {
-            const res = await fetch(`${baseUrl}/api/users/${userId}/budget`, { cache: "no-store" });
-            if (res.status !== 200) {
-                console.error(res.statusText);
-            } else {
-                const { data: userBudgetData } = await res.json() as RouteHandlerResponse<BudgetFormData[]>;
-                if (userBudgetData) {
-                    setUserBudgets(userBudgetData);
-                }
-            }
-        };
-        if (userBudgetData) return;
-        fetchUserBudgets();
-    }, [userId]);
 
     useEffect(() => {
         getRemainingBudgetAmount(budgetId ?? null);
@@ -253,7 +300,7 @@ export default function TransactionForm({
                     value={type}
                 />
                 <div className="flex flex-row justify-center items-center border border-slate-300 rounded-md overflow-hidden">
-                    {["Deposit", "Expense", "Pay friend"].map((typeName, idx) => {
+                    {transactionTypes.map((typeName, idx) => {
                         return (
                             <input
                                 key={`type_${idx}`}
@@ -266,12 +313,91 @@ export default function TransactionForm({
                                     { "bg-blue-500 hover:bg-blue-600 text-white font-semibold": type === typeName },
                                     { "border-x bg-white hover:bg-sky-100 text-gray-800 hover:text-blue-600": type !== typeName },
                                 )}
-                                onClick={() => setType(typeName as TransactionType)}
+                                onClick={() => setType(typeName satisfies TransactionType)}
                             />
                         )
                     })}
                 </div>
             </div>
+            {type === "Pay friend" &&
+                <p className="mt-1 max-md:mt-1.5 text-sm max-md:text-xs text-gray-500">
+                    * Payment to friends <span className="font-semibold">cannot</span> be edited or deleted
+                </p>
+            }
+            <section className={clsx(
+                "border border-slate-100 rounded-md w-1/2 max-lg:w-3/4 max-md:w-full px-4 pt-3 pb-4 my-4 bg-white shadow-md",
+                { "hidden": type !== "Pay friend" },
+            )}>
+                <label
+                    htmlFor="friend"
+                    className="text-lg font-semibold"
+                >
+                    Choose friend
+                </label>
+                <input
+                    id="friend_id"
+                    name="friend_id"
+                    type="hidden"
+                    value={friendId}
+                />
+                <p className="text-sm text-gray-500">
+                    Select a friend as the payee
+                </p>
+                <ul
+                    aria-labelledby="friend"
+                    className="flex flex-col gap-2 w-full max-h-56 overflow-scroll py-3"
+                >
+                    {!fetchingFriends && userFriends.map((friendData, idx) => {
+                        const friendUserId = friendData.invitee_id === userId ? friendData.inviter_id : friendData.invitee_id;
+                        const friendProfile = friendData.invitee_id === userId ? friendData.inviter_data : friendData.invitee_data;
+                        return (
+                            <li
+                                key={`friend_${idx}`}
+                                className={`w-full h-16 border-0 rounded-md px-3 ${friendUserId === friendId ? "bg-sky-100 text-blue-600" : "bg-gray-100 hover:bg-gray-200"} hover:cursor-pointer duration-200`}
+                                onClick={() => handleSelectFriend(friendUserId)}
+                            >
+                                <div className="flex flex-row items-center gap-3 h-full md:w-1/2">
+                                    <div className="w-10 h-10 min-w-10 border-2 border-gray-700 rounded-full bg-white overflow-clip">
+                                        <Image
+                                            priority
+                                            loader={({ src, width, quality }) => `${src}?w=${width}&q=${quality}`}
+                                            src={friendProfile?.avatar_url || avatarDefault.src}
+                                            width={40}
+                                            height={40}
+                                            alt={"User avatar"}
+                                        />
+                                    </div>
+                                    <div className="flex flex-col justify-center overflow-hidden">
+                                        <p className="whitespace-nowrap font-semibold text-sm text-ellipsis overflow-hidden">
+                                            {friendProfile?.username}
+                                        </p>
+                                        <p className={`whitespace-nowrap ${friendUserId === friendId ? "text-blue-600" : "text-gray-500"} text-xs text-ellipsis overflow-hidden`}>
+                                            {friendProfile?.first_name && friendProfile.last_name
+                                                ? `${friendProfile?.first_name} ${friendProfile.last_name}`
+                                                : `${friendProfile?.email}`
+                                            }
+                                        </p>
+                                    </div>
+                                </div>
+                            </li>
+                        );
+                    })}
+                    {!fetchingFriends && userFriends.length === 0 &&
+                        <div className="flex justify-center items-center border-0 rounded-md w-full h-24 bg-gray-100 text-center">
+                            <p className="font-semibold max-md:text-sm">
+                                Friend list empty
+                            </p>
+                        </div>
+                    }
+                    {fetchingFriends &&
+                        <div className="animate-pulse flex flex-col gap-2 w-full max-h-56 overflow-scroll py-3">
+                            <div className="border-0 rounded-md w-full h-16 bg-gray-300 text-center" />
+                            <div className="border-0 rounded-md w-full h-16 bg-gray-300 text-center" />
+                            <div className="border-0 rounded-md w-full h-16 bg-gray-300 text-center" />
+                        </div>
+                    }
+                </ul>
+            </section>
             <section className={clsx(
                 "border border-slate-100 rounded-md w-1/2 max-lg:w-3/4 max-md:w-full px-4 pt-3 pb-4 my-4 bg-gray-100 shadow-lg",
                 { "hidden": type === "Deposit" },

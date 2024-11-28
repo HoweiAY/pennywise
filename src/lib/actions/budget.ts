@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/utils/supabase/server";
 import { BudgetFormState, BudgetFormData } from "@/lib/types/form-state";
+import { BudgetCategoryId } from "@/lib/types/budget";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -13,6 +14,7 @@ const BudgetSchema = z.object({
     category: z.coerce.number().gt(0, { message: "Please select a category" }),
     description: z.string().trim().nullable(),
 });
+const BudgetCategorySchema = z.custom<BudgetCategoryId>();
 
 export async function createBudget(
     prevState: BudgetFormState | undefined,
@@ -39,23 +41,41 @@ export async function createBudget(
             }
         }
 
+        const validatedBudgetCategory = BudgetCategorySchema.safeParse(validatedBudgetData.data.category);
+        if (!validatedBudgetCategory.success) {
+            return { message: "Please select a category for this budget" };
+        }
+        const categoryId = validatedBudgetCategory.data;
+
         const supabase = await createSupabaseServerClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
             return { message: "Error: user not found" };
         }
-        const amountInCents = Math.floor(validatedBudgetData.data.amount * 100);
+        const { data: budgetCountData, error: budgetCountError } = await supabase
+            .from("budgets")
+            .select("budgetCount:count()")
+            .eq("user_id", user.id)
+            .limit(1);
+        if (budgetCountError) throw budgetCountError;
+        if (budgetCountData) {
+            const { budgetCount } = budgetCountData[0] as { budgetCount: number };
+            if (budgetCount >= 12) {
+                return { message: "You can only have at most 12 budgets at once" };
+            }
+        }
+        const amountInCents = Math.trunc(validatedBudgetData.data.amount * 10 * 10);
         const budgetFormData: BudgetFormData = {
             name: validatedBudgetData.data.name,
-            category_id: validatedBudgetData.data.category,
+            category_id: categoryId,
             currency: validatedBudgetData.data.currency,
             amount: amountInCents,
             user_id: user.id,
             description: validatedBudgetData.data.description,
         };
-        const { error } = await supabase.from("budgets").insert(budgetFormData);
-        if (error) {
-            return { message: error.message };
+        const { error: createBudgetError } = await supabase.from("budgets").insert(budgetFormData);
+        if (createBudgetError) {
+            return { message: createBudgetError.message };
         }
     } catch (error) {
         if (error instanceof Error) {
@@ -64,7 +84,7 @@ export async function createBudget(
         return { message: "An error has occurred" };
     }
 
-    redirect("/dashboard/budget");
+    redirect("/dashboard/budget/my-budgets");
 }
 
 export async function updateBudget(
@@ -96,15 +116,21 @@ export async function updateBudget(
             }
         }
 
+        const validatedBudgetCategory = BudgetCategorySchema.safeParse(validatedBudgetData.data.category);
+        if (!validatedBudgetCategory.success) {
+            return { message: "Please select a category for this budget" };
+        }
+        const categoryId = validatedBudgetCategory.data;
+
         const supabase = await createSupabaseServerClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
             return { message: "Error: user not found" };
         }
-        const amountInCents = Math.floor(validatedBudgetData.data.amount * 100);
+        const amountInCents = Math.trunc(validatedBudgetData.data.amount * 10 * 10);
         const budgetFormData: BudgetFormData = {
             name: validatedBudgetData.data.name,
-            category_id: validatedBudgetData.data.category,
+            category_id: categoryId,
             currency: validatedBudgetData.data.currency,
             amount: amountInCents,
             user_id: user.id,
@@ -125,7 +151,7 @@ export async function updateBudget(
         return { message: "An error has occurred" };
     }
 
-    redirect("/dashboard/budget");
+    redirect("/dashboard/budget/my-budgets");
 }
 
 export async function deleteBudget(
@@ -142,6 +168,6 @@ export async function deleteBudget(
     }
     revalidatePath("/dashboard/budget");
     if (redirectOnDelete) {
-        redirect("/dashboard/budget");
+        redirect("/dashboard/budget/my-budgets");
     }
 }

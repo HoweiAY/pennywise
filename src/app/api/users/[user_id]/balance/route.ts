@@ -21,7 +21,7 @@ export async function GET(
         return NextResponse.json({}, { status: 404, statusText: "User balance information not found" });
     }
     return NextResponse.json(
-        { data: userBalanceData[0] as UserBalanceData },
+        { data: userBalanceData[0] satisfies UserBalanceData },
         { status: 200 },
     );
 }

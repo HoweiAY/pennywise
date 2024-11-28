@@ -1,8 +1,8 @@
 "use client";
 
 import { BellIcon } from "@heroicons/react/24/outline";
-import { PennyWiseLogo } from "./logo";
 import avatarDefault from "@/ui/icons/avatar-default.png";
+import { PennyWiseLogo } from "@/components/common/logo";
 import { createSupabaseBrowserClient } from "@/lib/utils/supabase/client";
 import { StaticImport } from "next/dist/shared/lib/get-img-props";
 import Image from "next/image";
@@ -31,7 +31,7 @@ export default function TopBar() {
     }, []);
 
     return (
-        <div className="flex flex-row justify-end max-md:justify-between items-center h-20 ps-6 pe-12 py-6 max-md:px-6 border border-gray-200 shadow-sm bg-sky-50 max-md:bg-white sticky top-0 z-10">
+        <div className="flex flex-row justify-end max-md:justify-between items-center h-20 ps-6 pe-12 py-6 max-md:px-6 border border-gray-200 shadow-sm bg-sky-50 max-md:bg-white sticky top-0 z-20">
             <PennyWiseLogo hiddenOnLargeScreen={true} />
             <div className="flex flex-row justify-end items-center gap-6 max-md:gap-4">
                 <Link 

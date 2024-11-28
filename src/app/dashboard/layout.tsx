@@ -1,5 +1,6 @@
 import SideNav from "@/components/common/sidenav";
 import TopBar from "@/components/common/topbar";
+import BottomNav from "@/components/common/bottom-nav";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
     return (
@@ -8,6 +9,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div className="flex-grow overflow-y-auto">
                 <TopBar />
                 {children}
+                <BottomNav />
             </div>
         </div>
     );

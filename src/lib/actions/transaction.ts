@@ -2,9 +2,10 @@
 
 import { z } from "zod";
 import { addUserBalance, deductUserBalance } from "@/lib/actions/user";
+import { getUserBalanceData } from "@/lib/data/user";
 import { createSupabaseServerClient } from "@/lib/utils/supabase/server";
 import { TransactionFormState, TransactionFormData } from "@/lib/types/form-state";
-import { TransactionType } from "@/lib/types/transactions";
+import { TransactionCategoryId, TransactionType } from "@/lib/types/transactions";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
@@ -15,11 +16,13 @@ const TransactionSchema = z.object({
     balance: z.coerce.number(),
     remainingSpendingLimit: z.coerce.number().nullable(),
     type: z.enum(["Deposit", "Expense", "Pay friend"], { invalid_type_error: "Please select a transaction type" }),
+    friend: z.string().nullable(),
     budget: z.string().nullable(),
     remainingBudgetAmount: z.coerce.number().nullable(),
     category: z.coerce.number().nullable(),
     description: z.string().trim().nullable(),
 });
+const TransactionCategorySchema = z.custom<TransactionCategoryId>().nullable();
 
 // Server action for creating a new transaction
 export async function createTransaction(
@@ -33,6 +36,7 @@ export async function createTransaction(
         const balance = formData.get("balance");
         const remainingSpendingLimit = formData.get("remaining_spending_limit");
         const type = formData.get("type");
+        const friend = formData.get("friend_id");
         const budget = formData.get("budget");
         const remainingBudgetAmount = formData.get("remaining_budget_amount");
         const category = formData.get("category");
@@ -45,6 +49,7 @@ export async function createTransaction(
             balance,
             remainingSpendingLimit,
             type,
+            friend,
             budget,
             remainingBudgetAmount,
             category,
@@ -57,7 +62,13 @@ export async function createTransaction(
             }
         }
 
-        const amountInCents = Math.floor(validatedTransactionData.data.amount * 100);
+        const validatedTransactionCategory = TransactionCategorySchema.safeParse(validatedTransactionData.data.category);
+        if (!validatedTransactionCategory.success) {
+            return { message: "Invalid category ID" };
+        }
+        const categoryId = validatedTransactionCategory.data;
+
+        const amountInCents = Math.trunc(validatedTransactionData.data.amount * 10 * 10);
         const {
             balance: balanceInCents,
             remainingSpendingLimit: remainingSpendingLimitInCents,
@@ -65,7 +76,6 @@ export async function createTransaction(
             type: transactionType,
         } = validatedTransactionData.data;
         const budgetId = validatedTransactionData.data.budget;
-        const categoryId = validatedTransactionData.data.category;
         if (transactionType !== "Deposit") {
             const message = (amountInCents > balanceInCents)
                 ? "Transaction amount has exceeded your available balance"
@@ -103,24 +113,65 @@ export async function createTransaction(
             transactionData.category_id = categoryId;
             transactionData.payer_id = user.id;
             transactionData.payer_currency = validatedTransactionData.data.currency;
+            if (transactionData.transaction_type === "Pay friend") {
+                const friendId = validatedTransactionData.data.friend;
+                if (!friendId) {
+                    return { message: "Friend ID not found" };
+                }
+                const openExchangeRatesAppId = process.env.OPEN_EXCHANGE_RATES_APP_ID!;
+                const [
+                    { rates: exchangeRates },
+                    { status: friendBalanceStatus, data: friendBalanceData },
+                ] = await Promise.all([
+                    (await fetch(
+                        `https://openexchangerates.org/api/latest.json?app_id=${openExchangeRatesAppId}`,
+                        { next: { revalidate: 3600 } },
+                    )).json(),
+                    getUserBalanceData(friendId),
+                ]);
+                if (friendBalanceStatus !== "success" || !friendBalanceData) {
+                    return { message: "Failed to select friend for payment transfer" };
+                }
+                const baseCurrency = transactionData.payer_currency;
+                const targetCurrency = friendBalanceData["userBalanceData"].currency;
+                transactionData.recipient_currency = targetCurrency;
+                transactionData.exchange_rate = exchangeRates[targetCurrency] / exchangeRates[baseCurrency];
+                transactionData.recipient_id = friendId;
+            }
         }
-        const updateBalanceAction = transactionData.transaction_type === "Deposit"
+        const updateUserBalanceAction = transactionData.transaction_type === "Deposit"
             ? addUserBalance(user.id, amountInCents, supabase)
             : deductUserBalance(user.id, amountInCents, supabase);
+        let updateFriendBalanceAction = null;
+        if (transactionData.transaction_type === "Pay friend") {
+            if (!transactionData.recipient_id || !transactionData.exchange_rate) {
+                return { message: "Failed to select friend for payment transfer" };
+            }
+            const convertedAmountInCents = Math.trunc(amountInCents * transactionData.exchange_rate);
+            updateFriendBalanceAction = addUserBalance(transactionData.recipient_id, convertedAmountInCents, supabase);
+        }
         
         Promise.all([
             supabase.from("transactions").insert(transactionData),
-            updateBalanceAction,
+            updateUserBalanceAction,
+            updateFriendBalanceAction,
         ]).then(res => {
             const [
                 { error: supabaseError },
-                { status: updateBalanceStatus, message: updateBalanceMessage },
+                { status: updateUserBalanceStatus, message: updateUserBalanceMessage },
+                updateFriendBalanceRes,
             ] = res;
             if (supabaseError) {
                 return { message: supabaseError.message };
             }
-            if (updateBalanceStatus !== "success") {
-                return { message: updateBalanceMessage ?? "Failed to update user balance" };
+            if (updateUserBalanceStatus !== "success") {
+                return { message: updateUserBalanceMessage ?? "Failed to update user balance" };
+            }
+            if (updateFriendBalanceRes) {
+                const { status: updateFriendBalanceStatus } = updateFriendBalanceRes;
+                if (updateFriendBalanceStatus !== "success") {
+                    return { message: "Failed to transfer payment to selected friend" };
+                }
             }
         }).catch(error => {
             if (error instanceof Error) {
@@ -176,7 +227,14 @@ export async function updateTransaction(
                 message: "Invalid field input(s)",
             }
         }
-        const amountInCents = Math.floor(validatedTransactionData.data.amount * 100);
+
+        const validatedTransactionCategory = TransactionCategorySchema.safeParse(validatedTransactionData.data.category);
+        if (!validatedTransactionCategory.success) {
+            return { message: "Invalid category ID" };
+        }
+        const categoryId = validatedTransactionCategory.data;
+
+        const amountInCents = Math.trunc(validatedTransactionData.data.amount * 10 * 10);
         const prevAmountInCents = prevAmount ? parseInt(prevAmount.toString()) : amountInCents;
         const netAmountInCents = amountInCents - prevAmountInCents;
         const {
@@ -186,7 +244,6 @@ export async function updateTransaction(
             type: transactionType,
         } = validatedTransactionData.data;
         const budgetId = validatedTransactionData.data.budget;
-        const categoryId = validatedTransactionData.data.category;
         if (transactionType !== "Deposit") {
             const message = (netAmountInCents > balanceInCents)
                 ? "Transaction amount has exceeded your available balance"

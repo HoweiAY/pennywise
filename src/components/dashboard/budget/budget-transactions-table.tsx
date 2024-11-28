@@ -1,5 +1,6 @@
 import BudgetTransactionsTablePagination from "@/components/dashboard/budget/budget-transactions-table-pagination";
 import DeleteTransactionDialog from "@/components/dashboard/transactions/delete-transaction-dialog";
+import avatarDefault from "@/ui/icons/avatar-default.png";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -8,11 +9,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { EllipsisVerticalIcon, InformationCircleIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { transactionCategories } from "@/lib/utils/constant";
 import { formatCurrency, formatDateTime } from "@/lib/utils/format";
 import { TransactionItem } from "@/lib/types/transactions";
 import { getBudgetTransactions } from "@/lib/data/transaction";
 import Link from "next/link";
+import Image from "next/image";
 import clsx from "clsx";
 
 export default async function BudgetTransactionsTable({
@@ -30,7 +31,7 @@ export default async function BudgetTransactionsTable({
     if (status !== "success") {
         console.error(message);
     }
-    const transactionItems = data ? data["transactionItems"] as TransactionItem[] : [];
+    const transactionItems = data ? data["transactionItems"] satisfies TransactionItem[] : [];
 
     return (
         <section className="flex flex-col border border-slate-100 rounded-xl min-h-96 px-6 py-6 max-md:px-3 mb-10 bg-white shadow-lg">
@@ -62,9 +63,17 @@ export default async function BudgetTransactionsTable({
                                 className="border-b last:border-0 w-full h-16 py-3 text-sm odd:bg-gray-100 even:bg-gray-50"
                             >
                                 <td className="w-14 px-2">
-                                    <div className="h-10 w-10 border-2 border-gray-700 rounded-full">
-
-                                    </div>
+                                {transaction.transaction_type === "Pay friend" &&
+                                        <div className="h-10 w-10 border-2 border-gray-700 rounded-full overflow-clip">
+                                            <Image
+                                                priority
+                                                src={transaction.recipient_data?.avatar_url || avatarDefault.src}
+                                                width={40}
+                                                height={40}
+                                                alt={"User avatar"}
+                                            />
+                                        </div>
+                                    }
                                 </td>
                                 <td className="max-w-32 px-3 font-medium whitespace-nowrap">
                                     <p className="font-semibold text-ellipsis overflow-hidden">{transaction.title}</p>

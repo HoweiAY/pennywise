@@ -8,7 +8,14 @@ export const metadata: Metadata = {
     title: "New Transaction - PennyWise",
 }
 
-export default async function AddTransaction() {
+export default async function AddTransaction({
+    searchParams,
+}: {
+    searchParams?: {
+        transactionType?: string,
+        friendId?: string,
+    };
+}) {
     const { user } = await getAuthUser();
     const { status, message, data } = await getUserBalanceData(user.id);
     if (status != "success" || !data) {
@@ -27,16 +34,18 @@ export default async function AddTransaction() {
             status: transactionAmountStatus,
             message: transactionAmountMessage,
             data: transactionAmountData,
-        } = await getTotalTransactionAmount(user.id, "Expenditure", monthStartDateTime, currDateTime);
+        } = await getTotalTransactionAmount(user.id, "expenditure", monthStartDateTime, currDateTime);
         if (transactionAmountStatus !== "success") {
             console.error(transactionAmountMessage);
         } else if (transactionAmountData) {
-            remainingSpendingLimitInCents -= transactionAmountData["transactionAmount"] as number;
+            remainingSpendingLimitInCents -= transactionAmountData["transactionAmount"] ?? 0;
         }
     }
+    const transactionType = searchParams?.transactionType;
+    const payFriendId = searchParams?.friendId;
 
     return (
-        <main className="h-fit mb-2 overflow-hidden">
+        <main className="h-fit max-md:min-h-[80%] md:mb-2 overflow-hidden">
             <div className="px-6">
                 <header>
                     <h1 className="mt-8 text-3xl max-md:text-2xl font-semibold overflow-hidden whitespace-nowrap text-ellipsis">
@@ -51,6 +60,15 @@ export default async function AddTransaction() {
                     currency={currency}
                     balanceInCents={balanceInCents}
                     remainingSpendingLimitInCents={remainingSpendingLimitInCents}
+                    transactionType={transactionType === "deposit"
+                        ? "Deposit"
+                        : transactionType === "expense"
+                        ? "Expense"
+                        : transactionType === "pay_friend"
+                        ? "Pay friend"
+                        : undefined
+                    }
+                    payFriendId={payFriendId}
                 />
             </div>
         </main>

@@ -1,3 +1,4 @@
+import ReactQueryClientProvider from "@/components/providers/ReactQueryClientProvider";
 import { Toaster } from "@/components/ui/toaster";
 import { poppins } from "@/ui/fonts/fonts";
 import type { Metadata } from "next";
@@ -14,13 +15,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${poppins.variable} antialiased`}
-      >
-        {children}
-        <Toaster />
-      </body>
-    </html>
+    <ReactQueryClientProvider>
+      <html lang="en">
+        <body
+          className={`${poppins.variable} antialiased`}
+        >
+          {children}
+          <Toaster />
+        </body>
+      </html>
+    </ReactQueryClientProvider>
   );
 }

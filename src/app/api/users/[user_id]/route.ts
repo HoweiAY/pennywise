@@ -21,7 +21,7 @@ export async function GET(
         return NextResponse.json({}, { status: 404, statusText: "User not found" });
     }
     return NextResponse.json(
-        { data: userData[0] as UserData },
+        { data: userData[0] satisfies UserData },
         { status: 200 },
     );
 }
