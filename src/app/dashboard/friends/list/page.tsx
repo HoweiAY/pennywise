@@ -1,8 +1,10 @@
 import FriendsSearchBar from "@/components/dashboard/friends/friends-search-bar";
 import ListTabSelector from "@/components/dashboard/friends/list-tab-selector";
 import ListContainer from "@/components/dashboard/friends/list-container";
+import FriendsListContainerSkeleton from "@/ui/skeletons/friends-list-container-skeleton";
 import { getAuthUser } from "@/lib/data/auth";
 import { Metadata } from "next";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
     title: "Friend List - PennyWise",
@@ -27,18 +29,38 @@ export default async function List({
     const showListTab = () => {
         switch (tab) {
             case "pending":
-                return <ListContainer currUserId={user.id} type="pending" search={search} infiniteScroll={true} />;
+                return (
+                    <Suspense fallback={<FriendsListContainerSkeleton />}>
+                        <ListContainer currUserId={user.id} type="pending" search={search} infiniteScroll={true} />
+                    </Suspense>
+                );
             case "invited":
-                return <ListContainer currUserId={user.id} type="invited" search={search} infiniteScroll={true} />;
+                return (
+                    <Suspense fallback={<FriendsListContainerSkeleton />}>
+                        <ListContainer currUserId={user.id} type="invited" search={search} infiniteScroll={true} />
+                    </Suspense>
+                );
             case "my-friends":
-                return <ListContainer currUserId={user.id} type="friend" search={search} infiniteScroll={true} />;
+                return (
+                    <Suspense fallback={<FriendsListContainerSkeleton />}>
+                        <ListContainer currUserId={user.id} type="friend" search={search} infiniteScroll={true} />
+                    </Suspense>
+                );
             default:
                 return (
                     <>
-                        <ListContainer currUserId={user.id} type="pending" title="Pending" search={search} limit={3} />
-                        <ListContainer currUserId={user.id} type="invited" title="Invited" search={search} limit={3} />
-                        <ListContainer currUserId={user.id} type="friend" title="My friends" search={search} limit={3} />
-                        <ListContainer currUserId={user.id} type="all" title="All users" search={search} infiniteScroll={true} />
+                        <Suspense fallback={<FriendsListContainerSkeleton title="Pending" length={3} />}>
+                            <ListContainer currUserId={user.id} type="pending" title="Pending" search={search} limit={3} />
+                        </Suspense>
+                        <Suspense fallback={<FriendsListContainerSkeleton title="Invited" length={3} />}>
+                            <ListContainer currUserId={user.id} type="invited" title="Invited" search={search} limit={3} />
+                        </Suspense>
+                        <Suspense fallback={<FriendsListContainerSkeleton title="My friends" length={3} />}>
+                            <ListContainer currUserId={user.id} type="friend" title="My friends" search={search} limit={3} />
+                        </Suspense>
+                        <Suspense fallback={<FriendsListContainerSkeleton title="All users" />}>
+                            <ListContainer currUserId={user.id} type="all" title="All users" search={search} infiniteScroll={true} />
+                        </Suspense>
                     </>
                 );
         };

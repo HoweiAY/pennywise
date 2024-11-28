@@ -2,6 +2,11 @@ import UserProfileCard from "@/components/dashboard/profile/user-profile-card";
 import { UserData } from "@/lib/types/user";
 import { getAuthUser } from "@/lib/data/auth";
 import { getUserDataById } from "@/lib/data/user";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+    title: "My Profile - PennyWise",
+};
 
 export default async function MyProfile() {
     const { user } = await getAuthUser();

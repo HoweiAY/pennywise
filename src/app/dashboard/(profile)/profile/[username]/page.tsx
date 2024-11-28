@@ -1,5 +1,6 @@
 import UserProfileCard from "@/components/dashboard/profile/user-profile-card";
 import LatestActivitiesList from "@/components/dashboard/profile/latest-activities-list";
+import ProfileActivitiesListSkeleton from "@/ui/skeletons/profile-activities-list-skeleton";
 import { UserData } from "@/lib/types/user";
 import { FrinedshipStatus } from "@/lib/types/friend";
 import { TransactionItem } from "@/lib/types/transactions";
@@ -7,6 +8,16 @@ import { getAuthUser } from "@/lib/data/auth";
 import { getUserDataByUsername } from "@/lib/data/user";
 import { getFriendshipData } from "@/lib/data/friend";
 import { getPayFriendTransactions } from "@/lib/data/transaction";
+import { Metadata, ResolvingMetadata } from "next";
+import { Suspense } from "react";
+
+export async function generateMetadata(
+    { params }: { params: { username: string } },
+    parent: ResolvingMetadata,
+): Promise<Metadata> {
+    const endsWithS = params.username.slice(-1).toLowerCase() === "s"; 
+    return { title: `${params.username}'${!endsWithS ? "s" : ""} Profile - PennyWise`};
+}
 
 export default async function UserProfile({ params }: { params: { username: string } }) {
     const targetUsername = decodeURIComponent(params.username);
@@ -75,7 +86,9 @@ export default async function UserProfile({ params }: { params: { username: stri
                         </div>
                     }
                     {type === "friend" && friendId &&
-                        <LatestActivitiesList userId={user.id} friendId={friendId} friendUsername={userProfileData.username} />
+                        <Suspense fallback={<ProfileActivitiesListSkeleton />}>
+                            <LatestActivitiesList userId={user.id} friendId={friendId} friendUsername={userProfileData.username} />
+                        </Suspense>
                     }
                 </section>
             </div>

@@ -1,11 +1,14 @@
 import FriendsSearchBar from "@/components/dashboard/friends/friends-search-bar";
 import FriendInvitationsCarousel from "@/components/dashboard/friends/friend-invitations-carousel";
 import ListContainer from "@/components/dashboard/friends/list-container";
+import FriendsListContainerSkeleton from "@/ui/skeletons/friends-list-container-skeleton";
+import FriendInvitationsCarouselSkeleton from "@/ui/skeletons/friend-invitations-carousel-skeleton";
 import { ArrowRightIcon } from "@heroicons/react/24/outline";
 import { UserGroupIcon } from "@heroicons/react/24/solid";
 import { getAuthUser } from "@/lib/data/auth";
 import { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
     title: "Friends - PennyWise",
@@ -30,7 +33,9 @@ export default async function Friends() {
                     <h2 className="self-start text-2xl max-md:text-xl font-semibold">
                         Pending invitations
                     </h2>
-                    <FriendInvitationsCarousel currUserId={user.id} />
+                    <Suspense fallback={<FriendInvitationsCarouselSkeleton />}>
+                        <FriendInvitationsCarousel currUserId={user.id} />
+                    </Suspense>
                     <Link
                         href={"/dashboard/friends/list?tab=pending"}
                         className="self-end flex flex-row items-center gap-2 mr-6 max-md:mr-3 md:text-lg font-semibold hover:underline"
@@ -52,11 +57,13 @@ export default async function Friends() {
                             <span className="mr-1 max-md:text-sm">Friend list</span>
                         </Link>
                     </div>
-                    <ListContainer
-                        currUserId={user.id}
-                        type="friend"
-                        limit={5}
-                    />
+                    <Suspense fallback={<FriendsListContainerSkeleton />}>
+                        <ListContainer
+                            currUserId={user.id}
+                            type="friend"
+                            limit={5}
+                        />
+                    </Suspense>
                 </section>
             </div>
         </main>
