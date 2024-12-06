@@ -216,6 +216,7 @@ export async function updateTransaction(
             balance,
             remainingSpendingLimit,
             type,
+            friend: null,
             budget,
             remainingBudgetAmount,
             category,
