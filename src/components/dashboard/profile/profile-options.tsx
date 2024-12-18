@@ -34,7 +34,7 @@ export function MyProfileOptions() {
     return (
         <div className="flex flex-row max-md:justify-center items-center">
             <Link
-                href={"/dashboard/my-profile/edit"}
+                href={"/dashboard/settings"}
                 className="flex shrink-0 justify-center items-center gap-2 hover:border-blue-600 rounded-lg w-fit max-md:w-full h-12 max-md:h-10 px-6 text-white max-md:text-sm font-semibold bg-blue-500 hover:bg-blue-600 transition-colors duration-200"
             >
                 <PencilSquareIcon className="w-6 h-6 max-md:w-5 max-md:h-5" />

@@ -1,4 +1,4 @@
-import { AuthFormState, TransactionFormState, BudgetFormState } from "@/lib/types/form-state";
+import { AuthFormState, UserProfileFormState, TransactionFormState, BudgetFormState } from "@/lib/types/form-state";
 import { unescape } from "querystring";
 
 export function amountPercentageChange(oldAmountInCents: number, newAmountInCents: number): number {
@@ -13,6 +13,20 @@ export function authErrorMessage(error: AuthFormState | undefined): string {
             if (username) return username[0];
             if (email) return email[0];
             if (password) return password[0];
+        }
+        if (error.message) errorMessage = error.message;
+    }
+    return errorMessage;
+}
+
+export function userProfileErrorMessage(error: UserProfileFormState | undefined): string {
+    let errorMessage = "An error has occurred";
+    if (error) {
+        if (error.error) {
+            const { username, email, country } = error.error;
+            if (username) return username[0];
+            if (email) return email[0];
+            if (country) return country[0];
         }
         if (error.message) errorMessage = error.message;
     }
