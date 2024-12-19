@@ -82,8 +82,8 @@ export async function updateUserProfile(
 }
 
 export async function updateUserAvatar(
-    userId: string,
     avatarSrc: string,
+    removeUrl: string | null,
 ): Promise<ServerActionResponse<string>> {
     try {
         const avatarBlob = dataUrlToBlob(avatarSrc);
@@ -92,7 +92,19 @@ export async function updateUserAvatar(
         if (!user) {
             throw new Error("User not found");
         }
-        const avatarUrl = `${user.id}.${avatarBlob.type.split("/")[1]}`;
+        if (removeUrl) {
+            const { error: removeUrlError } = await supabase
+                .storage
+                .from("avatars")
+                .remove([removeUrl]);
+            if (removeUrlError) {
+                return {
+                    status: "error",
+                    message: removeUrlError.message,
+                };
+            }
+        }
+        const avatarUrl = `${user.id}-${new Date().toISOString()}.${avatarBlob.type.split("/")[1]}`;
         const { data: avatarUploadData, error } = await supabase
             .storage
             .from("avatars")

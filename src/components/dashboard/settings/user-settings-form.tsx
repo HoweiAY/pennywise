@@ -88,14 +88,16 @@ export default function UserSettingsForm({
             return;
           }
           if (avatarSrc !== avatarUrl) {
+            const splitAvatarUrl = avatarUrl?.split("/");
+            const removeUrl = splitAvatarUrl?.[splitAvatarUrl?.length - 1] ?? null;
             const {
               status: avatarStatus,
               message: avatarMessage,
               data: avatarUrlData,
-            } = await updateUserAvatar(userId, avatarSrc);
+            } = await updateUserAvatar(avatarSrc, removeUrl);
             if (avatarStatus !== "success" || !avatarUrlData) {
               console.error(avatarMessage);
-              throw new Error("Failed to upload user avatar");
+              throw new Error(avatarMessage || "Failed to upload user avatar");
             }
             avatarUrl = avatarUrlData["publicUrl"];
           }
