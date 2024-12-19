@@ -41,6 +41,7 @@ export type UserProfileFormData = {
     country: string,
     spending_limit?: number | null,
     avatar_url?: string | null,
+    updated_at?: string,
 };
 
 export type TransactionFormState = {
@@ -72,6 +73,7 @@ export type TransactionFormData = {
     recipient_id?: string | null,
     budget_id?: string | null,
     description: string | null,
+    updated_at?: string,
     created_at?: string,
 };
 

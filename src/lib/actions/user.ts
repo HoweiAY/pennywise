@@ -54,6 +54,7 @@ export async function updateUserProfile(
             last_name: validatedProfileData.data.lastName,
             country: validatedProfileData.data.country,
             avatar_url: validatedProfileData.data.avatarUrl,
+            updated_at: new Date().toISOString(),
         };
         userProfileData.spending_limit = validatedProfileData.data.spendingLimit
             ? Math.trunc(validatedProfileData.data.spendingLimit * 10 * 10)
