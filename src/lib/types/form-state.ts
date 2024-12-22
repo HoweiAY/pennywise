@@ -20,6 +20,30 @@ export type AccountSetupFormData = {
     avatar_url?: string | null,
 };
 
+export type UserProfileFormState = {
+    error?: {
+        username?: string[] | undefined;
+        email?: string[] | undefined;
+        firstName?: string[] | undefined;
+        lastName?: string[] | undefined;
+        country?: string[] | undefined;
+        spendingLimit?: string[] | undefined;
+        avatarUrl?: string[] | undefined;
+    };
+    message?: string | null;
+};
+
+export type UserProfileFormData = {
+    username: string,
+    email: string,
+    first_name?: string | null,
+    last_name?: string | null,
+    country: string,
+    spending_limit?: number | null,
+    avatar_url?: string | null,
+    updated_at?: string,
+};
+
 export type TransactionFormState = {
     error?: {
         title?: string[] | undefined;
@@ -49,6 +73,7 @@ export type TransactionFormData = {
     recipient_id?: string | null,
     budget_id?: string | null,
     description: string | null,
+    updated_at?: string,
     created_at?: string,
 };
 

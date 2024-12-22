@@ -216,6 +216,7 @@ export async function updateTransaction(
             balance,
             remainingSpendingLimit,
             type,
+            friend: null,
             budget,
             remainingBudgetAmount,
             category,
@@ -266,6 +267,7 @@ export async function updateTransaction(
             transaction_type: validatedTransactionData.data.type,
             amount: amountInCents,
             description: validatedTransactionData.data.description,
+            updated_at: new Date().toISOString(),
         };
         if (transactionType !== "Deposit") {
             transactionData.budget_id = budgetId;

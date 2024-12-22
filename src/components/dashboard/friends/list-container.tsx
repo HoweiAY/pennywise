@@ -16,6 +16,7 @@ export default async function ListContainer({
     title,
     search,
     limit,
+    size,
     infiniteScroll,
 }: {
     type: FriendshipType | "invited" | "all",
@@ -23,6 +24,7 @@ export default async function ListContainer({
     title?: string,
     search?: string,
     limit?: number,
+    size?: "small" | "normal",
     infiniteScroll?: boolean,
 }) {
     const getUsers = type === "all"
@@ -36,7 +38,7 @@ export default async function ListContainer({
         getUsers,
     ]);
     if (status !== "success" || !data) {
-        console.error(message || `Error fetching users${type !== "all" && "' friends"}`);
+        console.error(message || `Error fetching users${type !== "all" ? "' friends" : ""}`);
     }
     const users = data && data["usersData"] ? data["usersData"] : [];
     const friends = data && data["userFriendsData"] ? data["userFriendsData"] : [];
@@ -44,13 +46,48 @@ export default async function ListContainer({
     const showList = () => {
         switch (type) {
             case "all":
-                return <UserList currUserId={user.id} users={users as UserData[]} length={limit} infiniteScroll={infiniteScroll} />;
+                return (
+                    <UserList
+                        currUserId={user.id}
+                        users={users as UserData[]}
+                        search={search}
+                        length={limit}
+                        infiniteScroll={infiniteScroll}
+                    />
+                );
             case "friend":
-                return <FriendList currUserId={currUserId} friends={friends as FriendsData[]} length={limit} infiniteScroll={infiniteScroll} />;
+                return (
+                    <FriendList
+                        currUserId={currUserId}
+                        friends={friends as FriendsData[]}
+                        search={search}
+                        length={limit}
+                        size={size}
+                        infiniteScroll={infiniteScroll}
+                    />
+                );
             case "pending":
-                return <PendingList currUserId={currUserId} friends={friends as FriendsData[]} length={limit} infiniteScroll={infiniteScroll} />;
+                return (
+                    <PendingList
+                        currUserId={currUserId}
+                        friends={friends as FriendsData[]}
+                        search={search}
+                        length={limit}
+                        size={size}
+                        infiniteScroll={infiniteScroll}
+                    />
+                );
             case "invited":
-                return <InvitedList currUserId={currUserId} friends={friends as FriendsData[]} length={limit} infiniteScroll={infiniteScroll} />;
+                return (
+                    <InvitedList
+                        currUserId={currUserId}
+                        friends={friends as FriendsData[]}
+                        search={search}
+                        length={limit}
+                        size={size}
+                        infiniteScroll={infiniteScroll}
+                    />
+                );
             default:
                 return <></>;
         }
@@ -58,7 +95,7 @@ export default async function ListContainer({
 
     return (
         <div className="w-full mt-4">
-            {title && 
+            {title &&
                 <h2 className="pt-4 max-md:pt-3 text-2xl max-md:text-xl font-semibold">
                     {title}
                 </h2>

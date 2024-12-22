@@ -29,12 +29,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useCallback, useTransition } from "react";
 import { useToast } from "@/hooks/use-toast";
+import clsx from "clsx";
 
 export function MyProfileOptions() {
     return (
         <div className="flex flex-row max-md:justify-center items-center">
             <Link
-                href={"/dashboard/my-profile/edit"}
+                href={"/dashboard/settings"}
                 className="flex shrink-0 justify-center items-center gap-2 hover:border-blue-600 rounded-lg w-fit max-md:w-full h-12 max-md:h-10 px-6 text-white max-md:text-sm font-semibold bg-blue-500 hover:bg-blue-600 transition-colors duration-200"
             >
                 <PencilSquareIcon className="w-6 h-6 max-md:w-5 max-md:h-5" />
@@ -48,16 +49,24 @@ export function FriendProfileOptions({
     currUserId,
     targetUserId,
     targetUsername,
+    size,
 }: {
     currUserId: string,
     targetUserId: string,
     targetUsername: string,
+    size?: "small" | "normal",
 }) {
     return (
         <div className="flex flex-row justify-end max-md:justify-center items-center gap-3 max-md:gap-1 max-md:mx-3">
             <Link
                 href={`/dashboard/transactions/new?transactionType=pay_friend&friendId=${targetUserId}`}
-                className="flex shrink-0 justify-center items-center hover:border-blue-600 rounded-lg w-fit max-md:w-full h-12 max-md:h-10 px-6 text-white max-md:text-sm font-semibold bg-blue-500 hover:bg-blue-600 transition-colors duration-200"
+                className={clsx(
+                    "flex shrink-0 justify-center items-center hover:border-blue-600 rounded-lg w-fit max-md:w-full px-6 text-white max-md:text-sm font-semibold bg-blue-500 hover:bg-blue-600 transition-colors duration-200",
+                    {
+                        "h-12 max-md:h-10": !size || size === "normal",
+                        "h-10 max-md:h-8 max-md:px-3": size === "small",
+                    },
+                )}
             >
                 Pay friend
             </Link>
@@ -91,10 +100,12 @@ export function UserProfileOptions({
     currUserId,
     targetUserId,
     targetUsername,
+    size,
 }: {
     currUserId: string,
     targetUserId: string,
     targetUsername: string,
+    size?: "small" | "normal",
 }) {
     const [ processingInvitation, setProcessingInvitation ] = useState<boolean>(false);
     const [ isPending, startTransition ] = useTransition();
@@ -129,7 +140,13 @@ export function UserProfileOptions({
     return (
         <div className="flex flex-row justify-end max-md:justify-center items-center gap-3 max-md:gap-1 max-md:mx-3">
             <button
-                className="flex shrink-0 justify-center items-center gap-2 hover:border-blue-600 rounded-lg w-fit max-md:w-full h-12 max-md:h-10 px-6 text-white max-md:text-sm font-semibold bg-blue-500 hover:bg-blue-600 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 transition-colors duration-200"
+                className={clsx(
+                    "flex shrink-0 justify-center items-center gap-2 hover:border-blue-600 rounded-lg w-fit max-md:w-full px-6 text-white max-md:text-sm font-semibold bg-blue-500 hover:bg-blue-600 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 transition-colors duration-200",
+                    {
+                        "h-12 max-md:h-10": !size || size === "normal",
+                        "h-10 max-md:h-8 max-md:px-3": size === "small",
+                    },
+                )}
                 onClick={handleInviteFriend}
                 aria-disabled={processingInvitation || isPending}
             >
@@ -168,10 +185,12 @@ export function PendingProfileOptions({
     currUserId,
     targetUserId,
     targetUsername,
+    size,
 }: {
     currUserId: string,
     targetUserId: string,
     targetUsername: string,
+    size?: "small" | "normal",
 }) {
     const [ processingSelection, setProcessingSelection ] = useState<boolean>(false);
     const [ isPending, startTransition ] = useTransition();
@@ -209,10 +228,23 @@ export function PendingProfileOptions({
     }, [currUserId, targetUserId]);
 
     return (
-        <div className="flex flex-row justify-end max-md:justify-center items-center gap-3 max-md:mx-3">
-            <div className="flex flex-col lg:flex-row max-md:flex-row justify-center items-center gap-3 w-full">
+        <div className="flex flex-row justify-end max-md:justify-center items-center gap-3 max-md:gap-1 max-md:mx-3">
+            <div className={clsx(
+                    "flex flex-col lg:flex-row max-md:flex-row justify-center items-center gap-3 w-full",
+                    {
+                        "gap-3": !size || size === "normal",
+                        "md:flex-row max-md:gap-2": size === "small",
+                    }
+                )}
+            >
                 <button
-                    className="flex justify-center items-center gap-1 border border-green-500 rounded-lg w-full h-12 max-lg:h-10 px-6 text-green-500 hover:text-white max-md:text-sm font-semibold bg-green-100 hover:bg-green-500 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 transition-colors duration-200"
+                    className={clsx(
+                        "flex justify-center items-center gap-1 border border-green-500 rounded-lg w-full px-6 text-green-500 hover:text-white max-md:text-sm font-semibold bg-green-100 hover:bg-green-500 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 transition-colors duration-200",
+                        {
+                            "h-12 max-md:h-10": !size || size === "normal",
+                            "h-10 max-md:h-8 max-md:px-2": size === "small",
+                        },
+                    )}
                     onClick={async () => await handleSelectInviteOption("accept")}
                     aria-disabled={processingSelection || isPending}
                 >
@@ -220,7 +252,13 @@ export function PendingProfileOptions({
                     Accept
                 </button>
                 <button
-                    className="flex justify-center items-center gap-1 border border-rose-600 rounded-lg w-full h-12 max-lg:h-10 px-6 text-rose-600 hover:text-white max-md:text-sm font-semibold bg-rose-100 hover:bg-rose-600 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 transition-colors duration-200"
+                    className={clsx(
+                        "flex justify-center items-center gap-1 border border-rose-600 rounded-lg w-full px-6 text-rose-600 hover:text-white max-md:text-sm font-semibold bg-rose-100 hover:bg-rose-600 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 transition-colors duration-200",
+                        {
+                            "h-12 max-md:h-10": !size || size === "normal",
+                            "h-10 max-md:h-8 max-md:px-2": size === "small",
+                        },
+                    )}
                     onClick={async () => await handleSelectInviteOption("decline")}
                     aria-disabled={processingSelection || isPending}
                 >
@@ -260,10 +298,12 @@ export function InvitedProfileOptions({
     currUserId,
     targetUserId,
     targetUsername,
+    size,
 }: {
     currUserId: string,
     targetUserId: string,
     targetUsername: string,
+    size?: "small" | "normal",
 }) {
     const [ cancelling, setCancellng ] = useState<boolean>(false);
     const [ isPending, startTransition ] = useTransition();
@@ -282,7 +322,13 @@ export function InvitedProfileOptions({
     return (
         <div className="flex flex-row justify-end max-md:justify-center items-center gap-3 max-md:gap-1 max-md:mx-3">
             <button
-                className="flex justify-center items-center border border-blue-500 hover:border-blue-600 rounded-lg w-28 max-md:w-full h-12 max-md:h-10 px-6 text-blue-500 hover:text-white max-md:text-sm font-semibold bg-sky-100 hover:bg-blue-600 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 after:content-['Pending'] hover:after:content-['Cancel'] focus:after:content-['Cancel']"
+                className={clsx(
+                    "flex justify-center items-center border border-blue-500 hover:border-blue-600 rounded-lg w-28 max-md:w-full h-12 max-md:h-10 px-6 text-blue-500 hover:text-white max-md:text-sm font-semibold bg-sky-100 hover:bg-blue-600 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 after:content-['Pending'] hover:after:content-['Cancel'] focus:after:content-['Cancel']",
+                    {
+                        "h-12 max-md:h-10": !size || size === "normal",
+                        "h-10 max-md:h-8 max-md:px-4": size === "small",
+                    }
+                )}
                 onClick={handleCancelInvitation}
                 aria-disabled={cancelling || isPending}
             />
@@ -319,11 +365,13 @@ export function BlockedProfileOptions({
     targetUserId,
     targetUsername,
     blockedId,
+    size,
 }: {
     currUserId: string,
     targetUserId: string,
     targetUsername: string,
     blockedId?: string | null,
+    size?: "small" | "normal",
 }) {
     const [ cancellingBlockAction, setCancellingBlock ] = useState<boolean>(false);
     const [ isPending, startTransition ] = useTransition();
@@ -344,7 +392,13 @@ export function BlockedProfileOptions({
         return (
             <div className="flex flex-row justify-end max-md:justify-center items-center gap-3 max-md:gap-1 max-md:mx-3">
                 <button
-                    className="flex justify-center items-center border border-blue-500 hover:border-blue-600 rounded-lg w-28 max-md:w-full h-12 max-md:h-10 px-6 text-blue-500 hover:text-white max-md:text-sm font-semibold bg-sky-100 hover:bg-blue-600 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 after:content-['Blocked'] hover:after:content-['Unblock'] focus:after:content-['Unblock']"
+                    className={clsx(
+                        "flex justify-center items-center border border-blue-500 hover:border-blue-600 rounded-lg w-28 max-md:w-full h-12 max-md:h-10 px-6 text-blue-500 hover:text-white max-md:text-sm font-semibold bg-sky-100 hover:bg-blue-600 aria-disabled:cursor-not-allowed aria-disabled:opacity-50 after:content-['Blocked'] hover:after:content-['Unblock'] focus:after:content-['Unblock']",
+                        {
+                            "h-12 max-md:h-10": !size || size === "normal",
+                            "h-10 max-md:h-8 max-md:px-3": size === "small",
+                        },
+                    )}
                     onClick={handleCancelBlock}
                     aria-disabled={cancellingBlockAction || isPending}
                 />

@@ -7,7 +7,12 @@ const nextConfig = {
                 hostname: "**",
             }
         ]
-    }
+    },
+    experimental: {
+        serverActions: {
+            bodySizeLimit: '50mb',
+        },
+  },
 };
 
 export default nextConfig;

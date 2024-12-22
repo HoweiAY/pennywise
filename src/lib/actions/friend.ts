@@ -45,7 +45,10 @@ export async function acceptFriendInvite(
         const supabase = await createSupabaseServerClient();
         const { error } = await supabase
             .from("friendships")
-            .update({ status: "friend" })
+            .update({
+                status: "friend",
+                updated_at: new Date().toISOString(),
+            })
             .eq("inviter_id", inviterId)
             .eq("invitee_id", inviteeId);
         if (error) {
@@ -135,7 +138,11 @@ export async function blockUser(
         if (userId === blockedId) {
             throw new Error("User and blocked IDs cannot be identical");
         }
-        const updateStatus: { [status: string]: string } = { status: "blocked" };
+        const updateStatus: { [status: string]: string } = {
+            status: "blocked",
+            blocked_id: blockedId,
+            updated_at: new Date().toISOString(),
+        };
         const { status, data } = await getFriendshipData(userId, blockedId);
 
         const supabase = await createSupabaseServerClient();
@@ -145,12 +152,7 @@ export async function blockUser(
             updateStatus["invitee_id"] = data["friendshipData"][0].invitee_id;
             supabaseQuery = supabase
                 .from("friendships")
-                .update({
-                    inviter_id: data["friendshipData"][0].inviter_id,
-                    invitee_id: data["friendshipData"][0].invitee_id,
-                    status: "blocked",
-                    blocked_id: blockedId,
-                })
+                .update(updateStatus)
                 .or(`and(inviter_id.eq.${userId},invitee_id.eq.${blockedId}),and(inviter_id.eq.${blockedId},invitee_id.eq.${userId})`);
                 ;
         } else {
