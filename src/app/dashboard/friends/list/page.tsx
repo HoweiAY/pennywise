@@ -35,6 +35,7 @@ export default async function List({
                             currUserId={user.id}
                             type="pending"
                             search={search}
+                            limit={10}
                             size="small"
                             infiniteScroll={true}
                         />
@@ -47,6 +48,7 @@ export default async function List({
                             currUserId={user.id}
                             type="invited"
                             search={search}
+                            limit={10}
                             size="small"
                             infiniteScroll={true}
                         />
@@ -59,6 +61,7 @@ export default async function List({
                             currUserId={user.id}
                             type="friend"
                             search={search}
+                            limit={10}
                             size="small"
                             infiniteScroll={true}
                         />

@@ -10,7 +10,11 @@ export async function GET(
     const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get("status");
     const limit = searchParams.get("limit");
+    const offset = searchParams.get("offset");
     const { user_id: userId } = await params;
+
+    const itemsLimit = limit && !isNaN(parseInt(limit)) ? Math.abs(parseInt(limit)) : 10;
+    const itemsOffset = offset && !isNaN(parseInt(offset)) ? Math.abs(parseInt(offset)) : null;
 
     const supabase = await createSupabaseServerClient();
     let supabaseQuery = supabase
@@ -34,6 +38,9 @@ export async function GET(
             supabaseQuery = supabaseQuery.or(`inviter_id.eq.${userId}, invitee_id.eq.${userId}`);
         }
         supabaseQuery = supabaseQuery.eq("status", status === "invited" ? "pending" : status);
+    }
+    if (itemsOffset) {
+        supabaseQuery = supabaseQuery.range(itemsOffset, itemsOffset + itemsLimit - 1);
     }
     if (limit && !isNaN(parseInt(limit))) {
         supabaseQuery = supabaseQuery.limit(parseInt(limit));

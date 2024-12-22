@@ -70,7 +70,7 @@ export function UserList({
             return lastPage.length > 0 ? lastPageParam + lastPage.length : null;
         },
         refetchOnWindowFocus: false,
-        enabled: infiniteScroll,
+        enabled: infiniteScroll ?? false,
     });
 
     useEffect(() => {
@@ -99,7 +99,7 @@ export function UserList({
                     </li>
                 )
             })}
-            {userListData.length === 0 &&
+            {!fetchingUsers && userListData.length === 0 &&
                 <div className="flex flex-col justify-center items-center w-full h-48 mb-6 border-0 rounded-xl bg-gray-100">
                     <p className="text-center text-xl max-md:text-lg font-semibold">
                         No users found
@@ -131,12 +131,56 @@ export function FriendList({
 }) {
     const [ filteredFriends, setFilteredFriends ] = useState<FriendsData[]>(friends);
 
+    const { ref, inView } = useInView({ threshold: 0.8 });
+
+    const {
+        data: newFriends,
+        isFetching: fetchingFriends,
+        hasNextPage: hasMoreFriends,
+        fetchNextPage: fetchMoreFriends,
+    } = useInfiniteQuery({
+        queryKey: ["friends", friends, length, infiniteScroll],
+        queryFn: async ({ pageParam: offset }) => {
+            const res = await fetch(
+                `${baseUrl}/api/users/${currUserId}/friends?status=friend&offset=${offset}`,
+                { cache: "no-store" },
+            );
+            if (res.status !== 200) {
+                console.error(res.statusText);
+                return [];
+            }
+            const { data: friendsData } = await res.json() as { data: FriendsData[] };
+            return friendsData;
+        },
+        initialPageParam: friends.length,
+        getNextPageParam: (lastPage, allPages, lastPageParam, allPageParams) => {
+            return lastPage.length > 0 ? lastPageParam + lastPage.length : null;
+        },
+        refetchOnWindowFocus: false,
+        enabled: infiniteScroll ?? false,
+    });
+
     useEffect(() => {
-        setFilteredFriends(filterFriendsData(friends, search));
-    }, [friends, search]);
+        if (inView && hasMoreFriends) {
+            fetchMoreFriends();
+        }
+    }, [inView, hasMoreFriends]);
+
+    useEffect(() => {
+        const newFriendData = newFriends?.pages.flat() ?? [];
+        setFilteredFriends(
+            filterFriendsData(
+                [...friends, ...newFriendData],
+                search,
+            )
+        );
+    }, [friends, newFriends, search]);
 
     return (
-        <ul className="flex flex-col items-center gap-3 w-full pt-4 max-md:pt-3">
+        <ul
+            ref={ref}
+            className="flex flex-col items-center gap-3 w-full pt-4 max-md:pt-3"
+        >
             {filteredFriends.map((friendData, idx) => {
                 const friendId = friendData.inviter_id === currUserId ? friendData.invitee_id : friendData.inviter_id;
                 const targetFriend = friendData.inviter_id === currUserId ? friendData.invitee_data : friendData.inviter_data;
@@ -157,7 +201,7 @@ export function FriendList({
                     </li>
                 )
             })}
-            {filteredFriends.length === 0 &&
+            {!fetchingFriends && filteredFriends.length === 0 &&
                 <div className="flex flex-col justify-center items-center w-full h-48 mb-6 border-0 rounded-xl bg-gray-100">
                     <p className="text-center text-xl max-md:text-lg font-semibold">
                         No friends found
@@ -167,6 +211,7 @@ export function FriendList({
                     </p>
                 </div>
             }
+            {fetchingFriends && <InfiniteScrollLoadingSkeleton />}
         </ul>
     )
 }
@@ -188,12 +233,56 @@ export function PendingList({
 }) {
     const [ filteredFriends, setFilteredFriends ] = useState<FriendsData[]>(friends);
 
+    const { ref, inView } = useInView({ threshold: 0.8 });
+
+    const {
+        data: newFriends,
+        isFetching: fetchingFriends,
+        hasNextPage: hasMoreFriends,
+        fetchNextPage: fetchMoreFriends,
+    } = useInfiniteQuery({
+        queryKey: ["friends", friends, length, infiniteScroll],
+        queryFn: async ({ pageParam: offset }) => {
+            const res = await fetch(
+                `${baseUrl}/api/users/${currUserId}/friends?status=pending&offset=${offset}`,
+                { cache: "no-store" },
+            );
+            if (res.status !== 200) {
+                console.error(res.statusText);
+                return [];
+            }
+            const { data: friendsData } = await res.json() as { data: FriendsData[] };
+            return friendsData;
+        },
+        initialPageParam: friends.length,
+        getNextPageParam: (lastPage, allPages, lastPageParam, allPageParams) => {
+            return lastPage.length > 0 ? lastPageParam + lastPage.length : null;
+        },
+        refetchOnWindowFocus: false,
+        enabled: infiniteScroll ?? false,
+    });
+
     useEffect(() => {
-        setFilteredFriends(filterFriendsData(friends, search));
-    }, [friends, search]);
+        if (inView && hasMoreFriends) {
+            fetchMoreFriends();
+        }
+    }, [inView, hasMoreFriends]);
+
+    useEffect(() => {
+        const newFriendData = newFriends?.pages.flat() ?? [];
+        setFilteredFriends(
+            filterFriendsData(
+                [...friends, ...newFriendData],
+                search,
+            )
+        );
+    }, [friends, newFriends, search]);
 
     return (
-        <ul className="flex flex-col items-center gap-3 w-full pt-4 max-md:pt-3">
+        <ul 
+            ref={ref}
+            className="flex flex-col items-center gap-3 w-full pt-4 max-md:pt-3"
+        >
             {filteredFriends.map((friendData, idx) => {
                 return (
                     <li
@@ -212,7 +301,7 @@ export function PendingList({
                     </li>
                 )
             })}
-            {filteredFriends.length === 0 &&
+            {!fetchingFriends && filteredFriends.length === 0 &&
                 <div className="flex flex-col justify-center items-center w-full h-48 mb-6 border-0 rounded-xl bg-gray-100">
                     <p className="text-center text-xl max-md:text-lg font-semibold">
                         No pending invitations
@@ -222,6 +311,7 @@ export function PendingList({
                     </p>
                 </div>
             }
+            {fetchingFriends && <InfiniteScrollLoadingSkeleton />}
         </ul>
     )
 }
@@ -243,12 +333,56 @@ export function InvitedList({
 }) {
     const [ filteredFriends, setFilteredFriends ] = useState<FriendsData[]>(friends);
 
+    const { ref, inView } = useInView({ threshold: 0.8 });
+
+    const {
+        data: newFriends,
+        isFetching: fetchingFriends,
+        hasNextPage: hasMoreFriends,
+        fetchNextPage: fetchMoreFriends,
+    } = useInfiniteQuery({
+        queryKey: ["friends", friends, length, infiniteScroll],
+        queryFn: async ({ pageParam: offset }) => {
+            const res = await fetch(
+                `${baseUrl}/api/users/${currUserId}/friends?status=invited&offset=${offset}`,
+                { cache: "no-store" },
+            );
+            if (res.status !== 200) {
+                console.error(res.statusText);
+                return [];
+            }
+            const { data: friendsData } = await res.json() as { data: FriendsData[] };
+            return friendsData;
+        },
+        initialPageParam: friends.length,
+        getNextPageParam: (lastPage, allPages, lastPageParam, allPageParams) => {
+            return lastPage.length > 0 ? lastPageParam + lastPage.length : null;
+        },
+        refetchOnWindowFocus: false,
+        enabled: infiniteScroll ?? false,
+    });
+
     useEffect(() => {
-        setFilteredFriends(filterFriendsData(friends, search));
-    }, [friends, search]);
+        if (inView && hasMoreFriends) {
+            fetchMoreFriends();
+        }
+    }, [inView, hasMoreFriends]);
+
+    useEffect(() => {
+        const newFriendData = newFriends?.pages.flat() ?? [];
+        setFilteredFriends(
+            filterFriendsData(
+                [...friends, ...newFriendData],
+                search,
+            )
+        );
+    }, [friends, newFriends, search]);
 
     return (
-        <ul className="flex flex-col items-center gap-3 w-full pt-4 max-md:pt-3">
+        <ul
+            ref={ref}
+            className="flex flex-col items-center gap-3 w-full pt-4 max-md:pt-3"
+        >
             {filteredFriends.map((friendData, idx) => {
                 return (
                     <li
@@ -267,7 +401,7 @@ export function InvitedList({
                     </li>
                 )
             })}
-            {filteredFriends.length === 0 &&
+            {!fetchingFriends && filteredFriends.length === 0 &&
                 <div className="flex flex-col justify-center items-center w-full h-48 mb-6 border-0 rounded-xl bg-gray-100">
                     <p className="text-center text-xl max-md:text-lg font-semibold">
                         No invitations sent
@@ -277,6 +411,7 @@ export function InvitedList({
                     </p>
                 </div>
             }
+            {fetchingFriends && <InfiniteScrollLoadingSkeleton />}
         </ul>
     )
 }
