@@ -16,7 +16,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<RouteHandl
     const supabase = await createSupabaseServerClient();
     let supabaseQuery = supabase
         .from("users")
-        .select("username, email, first_name, last_name, country, avatar_url");
+        .select("user_id, username, email, first_name, last_name, country, avatar_url");
     if (searchQuery) {
         supabaseQuery = supabaseQuery.ilike("username", `%${searchQuery}%`);
     }
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<RouteHandl
         return NextResponse.json({}, { status: 500, statusText: error.message });
     }
     return NextResponse.json(
-        { data: usersData satisfies UserData[] },
+        { data: usersData satisfies UserData[] ?? [] },
         { status: 200 },
     );
 }

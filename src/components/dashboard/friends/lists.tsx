@@ -8,23 +8,88 @@ import {
     InvitedProfileOptions,
     BlockedProfileOptions,
 } from "@/components/dashboard/profile/profile-options";
+import { baseUrl } from "@/lib/utils/constant";
 import { UserData } from "@/lib/types/user";
 import { FriendsData } from "@/lib/types/friend";
+import { useState, useEffect } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInView } from "react-intersection-observer";
+
+function filterFriendsData(friends: FriendsData[], search?: string) {
+    if (!search) {
+        return friends;
+    }
+    const filteredFriends = friends.filter(friendData => {
+        const { inviter_data: inviterData, invitee_data: inviteeData } = friendData;
+        return (
+            inviterData?.username?.toLowerCase().includes(search.toLowerCase()) ||
+            inviteeData?.username?.toLowerCase().includes(search.toLowerCase())
+        );
+    });
+    return filteredFriends;
+}
 
 export function UserList({
     currUserId,
     users,
+    search,
     length,
     infiniteScroll,
 }: {
     currUserId: string,
     users: UserData[],
+    search?: string,
     length?: number,
     infiniteScroll?: boolean,
 }) {
+    const [userListData, setUserListData] = useState<UserData[]>(users);
+
+    const { ref, inView } = useInView({ threshold: 0.8 });
+
+    const {
+        data: newUsers,
+        isFetching: fetchingUsers,
+        hasNextPage: hasMoreUsers,
+        fetchNextPage: fetchMoreUsers,
+    } = useInfiniteQuery({
+        queryKey: ["users", users, length, infiniteScroll],
+        queryFn: async ({ pageParam: offset }) => {
+            const res = await fetch(
+                `${baseUrl}/api/users?search=${search}&limit=${length}&offset=${offset}&excludeCurrentUser=true`,
+                { cache: "no-store" },
+            );
+            if (res.status !== 200) {
+                console.error(res.statusText);
+                return [];
+            }
+            const { data: usersData } = await res.json() as { data: UserData[] };
+            return usersData;
+        },
+        initialPageParam: users.length,
+        getNextPageParam: (lastPage, allPages, lastPageParam, allPageParams) => {
+            return lastPage.length > 0 ? lastPageParam + lastPage.length : null;
+        },
+        refetchOnWindowFocus: false,
+        enabled: infiniteScroll,
+    });
+
+    useEffect(() => {
+        if (inView && hasMoreUsers) {
+            fetchMoreUsers();
+        }
+    }, [inView, hasMoreUsers]);
+
+    useEffect(() => {
+        const newUserData = newUsers?.pages.flat() ?? [];
+        setUserListData([...users, ...newUserData]);
+    }, [users, newUsers]);
+
     return (
-        <ul className="flex flex-col items-center gap-3 w-full pt-4 max-md:pt-3">
-            {users.map((userData, idx) => {
+        <ul
+            ref={ref}
+            className="flex flex-col items-center gap-3 w-full pt-4 max-md:pt-3"
+        >
+            {userListData.map((userData, idx) => {
                 return (
                     <li
                         key={`friend_${idx}`}
@@ -34,7 +99,7 @@ export function UserList({
                     </li>
                 )
             })}
-            {users.length === 0 &&
+            {userListData.length === 0 &&
                 <div className="flex flex-col justify-center items-center w-full h-48 mb-6 border-0 rounded-xl bg-gray-100">
                     <p className="text-center text-xl max-md:text-lg font-semibold">
                         No users found
@@ -44,6 +109,7 @@ export function UserList({
                     </p>
                 </div>
             }
+            {fetchingUsers && <InfiniteScrollLoadingSkeleton />}
         </ul>
     )
 }
@@ -51,17 +117,27 @@ export function UserList({
 export function FriendList({
     currUserId,
     friends,
+    search,
     length,
+    size,
     infiniteScroll,
 }: {
     currUserId: string,
     friends: FriendsData[],
+    search?: string,
     length?: number,
+    size?: "small" | "normal",
     infiniteScroll?: boolean,
 }) {
+    const [ filteredFriends, setFilteredFriends ] = useState<FriendsData[]>(friends);
+
+    useEffect(() => {
+        setFilteredFriends(filterFriendsData(friends, search));
+    }, [friends, search]);
+
     return (
         <ul className="flex flex-col items-center gap-3 w-full pt-4 max-md:pt-3">
-            {friends.map((friendData, idx) => {
+            {filteredFriends.map((friendData, idx) => {
                 const friendId = friendData.inviter_id === currUserId ? friendData.invitee_id : friendData.inviter_id;
                 const targetFriend = friendData.inviter_id === currUserId ? friendData.invitee_data : friendData.inviter_data;
                 return (
@@ -75,12 +151,13 @@ export function FriendList({
                                 currUserId={currUserId}
                                 targetUserId={friendId}
                                 targetUsername={targetFriend?.username!}
+                                size={size ?? "normal"}
                             />
                         </div>
                     </li>
                 )
             })}
-            {friends.length === 0 &&
+            {filteredFriends.length === 0 &&
                 <div className="flex flex-col justify-center items-center w-full h-48 mb-6 border-0 rounded-xl bg-gray-100">
                     <p className="text-center text-xl max-md:text-lg font-semibold">
                         No friends found
@@ -97,17 +174,27 @@ export function FriendList({
 export function PendingList({
     currUserId,
     friends,
+    search,
     length,
+    size,
     infiniteScroll,
 }: {
     currUserId: string,
     friends: FriendsData[],
+    search?: string,
     length?: number,
+    size?: "small" | "normal",
     infiniteScroll?: boolean,
 }) {
+    const [ filteredFriends, setFilteredFriends ] = useState<FriendsData[]>(friends);
+
+    useEffect(() => {
+        setFilteredFriends(filterFriendsData(friends, search));
+    }, [friends, search]);
+
     return (
         <ul className="flex flex-col items-center gap-3 w-full pt-4 max-md:pt-3">
-            {friends.map((friendData, idx) => {
+            {filteredFriends.map((friendData, idx) => {
                 return (
                     <li
                         key={`friend_${idx}`}
@@ -119,12 +206,13 @@ export function PendingList({
                                 currUserId={currUserId}
                                 targetUserId={friendData.inviter_id}
                                 targetUsername={friendData.inviter_data!.username!}
+                                size={size ?? "normal"}
                             />
                         </div>
                     </li>
                 )
             })}
-            {friends.length === 0 &&
+            {filteredFriends.length === 0 &&
                 <div className="flex flex-col justify-center items-center w-full h-48 mb-6 border-0 rounded-xl bg-gray-100">
                     <p className="text-center text-xl max-md:text-lg font-semibold">
                         No pending invitations
@@ -141,17 +229,27 @@ export function PendingList({
 export function InvitedList({
     currUserId,
     friends,
+    search,
     length,
+    size,
     infiniteScroll,
 }: {
     currUserId: string,
     friends: FriendsData[],
+    search?: string,
     length?: number,
+    size?: "small" | "normal",
     infiniteScroll?: boolean,
 }) {
+    const [ filteredFriends, setFilteredFriends ] = useState<FriendsData[]>(friends);
+
+    useEffect(() => {
+        setFilteredFriends(filterFriendsData(friends, search));
+    }, [friends, search]);
+
     return (
         <ul className="flex flex-col items-center gap-3 w-full pt-4 max-md:pt-3">
-            {friends.map((friendData, idx) => {
+            {filteredFriends.map((friendData, idx) => {
                 return (
                     <li
                         key={`friend_${idx}`}
@@ -163,12 +261,13 @@ export function InvitedList({
                                 currUserId={currUserId}
                                 targetUserId={friendData.invitee_id}
                                 targetUsername={friendData.invitee_data!.username!}
+                                size={size ?? "normal"}
                             />
                         </div>
                     </li>
                 )
             })}
-            {friends.length === 0 &&
+            {filteredFriends.length === 0 &&
                 <div className="flex flex-col justify-center items-center w-full h-48 mb-6 border-0 rounded-xl bg-gray-100">
                     <p className="text-center text-xl max-md:text-lg font-semibold">
                         No invitations sent
@@ -179,5 +278,28 @@ export function InvitedList({
                 </div>
             }
         </ul>
+    )
+}
+
+function InfiniteScrollLoadingSkeleton() {
+    return (
+        <>
+            {Array.from({ length: 3 }).map((_, idx) => {
+                return (
+                    <li
+                        key={`friend_${idx}_skeleton`}
+                        className="border border-slate-100 rounded-xl w-full h-20 max-md:h-16 p-3 bg-white shadow-md text-gray-800 hover:cursor-pointer hover:scale-[101%] duration-200"
+                    >
+                        <div className="animate-pulse flex shrink-0 items-center gap-2 w-2/3 max-lg:w-1/2 overflow-hidden">
+                            <div className="h-10 w-10 min-w-10 max-md:w-8 max-md:h-8 max-md:min-w-8 rounded-full bg-gray-300" />
+                            <div className="flex flex-col justify-center gap-2 w-1/2 max-lg:w-11/12 h-16 max-md:h-12">
+                                <div className="w-full h-6 max-md:h-4 rounded bg-gray-300" />
+                                <div className="w-2/3 h-3 max-md:h-2 rounded bg-gray-300" />
+                            </div>
+                        </div>
+                    </li>
+                )
+            })}
+        </>
     )
 }

@@ -31,35 +31,81 @@ export default async function List({
             case "pending":
                 return (
                     <Suspense fallback={<FriendsListContainerSkeleton />}>
-                        <ListContainer currUserId={user.id} type="pending" search={search} infiniteScroll={true} />
+                        <ListContainer
+                            currUserId={user.id}
+                            type="pending"
+                            search={search}
+                            size="small"
+                            infiniteScroll={true}
+                        />
                     </Suspense>
                 );
             case "invited":
                 return (
                     <Suspense fallback={<FriendsListContainerSkeleton />}>
-                        <ListContainer currUserId={user.id} type="invited" search={search} infiniteScroll={true} />
+                        <ListContainer
+                            currUserId={user.id}
+                            type="invited"
+                            search={search}
+                            size="small"
+                            infiniteScroll={true}
+                        />
                     </Suspense>
                 );
             case "my-friends":
                 return (
                     <Suspense fallback={<FriendsListContainerSkeleton />}>
-                        <ListContainer currUserId={user.id} type="friend" search={search} infiniteScroll={true} />
+                        <ListContainer
+                            currUserId={user.id}
+                            type="friend"
+                            search={search}
+                            size="small"
+                            infiniteScroll={true}
+                        />
                     </Suspense>
                 );
             default:
                 return (
                     <>
                         <Suspense fallback={<FriendsListContainerSkeleton title="Pending" length={3} />}>
-                            <ListContainer currUserId={user.id} type="pending" title="Pending" search={search} limit={3} />
+                            <ListContainer
+                                currUserId={user.id}
+                                type="pending"
+                                title="Pending"
+                                search={search}
+                                limit={3}
+                                size="small"
+                            />
                         </Suspense>
                         <Suspense fallback={<FriendsListContainerSkeleton title="Invited" length={3} />}>
-                            <ListContainer currUserId={user.id} type="invited" title="Invited" search={search} limit={3} />
+                            <ListContainer
+                                currUserId={user.id}
+                                type="invited"
+                                title="Invited"
+                                search={search}
+                                limit={3}
+                                size="small"
+                            />
                         </Suspense>
                         <Suspense fallback={<FriendsListContainerSkeleton title="My friends" length={3} />}>
-                            <ListContainer currUserId={user.id} type="friend" title="My friends" search={search} limit={3} />
+                            <ListContainer
+                                currUserId={user.id}
+                                type="friend"
+                                title="My friends"
+                                search={search}
+                                limit={3}
+                                size="small"
+                            />
                         </Suspense>
                         <Suspense fallback={<FriendsListContainerSkeleton title="All users" />}>
-                            <ListContainer currUserId={user.id} type="all" title="All users" search={search} infiniteScroll={true} />
+                            <ListContainer
+                                currUserId={user.id}
+                                type="all"
+                                title="All users"
+                                search={search}
+                                limit={10}
+                                infiniteScroll={true}
+                            />
                         </Suspense>
                     </>
                 );
