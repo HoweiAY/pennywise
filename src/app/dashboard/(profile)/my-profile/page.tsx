@@ -1,7 +1,10 @@
 import UserProfileCard from "@/components/dashboard/profile/user-profile-card";
+import MyActivitiesList from "@/components/dashboard/profile/my-activities-list";
+import ProfileActivitiesListSkeleton from "@/ui/skeletons/profile-activities-list-skeleton";
 import { UserData } from "@/lib/types/user";
 import { getAuthUser } from "@/lib/data/auth";
 import { getUserDataById } from "@/lib/data/user";
+import { Suspense } from "react";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -34,7 +37,12 @@ export default async function MyProfile() {
                     />
                 </section>
                 <section>
-                    
+                    <h2 className="text-2xl max-md:text-xl font-semibold">
+                        My Activities
+                    </h2>
+                    <Suspense fallback={<ProfileActivitiesListSkeleton />}>
+                        <MyActivitiesList userId={user.id} />
+                    </Suspense>
                 </section>
             </div>
         </main>

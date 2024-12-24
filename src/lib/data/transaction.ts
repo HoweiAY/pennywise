@@ -7,6 +7,65 @@ import { getBudgetAmountSpentByCategory } from "@/lib/data/budget";
 import { unstable_noStore as noStore } from "next/cache";
 import { redirect } from "next/navigation";
 
+export async function getUserTransactions(
+    userId: string,
+    itemsLimit?: number,
+    searchQuery?: string,
+): Promise<DataResponse<TransactionItem[]>> {
+    noStore();
+
+    try {
+        const supabase = await createSupabaseServerClient();
+        let supabaseQuery = supabase
+            .from("transactions")
+            .select(`
+                transaction_id,
+                title,
+                payer_currency,
+                recipient_currency,
+                exchange_rate,
+                amount,
+                transaction_type,
+                category_id,
+                payer_id,
+                recipient_id,
+                budget_id,
+                payer_data:users!transactions_payer_id_fkey(username, first_name, last_name, avatar_url),
+                recipient_data:users!transactions_recipient_id_fkey(username, first_name, last_name, avatar_url),
+                budget_data:budgets!transactions_budget_id_fkey(category_id),
+                description,
+                created_at
+            `)
+            .or(`payer_id.eq.${userId}, recipient_id.eq.${userId}`)
+            .order("created_at", { ascending: false });
+        if (searchQuery) {
+            const splitSearchQuery = searchQuery.trim().split(" ");
+            const searchTerms = splitSearchQuery.reduce((prevTerms, term) => term ? `${prevTerms ? prevTerms + " & " : ""}'${term}'` : prevTerms, ``);
+            supabaseQuery = supabaseQuery.textSearch("title", searchTerms);
+        }
+        if (itemsLimit) {
+            supabaseQuery = supabaseQuery.limit(itemsLimit);
+        }
+        const { data: transactionsData, error } = await supabaseQuery;
+        if (error) throw error;
+        return {
+            status: "success",
+            data: { transactionItems: transactionsData as TransactionItem[] },
+        };
+    } catch (error) {
+        if (error instanceof Error) {
+            return {
+                status: "error",
+                message: error.message,
+            };
+        }
+        return {
+            status: "error",
+            message: "Failed to fetch user transactions",
+        };
+    }
+}
+
 export async function getTransactionsPages(
     itemsPerPage: number,
     searchQuery: string | null,
@@ -332,7 +391,7 @@ export async function getTotalTransactionAmount(
         return amount += transaction.recipient_id === userId ? Math.trunc(transaction.amount * transaction.exchange_rate) : transaction.amount;
     }, 0);
     return {
-        status:"success",
+        status: "success",
         data: { transactionAmount: transactionAmountData[0].totalAmount + exchangedAmount as number || null },
     };
 }
@@ -381,7 +440,7 @@ export async function getTotalExpenseByCategoryId(
         ? transactionsAmountData[0].transactionsAmount + (spentBudgetData["spentBudget"] ?? 0)
         : transactionsAmountData[0].transactionsAmount;
     return {
-        status:"success",
+        status: "success",
         data: { expenseAmount: totalAmount as number || null },
     };
 }
