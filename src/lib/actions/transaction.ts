@@ -118,7 +118,7 @@ export async function createTransaction(
                 if (!friendId) {
                     return { message: "Friend ID not found" };
                 }
-                const openExchangeRatesAppId = process.env.OPEN_EXCHANGE_RATES_APP_ID!;
+                const openExchangeRatesAppId = process.env.NEXT_PUBLIC_OPEN_EXCHANGE_RATES_APP_ID!;
                 const [
                     { rates: exchangeRates },
                     { status: friendBalanceStatus, data: friendBalanceData },
