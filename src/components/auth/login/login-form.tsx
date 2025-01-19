@@ -76,7 +76,7 @@ export default function LoginForm() {
             </p>
             <LoginButton />
             <p className="max-md:mb-4 text-sm max-md:text-xs">
-                Don't have an account?
+                Don&apos;t have an account?
                 <Link
                     href={"/signup"}
                     className="ml-1 font-semibold text-blue-500 border-b border-blue-500"
