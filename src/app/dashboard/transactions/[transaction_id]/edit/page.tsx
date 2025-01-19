@@ -38,11 +38,8 @@ export default async function EditTransaction({ params }: { params: { transactio
     if (userBalanceStatus !== "success" || !userBalanceData) {
         throw new Error(userBalanceMessage || "Error: user balance information not found");
     }
-    let {
-        currency, 
-        balance: balanceInCents,
-        spending_limit: remainingSpendingLimitInCents,
-    } = userBalanceData["userBalanceData"];
+    const { currency, balance: balanceInCents } = userBalanceData["userBalanceData"];
+    let remainingSpendingLimitInCents = userBalanceData["userBalanceData"].spending_limit;
 
     if (remainingSpendingLimitInCents) {
         const currDateTime = new Date();
