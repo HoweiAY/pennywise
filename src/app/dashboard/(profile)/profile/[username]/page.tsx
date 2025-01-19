@@ -3,20 +3,15 @@ import LatestActivitiesList from "@/components/dashboard/profile/latest-activiti
 import ProfileActivitiesListSkeleton from "@/ui/skeletons/profile-activities-list-skeleton";
 import { UserData } from "@/lib/types/user";
 import { FrinedshipStatus } from "@/lib/types/friend";
-import { TransactionItem } from "@/lib/types/transactions";
 import { getAuthUser } from "@/lib/data/auth";
 import { getUserDataByUsername } from "@/lib/data/user";
 import { getFriendshipData } from "@/lib/data/friend";
-import { getPayFriendTransactions } from "@/lib/data/transaction";
-import { Metadata, ResolvingMetadata } from "next";
+import { Metadata } from "next";
 import { Suspense } from "react";
 
-export async function generateMetadata(
-    { params }: { params: { username: string } },
-    parent: ResolvingMetadata,
-): Promise<Metadata> {
-    const endsWithS = params.username.slice(-1).toLowerCase() === "s"; 
-    return { title: `${params.username}'${!endsWithS ? "s" : ""} Profile - PennyWise`};
+export async function generateMetadata({ params }: { params: { username: string } }): Promise<Metadata> {
+    const endsWithS = params.username.slice(-1).toLowerCase() === "s";
+    return { title: `${decodeURIComponent(params.username)}'${!endsWithS ? "s" : ""} Profile - PennyWise` };
 }
 
 export default async function UserProfile({ params }: { params: { username: string } }) {
@@ -50,7 +45,6 @@ export default async function UserProfile({ params }: { params: { username: stri
     }
     let friendId = null;
 
-    let latestFriendActivities: TransactionItem[] = [];
     if (type === "friend") {
         friendId = frienshipData["friendshipData"][0].inviter_id === user.id
             ? frienshipData["friendshipData"][0].invitee_id

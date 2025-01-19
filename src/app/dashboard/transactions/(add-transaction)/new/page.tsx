@@ -21,11 +21,8 @@ export default async function AddTransaction({
     if (status != "success" || !data) {
         throw new Error(message || "Error: user balance information not found");
     }
-    let {
-        currency, 
-        balance: balanceInCents,
-        spending_limit: remainingSpendingLimitInCents,
-    } = data["userBalanceData"];
+    const { currency, balance: balanceInCents } = data["userBalanceData"];
+    let remainingSpendingLimitInCents = data["userBalanceData"].spending_limit;
 
     if (remainingSpendingLimitInCents) {
         const currDateTime = new Date();

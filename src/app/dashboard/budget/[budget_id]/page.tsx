@@ -9,15 +9,12 @@ import { getAuthUser } from "@/lib/data/auth";
 import { getTransactionsPages } from "@/lib/data/transaction";
 import { getUserBudgetById, getBudgetAmountSpent } from "@/lib/data/budget";
 import { BudgetItem } from "@/lib/types/budget";
-import { Metadata, ResolvingMetadata } from "next";
+import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
 
-export async function generateMetadata(
-    { params }: { params: { budget_id: string } },
-    parent: ResolvingMetadata,
-): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: { budget_id: string } }): Promise<Metadata> {
     const { status, data } = await getUserBudgetById(params.budget_id);
     if (status === "success" && data) {
         const { name: budgetName } = data["budgetData"] as BudgetItem;

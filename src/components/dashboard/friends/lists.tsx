@@ -194,7 +194,7 @@ export function FriendList({
                             <FriendProfileOptions
                                 currUserId={currUserId}
                                 targetUserId={friendId}
-                                targetUsername={targetFriend?.username!}
+                                targetUsername={targetFriend?.username || "--"}
                                 size={size ?? "normal"}
                             />
                         </div>

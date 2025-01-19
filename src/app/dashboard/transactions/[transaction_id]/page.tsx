@@ -9,16 +9,13 @@ import { transactionCategories } from "@/lib/utils/constant";
 import { formatCurrency, formatDateTime } from "@/lib/utils/format";
 import { UserData } from "@/lib/types/user";
 import { TransactionCategoryId, TransactionItem } from "@/lib/types/transactions";
-import { Metadata, ResolvingMetadata } from "next";
+import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import clsx from "clsx";
 
-export async function generateMetadata(
-    { params }: { params: { transaction_id: string } },
-    parent: ResolvingMetadata,
-): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: { transaction_id: string } }): Promise<Metadata> {
     const { status, data } = await getTransactionById(params.transaction_id);
     if (status === "success" && data) {
         const transactionData = data["transactionData"];
