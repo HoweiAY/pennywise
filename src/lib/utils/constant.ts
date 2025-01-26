@@ -6,10 +6,10 @@ import {
 } from "@heroicons/react/24/outline";
 
 // Base URL for calling APIs in route handler
-export const baseUrl = 
-    (process.env.NEXT_PUBLIC_VERCEL_TARGET_ENV! === "development" 
-        ? "http://" 
-        : "https://") + process.env.NEXT_PUBLIC_VERCEL_URL!;
+export const baseUrl =
+    (process.env.NEXT_PUBLIC_VERCEL_TARGET_ENV! === "development"
+        ? "http://"
+        : "https://") + process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL!;
 
 /*
     Country codes and corresponding names
